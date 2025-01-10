@@ -33,7 +33,13 @@ func saveFile(w http.ResponseWriter, req *http.Request) {
     // Get file from form
     f, fh, err := req.FormFile("file")
     if err != nil {
-	log.Fatalln("Failed to read form value.", err)
+	log.Println("Failed to read form value.", err)
+
+	w.WriteHeader(http.StatusNotFound)
+	response, _ := json.Marshal(ResponseMessage{Message: "provide a file"})
+	w.Write(response)
+
+	return
     }
     defer f.Close()
     
@@ -44,7 +50,13 @@ func saveFile(w http.ResponseWriter, req *http.Request) {
     nf, err := os.Create(newFilepath)
     if err != nil {
 	f.Close()
-	log.Fatalln("Failed to create a file:", err)
+	log.Println("Failed to create a file:", err)
+
+	w.WriteHeader(http.StatusInternalServerError)
+	response, _ := json.Marshal(ResponseMessage{Message: "try again"})
+	w.Write(response)
+
+	return
     }
     defer nf.Close()
 
@@ -53,7 +65,13 @@ func saveFile(w http.ResponseWriter, req *http.Request) {
     if err != nil {
 	f.Close(); nf.Close()
 	os.Remove(newFilepath)
-	log.Fatalln("Failed to save file:", err)
+	log.Println("Failed to save file:", err)
+    
+	w.WriteHeader(http.StatusInternalServerError)
+	response, _ := json.Marshal(ResponseMessage{Message: "try again"})
+	w.Write(response)
+
+	return
     }
     log.Printf("File %s saved.\n", newFilepath)
 
@@ -65,10 +83,12 @@ func saveFile(w http.ResponseWriter, req *http.Request) {
     w.Write(response)
 }
 
+func deleteFile() {
+
+}
+
 func downloadFile() {
 
 }
 
-func deleteFile() {
 
-}
