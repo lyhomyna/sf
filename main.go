@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"io"
 	"log"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
-	"time"
 )
 
 type ResponseMessage struct {
@@ -34,50 +34,21 @@ func saveFile(w http.ResponseWriter, req *http.Request) {
     f, fh, err := req.FormFile("file")
     if err != nil {
 	log.Println("Failed to read form value.", err)
-
-	w.WriteHeader(http.StatusNotFound)
-	response, _ := json.Marshal(ResponseMessage{Message: "provide a file"})
-	w.Write(response)
+	writeErrorResponse(w, "Provide a file.", http.StatusBadRequest)
 
 	return
     }
     defer f.Close()
     
     // TODO: encrypt filename
-
-    // Create new file
-    newFilepath := filepath.Join(filesDirectory, fh.Filename)
-    nf, err := os.Create(newFilepath)
-    if err != nil {
-	f.Close()
-	log.Println("Failed to create a file:", err)
-
-	w.WriteHeader(http.StatusInternalServerError)
-	response, _ := json.Marshal(ResponseMessage{Message: "try again"})
-	w.Write(response)
-
-	return
-    }
-    defer nf.Close()
-
-    // Copy content
-    _, err = io.Copy(nf, f)
-    if err != nil {
-	f.Close(); nf.Close()
-	os.Remove(newFilepath)
-	log.Println("Failed to save file:", err)
     
-	w.WriteHeader(http.StatusInternalServerError)
-	response, _ := json.Marshal(ResponseMessage{Message: "try again"})
-	w.Write(response)
-
+    if errMsg, statusCode := saveUploadedFile(fh.Filename, f); errMsg != "" && statusCode != -1 {
+	writeErrorResponse(w, errMsg, statusCode)
 	return
     }
-    log.Printf("File %s saved.\n", newFilepath)
 
     // Write response
     w.Header().Set("Content-Type", "application/json")
-    w.Header().Set("Date", time.Now().UTC().String())
 
     response, _ := json.Marshal(ResponseMessage{Message: "file saved"})
     w.Write(response)
@@ -91,4 +62,36 @@ func downloadFile() {
 
 }
 
+func writeErrorResponse(w http.ResponseWriter, message string, code int) {
+	w.WriteHeader(code)
+	response, _ := json.Marshal(ResponseMessage{Message: message})
+	w.Write(response)
+}
 
+func saveUploadedFile(filename string, uploadedFile multipart.File) (string, int) {
+    newFilepath := filepath.Join(filesDirectory, filename)
+
+    if _, err := os.Stat(newFilepath); err == nil {
+	log.Println("File with the same name already exist")
+	return "File with the same name already exist.", http.StatusBadRequest 
+    }
+
+    nf, err := os.Create(newFilepath)
+    if err != nil {
+	log.Println("Failed to create a file:", err)
+	return "Something went wrong while a server was creating file.", http.StatusInternalServerError
+    }
+    defer nf.Close()
+
+    // Copy content
+    _, err = io.Copy(nf, uploadedFile)
+    if err != nil {
+	os.Remove(newFilepath)
+	log.Println("Failed to save file:", err)
+	return "Something went wrong when the server was copying content from your file.", http.StatusInternalServerError
+    }
+
+    log.Printf("File %s saved.\n", newFilepath)
+
+    return "", -1
+}
