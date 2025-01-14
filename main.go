@@ -14,6 +14,7 @@ type ResponseMessage struct {
     Message string `json:"message"`
 }
 
+// files directory where an uploaded files will be saved
 var filesDirectory = filepath.Join("..", "files")
 
 func main() {
@@ -28,7 +29,6 @@ func main() {
     }
 }
 
-
 func saveFile(w http.ResponseWriter, req *http.Request) {
     // Get file from form
     f, fh, err := req.FormFile("file")
@@ -39,8 +39,6 @@ func saveFile(w http.ResponseWriter, req *http.Request) {
 	return
     }
     defer f.Close()
-    
-    // TODO: encrypt filename
     
     if errMsg, statusCode := saveUploadedFile(fh.Filename, f); errMsg != "" && statusCode != -1 {
 	writeErrorResponse(w, errMsg, statusCode)
@@ -55,19 +53,21 @@ func saveFile(w http.ResponseWriter, req *http.Request) {
 }
 
 func deleteFile() {
-
+    panic("Not yet implemented.")
 }
 
 func downloadFile() {
-
+    panic("Not yet implemented.")
 }
 
+// writeErrorRespose created to write error responses fast
 func writeErrorResponse(w http.ResponseWriter, message string, code int) {
-	w.WriteHeader(code)
-	response, _ := json.Marshal(ResponseMessage{Message: message})
-	w.Write(response)
+    w.WriteHeader(code)
+    response, _ := json.Marshal(ResponseMessage{Message: message})
+    w.Write(response)
 }
 
+// saveupLoadedFile saves file into server's forlder and returns error message as string and staus code as int. If error message == "" and status code == -1 there is not errors and file uploaded successfully.
 func saveUploadedFile(filename string, uploadedFile multipart.File) (string, int) {
     newFilepath := filepath.Join(filesDirectory, filename)
 
