@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type ResponseMessage struct {
@@ -18,7 +19,8 @@ type ResponseMessage struct {
 var filesDirectory = filepath.Join("..", "files")
 
 func main() {
-    http.HandleFunc("/save", saveFile) 
+    http.HandleFunc("/save", saveHandler) 
+    http.HandleFunc("/delete", deleteHandler)
 
     fs := http.FileServer(http.Dir(filesDirectory))
     http.Handle("/", fs)
@@ -29,19 +31,19 @@ func main() {
     }
 }
 
-func saveFile(w http.ResponseWriter, req *http.Request) {
+func saveHandler(w http.ResponseWriter, req *http.Request) {
     // Get file from form
     f, fh, err := req.FormFile("file")
     if err != nil {
 	log.Println("Failed to read form value.", err)
-	writeErrorResponse(w, "Provide a file.", http.StatusBadRequest)
+	writeResponse(w, "Provide a file.", http.StatusBadRequest)
 
 	return
     }
     defer f.Close()
     
     if errMsg, statusCode := saveUploadedFile(fh.Filename, f); errMsg != "" && statusCode != -1 {
-	writeErrorResponse(w, errMsg, statusCode)
+	writeResponse(w, errMsg, statusCode)
 	return
     }
 
@@ -52,22 +54,46 @@ func saveFile(w http.ResponseWriter, req *http.Request) {
     w.Write(response)
 }
 
-func deleteFile() {
-    panic("Not yet implemented.")
+func deleteHandler(w http.ResponseWriter, req *http.Request) {
+    urlParts := strings.Split(req.RequestURI, "/")
+    filename := urlParts[len(urlParts) -1]
+
+    errMsg, statusCode := deleteFile(filename)
+    if errMsg != "" && statusCode != -1 {
+	writeResponse(w, errMsg, statusCode)
+    }
+
+    writeResponse(w, "file deleted", http.StatusOK)
+}
+
+// deleteFile deletes file from server and returns error message as string and http response code as int. If error message == "" and status code == -1 there is not errors and file uploaded successfully.
+func deleteFile(filename string) (string, int) {
+    fullFilepath := filepath.Join(filesDirectory, filename)
+
+    if _, err := os.Stat(fullFilepath); err != nil {
+	return "File don't exist.", http.StatusNoContent 
+    }
+
+    if err := os.Remove(fullFilepath); err != nil {
+	return err.Error(), http.StatusInternalServerError 
+    }
+    
+    log.Printf("File %s deleted successfully.", filename)
+
+    return "", -1
 }
 
 func downloadFile() {
     panic("Not yet implemented.")
 }
 
-// writeErrorRespose created to write error responses fast
-func writeErrorResponse(w http.ResponseWriter, message string, code int) {
+func writeResponse(w http.ResponseWriter, message string, code int) {
     w.WriteHeader(code)
     response, _ := json.Marshal(ResponseMessage{Message: message})
     w.Write(response)
 }
 
-// saveupLoadedFile saves file into server's forlder and returns error message as string and staus code as int. If error message == "" and status code == -1 there is not errors and file uploaded successfully.
+// saveupLoadedFile saves file into server's forlder and returns error message as string and http status code as int. If error message == "" and status code == -1 there is not errors and file uploaded successfully.
 func saveUploadedFile(filename string, uploadedFile multipart.File) (string, int) {
     newFilepath := filepath.Join(filesDirectory, filename)
 
