@@ -37,7 +37,6 @@ func saveHandler(w http.ResponseWriter, req *http.Request) {
     if err != nil {
 	log.Println("Failed to read form value.", err)
 	writeResponse(w, "Provide a file.", http.StatusBadRequest)
-
 	return
     }
     defer f.Close()
@@ -61,6 +60,7 @@ func deleteHandler(w http.ResponseWriter, req *http.Request) {
     errMsg, statusCode := deleteFile(filename)
     if errMsg != "" && statusCode != -1 {
 	writeResponse(w, errMsg, statusCode)
+	return
     }
 
     writeResponse(w, "file deleted", http.StatusOK)
