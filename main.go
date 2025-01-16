@@ -22,17 +22,18 @@ var fileServer = http.FileServer(http.Dir(filesDirectory))
 func main() {
     http.HandleFunc("/save", saveHandler) 
     http.HandleFunc("/delete", deleteHandler)
-    http.HandleFunc("/download", downloadHandler)
+    http.HandleFunc("/download/", downloadHandler)
 
-    
-    log.Println("Server is running...")
+    http.Handle("/favion.ico", http.NotFoundHandler())
+    log.Println("Port 8080. Server is running...")
     if err := http.ListenAndServe(":8080", nil); err != nil {
 	log.Println("Failed to start server:", err)
     }
 }
 
 func saveHandler(w http.ResponseWriter, req *http.Request) {
-    // Get file from form
+    logConnection(req)
+
     f, fh, err := req.FormFile("file")
     if err != nil {
 	log.Println("Failed to read form value.", err)
@@ -54,6 +55,8 @@ func saveHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func deleteHandler(w http.ResponseWriter, req *http.Request) {
+    logConnection(req)
+
     urlParts := strings.Split(req.RequestURI, "/")
     filename := urlParts[len(urlParts) -1]
 
@@ -83,10 +86,19 @@ func deleteFile(filename string) (string, int) {
     return "", -1
 }
 
+// downloadHandler downloads file into client downloads folder
 func downloadHandler(w http.ResponseWriter, req *http.Request) {
+    logConnection(req)
+
     filename := strings.TrimPrefix(req.URL.Path, "/download/")   
     if filename == "" {
-	http.Error(w, "File not specified", http.StatusBadRequest)
+	writeResponse(w, "File not specified", http.StatusBadRequest)
+	return
+    }
+
+    _, err := os.Stat(filepath.Join(filesDirectory, filename))
+    if err != nil {
+	writeResponse(w, "File not found", http.StatusNotFound)
 	return
     }
 
@@ -127,4 +139,9 @@ func saveUploadedFile(filename string, uploadedFile multipart.File) (string, int
     log.Printf("File %s saved.\n", newFilepath)
 
     return "", -1
+}
+
+// logConnection is a 'logger' of each request
+func logConnection(req *http.Request) {
+    log.Printf("%s | %s %s\n", req.RemoteAddr, req.Method,  req.URL.Path)
 }
