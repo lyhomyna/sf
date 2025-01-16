@@ -17,13 +17,13 @@ type ResponseMessage struct {
 
 // files directory where an uploaded files will be saved
 var filesDirectory = filepath.Join("..", "files")
+var fileServer = http.FileServer(http.Dir(filesDirectory))
 
 func main() {
     http.HandleFunc("/save", saveHandler) 
     http.HandleFunc("/delete", deleteHandler)
+    http.HandleFunc("/download", downloadHandler)
 
-    fs := http.FileServer(http.Dir(filesDirectory))
-    http.Handle("/", fs)
     
     log.Println("Server is running...")
     if err := http.ListenAndServe(":8080", nil); err != nil {
@@ -83,8 +83,15 @@ func deleteFile(filename string) (string, int) {
     return "", -1
 }
 
-func downloadFile() {
-    panic("Not yet implemented.")
+func downloadHandler(w http.ResponseWriter, req *http.Request) {
+    filename := strings.TrimPrefix(req.URL.Path, "/download/")   
+    if filename == "" {
+	http.Error(w, "File not specified", http.StatusBadRequest)
+	return
+    }
+
+    w.Header().Set("Content-Disposition", "attachment; filename="+filename)
+    http.StripPrefix("/download/", fileServer).ServeHTTP(w, req)
 }
 
 func writeResponse(w http.ResponseWriter, message string, code int) {
