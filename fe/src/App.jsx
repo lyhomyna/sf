@@ -2,10 +2,10 @@ import TopBar from "./components/TopBar.jsx";
 import FileItem from "./components/FileItem.jsx";
 
 export default function App() {
-  const email="supercoolemail@super.mail" 
-  const imageURL="https://static.vecteezy.com/system/resources/previews/018/871/797/non_2x/happy-cat-transparent-background-png.png"
+    const email="supercoolemail@super.mail" 
+    const imageURL="https://static.vecteezy.com/system/resources/previews/018/871/797/non_2x/happy-cat-transparent-background-png.png"
 
-  return (<div className="p-2" >
+    return (<div className="p-2" >
 	<TopBar email={email} imageURL={imageURL} />
 	<FileItem fullFilename="supercoolfile.txt"/>
     </div>);
