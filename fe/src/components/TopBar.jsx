@@ -5,7 +5,7 @@ export default function TopBar({ email, imageURL }) {
 	<div className="w-16 h-16 bg-stone-700 rounded-md shadow-md">
 	    <img src={imageURL} alt="Avatar"/>
 	</div>
-	<div className="font-medium">
+	<div className="font-medium text-slate-300">
 	    { email }
 	</div>
 	<ControlButtons className="flex gap-x-1" />

@@ -7,6 +7,10 @@ export default function App() {
 
     return (<div className="p-2" >
 	<TopBar email={email} imageURL={imageURL} />
-	<FileItem fullFilename="supercoolfile.txt"/>
+	<ul className="flex flex-col justify-start w-max">
+	    <FileItem fullFilename="supercoolfile1.txt"/>
+	    <FileItem fullFilename="supercoolfilee2.txt"/>
+	    <FileItem fullFilename="supercoolfileee3.txt"/>
+	</ul>
     </div>);
 }
