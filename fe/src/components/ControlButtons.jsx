@@ -24,7 +24,7 @@ function uploadFile() {
 	    });
 
 	    if (response.ok) {
-		alert("File uploaded successfuly!");
+		alert("File uploaded successfully!");
 	    } else {
 		alert("Failed to upload file.");
 	    }

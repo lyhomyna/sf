@@ -135,6 +135,11 @@ func HandleDownload(w http.ResponseWriter, req *http.Request) {
     http.StripPrefix("/download/", fileServer).ServeHTTP(w, req)
 }
 
+func HandleFilenames(w http.ResponseWriter, req *http.Request) {
+    w.Write([]byte("panic"))
+    panic("Not yet implemented")
+}
+
 type responseMessage struct {
     Message string `json:"message"`
 }
@@ -145,9 +150,7 @@ func writeResponse(w http.ResponseWriter, message string, code int) {
     w.Write(response)
 }
 
-
 // logConnection is a 'logger' of each request
 func logConnection(req *http.Request) {
     log.Printf("%s | %s %s\n", req.RemoteAddr, req.Method,  req.URL.Path)
 }
-
