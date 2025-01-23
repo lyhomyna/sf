@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"mime/multipart"
@@ -11,8 +12,8 @@ import (
 	"strings"
 )
 
-// files directory where an uploaded files will be saved
 var (
+    // directory where uploaded files will be saved
     filesDirectory = filepath.Join("..", "..", "files")
     fileServer = http.FileServer(http.Dir(filesDirectory))
 )
@@ -37,10 +38,6 @@ func HandleSave(w http.ResponseWriter, req *http.Request) {
 	writeResponse(w, errMsg, statusCode)
 	return
     }
-
-    // Write response
-    w.Header().Set("Content-Type", "application/json")
-    w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 
     writeResponse(w, "file saved", http.StatusOK)
 }
@@ -136,17 +133,58 @@ func HandleDownload(w http.ResponseWriter, req *http.Request) {
 }
 
 func HandleFilenames(w http.ResponseWriter, req *http.Request) {
-    w.Write([]byte("panic"))
-    panic("Not yet implemented")
+    logConnection(req)
+
+    if req.Method != http.MethodGet {
+	http.Error(w, "Use GET method instead", http.StatusBadRequest)
+	return
+    }
+
+    if filenames, err := getFilenames(); err != nil {
+	writeResponse(w, err.Message, err.Code)
+    } else {
+	writeResponse(w, filenames, http.StatusOK)
+    }
 }
 
-type responseMessage struct {
-    Message string `json:"message"`
+type responseError struct {
+    Code int
+    Message string
 }
 
-func writeResponse(w http.ResponseWriter, message string, code int) {
+func getFilenames() ([]string, *responseError) {
+    entries, err := os.ReadDir(filesDirectory)
+    if err != nil {
+	return nil, &responseError {
+	    Code: http.StatusInternalServerError,
+	    Message: fmt.Sprint("Cannot read from files directory:", err.Error()),
+	}
+    }
+
+    var filenames []string
+    for _, entry := range entries {
+	filenames = append(filenames, entry.Name())
+    }
+
+    return filenames, nil
+}
+
+
+func writeResponse(w http.ResponseWriter, data any, code int) {
+    w.Header().Set("Content-Type", "application/json")
+    w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+
     w.WriteHeader(code)
-    response, _ := json.Marshal(responseMessage{Message: message})
+    d := struct {
+	Data any `json:"data"`
+    } {
+	Data: data,
+    }
+
+    response, err := json.Marshal(d)
+    if err != nil {
+	panic(err)
+    }
     w.Write(response)
 }
 
