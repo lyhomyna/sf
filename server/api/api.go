@@ -13,7 +13,7 @@ import (
 
 // files directory where an uploaded files will be saved
 var (
-    filesDirectory = filepath.Join("..", "..", "..", "files")
+    filesDirectory = filepath.Join("..", "..", "files")
     fileServer = http.FileServer(http.Dir(filesDirectory))
 )
 
@@ -40,6 +40,7 @@ func HandleSave(w http.ResponseWriter, req *http.Request) {
 
     // Write response
     w.Header().Set("Content-Type", "application/json")
+    w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 
     writeResponse(w, "file saved", http.StatusOK)
 }
@@ -47,6 +48,7 @@ func HandleSave(w http.ResponseWriter, req *http.Request) {
 // saveupLoadedFile saves file into server's forlder and returns error message as string and http status code as int. If error message == "" and status code == -1 there is not errors and file uploaded successfully.
 func saveUploadedFile(filename string, uploadedFile multipart.File) (string, int) {
     newFilepath := filepath.Join(filesDirectory, filename)
+    log.Println(newFilepath)
 
     if _, err := os.Stat(newFilepath); err == nil {
 	log.Println("File with the same name already exist")
