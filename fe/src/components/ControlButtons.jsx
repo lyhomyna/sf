@@ -6,12 +6,11 @@ import { FilesContext } from "../storage/FilesContext.jsx";
 export default function ControlButtons({...props}) {
     const { addFilename } = useContext(FilesContext);
 
-
     const uploadFile = () => {
 	const input = document.createElement('input');
 	input.type = 'file';
 
-	input.onchange = async e => {
+	input.onchange = async (e) => {
 	    const file = e.target.files[0];
 	    const formData = new FormData();
 	    formData.append("file", file);
@@ -24,7 +23,7 @@ export default function ControlButtons({...props}) {
 
 		if (response.ok) {
 		    alert("File uploaded successfully!");
-		    addFilename(file.name)
+		    addFilename(file.name) // to show filenames in list
 		} else {
 		    alert("Failed to upload file.");
 		}

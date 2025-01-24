@@ -18,6 +18,7 @@ var (
     fileServer = http.FileServer(http.Dir(filesDirectory))
 )
 
+// HandleSave is the handler for saving file. File should be form value with key 'file'.
 func HandleSave(w http.ResponseWriter, req *http.Request) {
     logConnection(req)
 
