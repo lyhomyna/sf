@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useContext } from 'react';
 
+import { FilesContext } from "../storage/FilesContext.jsx";
 import FileItem from "./FileItem.jsx";
 
 export default function FileList() {
-    const [filenames, setFilenames] = useState([]); 
+    const { filenames, addFilenames } = useContext(FilesContext);
 
     useEffect(() => {
 	fetch("http://localhost:8080/filenames")
@@ -11,10 +12,10 @@ export default function FileList() {
 	    return res.json();
 	}).then((json) => {
 	    if (Array.isArray(json.data)) {
-                setFilenames(json.data);
+                addFilenames(json.data);
             } else {
                 console.error("Invalid data format:", json);
-                setFilenames([]);
+                addFilenames([]);
             }
 	}).catch((err) => console.error("Failed to fetch filenames:", err));
     }, [])

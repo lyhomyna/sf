@@ -2,6 +2,7 @@ import Button from "./Button.jsx";
 
 export default function FileItem({ fullFilename }) {
     const [filename, ext] = fullFilename.split(".")
+
     return (<li key={filename} className="flex flex-row justify-between gap-2 items-center mt-3">
 	<div className="flex gap-[0.3rem]">
 	    <button className="w-[15px] h-[2.1rem] bg-red-400 hover:bg-red-700 duration-300" title="Delete" />
