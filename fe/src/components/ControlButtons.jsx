@@ -25,6 +25,8 @@ function uploadFile() {
 
 	    if (response.ok) {
 		alert("File uploaded successfully!");
+	    } else if (response.status === 400) {
+		alert("File already uploaded.\nTODO: Update?")
 	    } else {
 		alert("Failed to upload file.");
 	    }

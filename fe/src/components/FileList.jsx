@@ -19,11 +19,15 @@ export default function FileList() {
 	}).catch((err) => console.error("Failed to fetch filenames:", err));
     }, [])
 
-    return <ul className="flex flex-col justify-start w-max">
-	{ 
-	    filenames.map((filename) => {
-		return <FileItem fullFilename={filename}/>
-	    })
-	}
-    </ul>
+    return filenames.length === 0 ? (
+	    <p className="text-stone-100 text-xl text-center w-[40rem]">No files uploaded yet.</p>
+	) : (
+	    <ul className="flex flex-col justify-start w-max">
+	    { 
+		filenames.map((filename) => {
+		    return <FileItem fullFilename={filename}/>
+		})
+	    }
+	    </ul>
+	);
 }
