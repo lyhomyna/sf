@@ -11,7 +11,7 @@ func main() {
     http.HandleFunc("/save", api.HandleSave)           // POST
     http.HandleFunc("/delete/", api.HandleDelete)      // DELETE
     http.HandleFunc("/download/", api.HandleDownload)  // GET
-    http.HandleFunc("/filenames", api.HandleFilenames) //GET
+    http.HandleFunc("/filenames", api.HandleFilenames) // GET
 
     http.Handle("/favion.ico", http.NotFoundHandler())
     log.Println("Port 8080. Server is running...")

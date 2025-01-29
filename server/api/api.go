@@ -29,8 +29,8 @@ func HandleSave(w http.ResponseWriter, req *http.Request) {
 
     f, fh, err := req.FormFile("file")
     if err != nil {
-	log.Println("Failed to read form value.", err)
-	writeResponse(w, "Provide a file.", http.StatusBadRequest)
+	log.Println("Failed to read form value", err)
+	writeResponse(w, "Provide a file", http.StatusBadRequest)
 	return
     }
     defer f.Close()
@@ -40,7 +40,7 @@ func HandleSave(w http.ResponseWriter, req *http.Request) {
 	return
     }
 
-    writeResponse(w, "file saved", http.StatusOK)
+    writeResponse(w, "File saved", http.StatusOK)
 }
 
 // saveupLoadedFile saves file into server's forlder and returns error message as string and http status code as int. If error message == "" and status code == -1 there is not errors and file uploaded successfully.
@@ -50,13 +50,13 @@ func saveUploadedFile(filename string, uploadedFile multipart.File) (string, int
 
     if _, err := os.Stat(newFilepath); err == nil {
 	log.Println("File with the same name already exist")
-	return "File with the same name already exist.", http.StatusBadRequest 
+	return "File with the same name already exist", http.StatusBadRequest 
     }
 
     nf, err := os.Create(newFilepath)
     if err != nil {
 	log.Println("Failed to create a file:", err)
-	return "Something went wrong while a server was creating file.", http.StatusInternalServerError
+	return "Something went wrong while a server was creating file", http.StatusInternalServerError
     }
     defer nf.Close()
 
@@ -65,13 +65,14 @@ func saveUploadedFile(filename string, uploadedFile multipart.File) (string, int
     if err != nil {
 	os.Remove(newFilepath)
 	log.Println("Failed to save file:", err)
-	return "Something went wrong when the server was copying content from your file.", http.StatusInternalServerError
+	return "Something went wrong when the server was copying content from your file", http.StatusInternalServerError
     }
 
     log.Printf("File %s saved.\n", newFilepath)
 
     return "", -1
 }
+
 func HandleDelete(w http.ResponseWriter, req *http.Request) {
     logConnection(req)
 
@@ -88,7 +89,7 @@ func HandleDelete(w http.ResponseWriter, req *http.Request) {
 	return
     }
 
-    writeResponse(w, "file deleted", http.StatusOK)
+    writeResponse(w, "File deleted", http.StatusOK)
 }
 
 // deleteFile deletes file from server and returns error message as string and http response code as int. If error message == "" and status code == -1 there is not errors and file uploaded successfully.
@@ -96,11 +97,11 @@ func deleteFile(filename string) (string, int) {
     fullFilepath := filepath.Join(filesDirectory, filename)
 
     if _, err := os.Stat(fullFilepath); err != nil {
-	return "File don't exist.", http.StatusNoContent 
+	return "File doesn't exist", http.StatusNoContent 
     }
 
     if err := os.Remove(fullFilepath); err != nil {
-	return err.Error(), http.StatusInternalServerError 
+	return "Error removing file", http.StatusInternalServerError 
     }
     
     log.Printf("File %s deleted successfully.", filename)
@@ -158,7 +159,7 @@ func getFilenames() ([]string, *responseError) {
     if err != nil {
 	return nil, &responseError {
 	    Code: http.StatusInternalServerError,
-	    Message: fmt.Sprint("Cannot read from files directory:", err.Error()),
+	    Message: "Cannot read from user directory",
 	}
     }
 
