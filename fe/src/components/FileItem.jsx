@@ -1,11 +1,18 @@
 import Button from "./Button.jsx";
 
 export default function FileItem({ fullFilename }) {
-    const [filename, ext] = fullFilename.split(".")
+    const [_, ext] = fullFilename.split(".")
 
-    return (<li key={filename} className="flex flex-row justify-between gap-2 items-center mt-3">
+    const deleteItem = async () => {
+	const res = await fetch(`http://localhost:8080/delete/${fullFilename}`, {
+	    method: "DELETE",
+	});
+	console.log(res);
+    }
+
+    return (<li key={fullFilename} className="flex flex-row justify-between gap-2 items-center mt-3">
 	<div className="flex gap-[0.3rem]">
-	    <button className="w-[15px] h-[2.1rem] bg-red-200 hover:bg-red-700 duration-300" title="Delete" />
+	    <button onClick={deleteItem} className="w-[15px] h-[2.1rem] bg-red-200 hover:bg-red-700 duration-300" title="Delete" />
 	    <div className="flex flex-row gap-x-2">
 		<div className="border border-stone-300 text-slate-300 p-1">
 		    .{ ext }

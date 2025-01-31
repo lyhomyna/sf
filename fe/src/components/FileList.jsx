@@ -3,8 +3,8 @@ import { useEffect, useContext } from 'react';
 import { FilesContext } from "../storage/FilesContext.jsx";
 import FileItem from "./FileItem.jsx";
 
-export default function FileList() {
-    const { filenames, addFilenames } = useContext(FilesContext);
+export default function FileList({filenames}) {
+    const { addFilenames } = useContext(FilesContext);
 
     useEffect(() => {
 	fetch("http://localhost:8080/filenames")

@@ -12,19 +12,19 @@ export default function App() {
     
     const addFilenames = (filenames) => {
 	if (Array.isArray(filenames)) {
-	    setFilenames((oldFilenames) => [...oldFilenames, ...filenames] );
+	    setFilenames(filenames);
 	}
     };
 
     const addFilename = (filename) => {
-	setFilenames(oldFilenames => [...oldFilenames, filename])
+	setFilenames(oldFilenames => [...oldFilenames, filename]);
     };
 
     return (
     <FilesContext value={ { filenames: filenames, addFilenames: addFilenames, addFilename: addFilename } }>
 	<div className="p-2" >
 	    <TopBar email={email} imageURL={imageURL} />
-	    <FileList />
+	    <FileList filenames={filenames} />
 	</div>
     </FilesContext>
     );
