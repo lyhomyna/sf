@@ -4,13 +4,23 @@ export default function FileItem({ fullFilename }) {
     const [_, ext] = fullFilename.split(".")
 
     const deleteItem = async () => {
-	const res = await fetch(`http://localhost:8080/delete/${fullFilename}`, {
-	    method: "DELETE",
-	});
-	console.log(res);
+	try {
+	    const res = await fetch(`http://localhost:8080/delete/${fullFilename}`, {
+		method: "DELETE", 
+	    });
+	    console.log(res)
+
+	} catch (err) {
+	    console.error("Error deleting file:", err)
+	    alert("An error occured. Try again.")
+	}
     }
 
-    return (<li key={fullFilename} className="flex flex-row justify-between gap-2 items-center mt-3">
+    const downloadItem = (e) => {
+	// TODO
+    }
+
+    return (<li key={filename} className="flex flex-row justify-between gap-2 items-center mt-3">
 	<div className="flex gap-[0.3rem]">
 	    <button onClick={deleteItem} className="w-[15px] h-[2.1rem] bg-red-200 hover:bg-red-700 duration-300" title="Delete" />
 	    <div className="flex flex-row gap-x-2">
