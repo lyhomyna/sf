@@ -19,6 +19,8 @@ var (
 
 func OptionsMiddleware(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+	logConnection(req)
+
 	if req.Method == http.MethodOptions {
 	    w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 	    w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
@@ -31,8 +33,6 @@ func OptionsMiddleware(next http.Handler) http.Handler {
 
 // HandleSave is the handler for saving file. File should be form value with key 'file'.
 func HandleSave(w http.ResponseWriter, req *http.Request) {
-    logConnection(req)
-
     if req.Method != http.MethodPost {
 	http.Error(w, "Use POST method instead", http.StatusBadRequest)
 	return
@@ -85,8 +85,6 @@ func saveUploadedFile(filename string, uploadedFile multipart.File) (string, int
 }
 
 func HandleDelete(w http.ResponseWriter, req *http.Request) {
-    logConnection(req)
-
     if req.Method != http.MethodDelete {
 	http.Error(w, "Use DELETE method instead", http.StatusBadRequest)
 	return
@@ -122,8 +120,6 @@ func deleteFile(filename string) (string, int) {
 
 // handleDownload downloads file into client downloads folder
 func HandleDownload(w http.ResponseWriter, req *http.Request) {
-    logConnection(req)
-
     if req.Method != http.MethodGet {
 	http.Error(w, "Use GET method instead", http.StatusBadRequest)
 	return
@@ -146,8 +142,6 @@ func HandleDownload(w http.ResponseWriter, req *http.Request) {
 }
 
 func HandleFilenames(w http.ResponseWriter, req *http.Request) {
-    logConnection(req)
-
     if req.Method != http.MethodGet {
 	http.Error(w, "Use GET method instead", http.StatusBadRequest)
 	return
@@ -174,7 +168,7 @@ func getFilenames() ([]string, *responseError) {
 	}
     }
 
-    var filenames []string
+    filenames := []string {}
     for _, entry := range entries {
 	filenames = append(filenames, entry.Name())
     }
