@@ -22,7 +22,7 @@ export default function ControlButtons({...props}) {
 		});
 
 		if (response.ok) {
-		    alert("File uploaded successfully!");
+		    // alert("File uploaded successfully!");
 		    addFilename(file.name) // to show filenames in list
 		} else {
 		    alert("Failed to upload file.");
@@ -39,6 +39,6 @@ export default function ControlButtons({...props}) {
     return (<div {...props}>
 	<Button className="bg-neutral-300" text="Log in" />
 	<Button className="bg-neutral-300" text="Cnange password" />
-	<Button text="Upload file" onClick={uploadFile} />
+	<Button className="bg-neutral-700"text="Upload file" onClick={uploadFile} />
     </div>);
 }

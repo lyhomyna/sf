@@ -1,6 +1,7 @@
 import { useEffect, useContext } from 'react';
 
 import { FilesContext } from "../storage/FilesContext.jsx";
+
 import FileItem from "./FileItem.jsx";
 
 export default function FileList({filenames}) {
@@ -26,7 +27,9 @@ export default function FileList({filenames}) {
 	    <ul className="flex flex-col justify-start w-max">
 	    { 
 		filenames.map((filename) => {
-		    return <FileItem fullFilename={filename}/>
+		    return (<li key={filename}>
+			<FileItem fullFilename={filename}/>
+		    </li>);
 		})
 	    }
 	    </ul>

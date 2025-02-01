@@ -20,8 +20,26 @@ export default function App() {
 	setFilenames(oldFilenames => [...oldFilenames, filename]);
     };
 
+    const deleteFilename = (filename) => {
+	setFilenames(oldFilenames => { 
+	    let withoutFilename;
+	    oldFilenames.forEach((_, i) => {
+		if (oldFilenames[i] === filename) {
+		    withoutFilename = [...oldFilenames.slice(0, i), ...oldFilenames.slice(i+1, oldFilenames.length)]
+		    return
+		}
+	    });
+	    return withoutFilename;
+	});
+    };
+
     return (
-    <FilesContext value={ { filenames: filenames, addFilenames: addFilenames, addFilename: addFilename } }>
+    <FilesContext value={ { 
+	filenames: filenames, 
+	addFilenames: addFilenames, 
+	addFilename: addFilename, 
+	deleteFilename: deleteFilename, 
+    }}>
 	<div className="p-2" >
 	    <TopBar email={email} imageURL={imageURL} />
 	    <FileList filenames={filenames} />
