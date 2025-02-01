@@ -57,7 +57,6 @@ func HandleSave(w http.ResponseWriter, req *http.Request) {
 // saveupLoadedFile saves file into server's forlder and returns error message as string and http status code as int. If error message == "" and status code == -1 there is not errors and file uploaded successfully.
 func saveUploadedFile(filename string, uploadedFile multipart.File) (string, int) {
     newFilepath := filepath.Join(filesDirectory, filename)
-    log.Println(newFilepath)
 
     if _, err := os.Stat(newFilepath); err == nil {
 	log.Println("File with the same name already exist")
@@ -78,8 +77,6 @@ func saveUploadedFile(filename string, uploadedFile multipart.File) (string, int
 	log.Println("Failed to save file:", err)
 	return "Something went wrong when the server was copying content from your file", http.StatusInternalServerError
     }
-
-    log.Printf("File %s saved.\n", newFilepath)
 
     return "", -1
 }
@@ -112,8 +109,6 @@ func deleteFile(filename string) (string, int) {
     if err := os.Remove(fullFilepath); err != nil {
 	return "Error removing file", http.StatusInternalServerError 
     }
-    
-    log.Printf("File %s deleted successfully.", filename)
 
     return "", -1
 }
