@@ -17,6 +17,18 @@ var (
     fileServer = http.FileServer(http.Dir(filesDirectory))
 )
 
+func OptionsMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+	if req.Method == http.MethodOptions {
+	    w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	    w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+	    w.WriteHeader(http.StatusNoContent)
+	} else {
+	    next.ServeHTTP(w, req)
+	}
+    })
+}
+
 // HandleSave is the handler for saving file. File should be form value with key 'file'.
 func HandleSave(w http.ResponseWriter, req *http.Request) {
     logConnection(req)

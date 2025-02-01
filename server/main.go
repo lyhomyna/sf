@@ -8,14 +8,19 @@ import (
 )
 
 func main() {
-    http.HandleFunc("/save", api.HandleSave)           // POST
-    http.HandleFunc("/delete/", api.HandleDelete)      // DELETE
-    http.HandleFunc("/download/", api.HandleDownload)  // GET
-    http.HandleFunc("/filenames", api.HandleFilenames) // GET
+    mux := http.NewServeMux()
 
-    http.Handle("/favion.ico", http.NotFoundHandler())
+    mux.HandleFunc("/save", api.HandleSave)           // POST
+    mux.HandleFunc("/delete/", api.HandleDelete)      // DELETE
+    mux.HandleFunc("/download/", api.HandleDownload)  // GET
+    mux.HandleFunc("/filenames", api.HandleFilenames) // GET
+
+    mux.Handle("/favion.ico", http.NotFoundHandler())
+
+    handler := api.OptionsMiddleware(mux)
+
     log.Println("Port 8080. Server is running...")
-    if err := http.ListenAndServe(":8080", nil); err != nil {
+    if err := http.ListenAndServe(":8080", handler); err != nil {
 	log.Println("Failed to start server:", err)
     }
 }
