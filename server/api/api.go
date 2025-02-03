@@ -59,8 +59,8 @@ func saveUploadedFile(filename string, uploadedFile multipart.File) (string, int
     newFilepath := filepath.Join(filesDirectory, filename)
 
     if _, err := os.Stat(newFilepath); err == nil {
-	log.Println("File with the same name already exist")
-	return "File with the same name already exist", http.StatusBadRequest 
+	log.Println("File with the same name already exists")
+	return "File with the same name already exists", http.StatusBadRequest 
     }
 
     nf, err := os.Create(newFilepath)

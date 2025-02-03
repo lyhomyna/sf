@@ -20,12 +20,14 @@ export default function ControlButtons({...props}) {
 		    method: "POST", 
 		    body: formData,
 		});
-
+		
 		if (response.ok) {
 		    // alert("File uploaded successfully!");
 		    addFilename(file.name) // to show filenames in list
+		} else if(response.status === 400) {
+		    alert("File with the same filename has already uploaded.")
 		} else {
-		    alert("Failed to upload file.");
+		    alert("Failed to upload file. Try again.");
 		}
 	    } catch (err) {
 		console.error("Error uploading file:", err)
