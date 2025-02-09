@@ -8,8 +8,6 @@ const baseUrl = "http://localhost:8080"
 export default function FileItem({ fullFilename }) {
     const { deleteFilename } = useContext(FilesContext);
 
-    const [_, ext] = fullFilename.split(".");
-
     const deleteItem = async () => {
 	const res = await fetch(`${baseUrl}/delete/${fullFilename}`, {
 	    method: "DELETE",
@@ -29,8 +27,15 @@ export default function FileItem({ fullFilename }) {
 	try {
 	    const res = await fetch(`${baseUrl}/download/${fullFilename}`);
 	    if (res.status === 404) {
-		alert("File not found. Refresh the page.")
-	    }
+		alert("File not found. Refresh the page.");
+		return;
+	    } else if (!res.ok) {
+		console.error("Download failed:", res.statusText);
+                return;
+            }
+
+	    console.log(res);
+
 	    const blob = await res.blob();
 	    const url = window.URL.createObjectURL(blob);
 
@@ -54,7 +59,7 @@ export default function FileItem({ fullFilename }) {
 	    <button onClick={deleteItem} className="w-[15px] h-[2.1rem] bg-red-200 hover:bg-red-700 duration-300" title="Delete" />
 	    <div className="flex flex-row gap-x-2">
 		<div className="border border-stone-300 text-slate-300 p-1">
-		    .{ ext }
+		    .{ fullFilename.split(".")[1] }
 		</div>
 		<p className="text-xl text-slate-300" title={fullFilename}>
 		    { fullFilename }

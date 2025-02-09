@@ -22,9 +22,10 @@ func OptionsMiddleware(next http.Handler) http.Handler {
 	    w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 	    w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
 	    w.WriteHeader(http.StatusNoContent)
-	} else {
-	    next.ServeHTTP(w, req)
+	    return
 	}
+	    
+	next.ServeHTTP(w, req)
     })
 }
 
@@ -112,6 +113,8 @@ func deleteFile(filename string) (string, int) {
 
 // handleDownload downloads file into client downloads folder
 func HandleDownload(w http.ResponseWriter, req *http.Request) {
+    logConnection(req)
+
     if req.Method != http.MethodGet {
 	http.Error(w, "Use GET method instead", http.StatusBadRequest)
 	return
