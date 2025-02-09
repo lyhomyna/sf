@@ -27,10 +27,22 @@ export default function FileItem({ fullFilename }) {
 
     const downloadFile = async () => {
 	try {
-	    const res = await fetch(`${baseUrl}/download/${fullFilename}`)
+	    const res = await fetch(`${baseUrl}/download/${fullFilename}`);
 	    if (res.status === 404) {
 		alert("File not found. Refresh the page.")
 	    }
+	    const blob = await res.blob();
+	    const url = window.URL.createObjectURL(blob);
+
+	    const a = document.createElement("a");
+	    a.href = url;
+	    a.download = fullFilename;
+
+	    document.body.appendChild(a);
+	    a.click();
+	    document.body.removeChild(a);
+
+	    window.URL.revokeObjectURL(url);
 	} catch (e) {
 	    console.log(e)
 	    alert("Something went wrong. Refresh the page and try again.")
@@ -49,6 +61,6 @@ export default function FileItem({ fullFilename }) {
 		</p>
 	    </div>
 	</div>
-	<Button className="bg-neutral-200" text="Download" onClick={downloadFile}/>
+	<Button className="bg-neutral-700" text="Download" onClick={downloadFile}/>
     </div>);
 }
