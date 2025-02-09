@@ -11,11 +11,8 @@ import (
 	"strings"
 )
 
-var (
-    // directory where uploaded files will be saved
-    filesDirectory = filepath.Join("..", "..", "files")
-    fileServer = http.FileServer(http.Dir(filesDirectory))
-)
+// directory where uploaded files will be saved
+var filesDirectory = filepath.Join("..", "..", "files")
 
 func OptionsMiddleware(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -133,8 +130,10 @@ func HandleDownload(w http.ResponseWriter, req *http.Request) {
     }
 
     w.Header().Set("Content-Disposition", "attachment; filename="+filename)
+    w.Header().Set("Content-Type", "application/octet-stream")
     w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-    http.StripPrefix("/download/", fileServer).ServeHTTP(w, req)
+
+    http.ServeFile(w,req, filepath.Join(filesDirectory, filename))
 }
 
 func HandleFilenames(w http.ResponseWriter, req *http.Request) {
