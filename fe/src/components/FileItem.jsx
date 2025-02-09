@@ -3,13 +3,15 @@ import { FilesContext } from "../storage/FilesContext.jsx";
 
 import Button from "./Button.jsx";
 
+const baseUrl = "http://localhost:8080"
+
 export default function FileItem({ fullFilename }) {
     const { deleteFilename } = useContext(FilesContext);
 
     const [_, ext] = fullFilename.split(".");
 
     const deleteItem = async () => {
-	const res = await fetch(`http://localhost:8080/delete/${fullFilename}`, {
+	const res = await fetch(`${baseUrl}/delete/${fullFilename}`, {
 	    method: "DELETE",
 	});
 
@@ -21,6 +23,18 @@ export default function FileItem({ fullFilename }) {
 	
 	// allert("File deleted successfuly");
 	deleteFilename(fullFilename);
+    }
+
+    const downloadFile = async () => {
+	try {
+	    const res = await fetch(`${baseUrl}/download/${fullFilename}`)
+	    if (res.status === 404) {
+		alert("File not found. Refresh the page.")
+	    }
+	} catch (e) {
+	    console.log(e)
+	    alert("Something went wrong. Refresh the page and try again.")
+	}
     }
 
     return (<div className="flex flex-row justify-between gap-2 items-center mt-3">
@@ -35,6 +49,6 @@ export default function FileItem({ fullFilename }) {
 		</p>
 	    </div>
 	</div>
-	<Button className="bg-neutral-200" text="Download"/>
+	<Button className="bg-neutral-200" text="Download" onClick={downloadFile}/>
     </div>);
 }
