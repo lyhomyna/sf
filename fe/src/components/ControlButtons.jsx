@@ -39,7 +39,7 @@ export default function ControlButtons({...props}) {
 }
 
     return (<div {...props}>
-	<Button className="bg-neutral-300" text="Log in" />
+	<Button className="bg-neutral-300" text="Log out" />
 	<Button className="bg-neutral-300" text="Cnange password" />
 	<Button className="bg-neutral-700"text="Upload file" onClick={uploadFile} />
     </div>);
