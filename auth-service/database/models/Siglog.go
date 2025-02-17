@@ -6,7 +6,7 @@ type Siglog struct {
 }
 
 type UserDao interface {
-    CreateUser(user *User)
+    CreateUser(user *User) (string, error)
     DeleteUser(user *User) error
     ReadUserById(id string) (*User, error)
 }
