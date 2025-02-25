@@ -3,14 +3,24 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/lyhomyna/sf/auth-service/database/models"
 )
 
 type PostgreUsers struct {
-    db *pgx.Conn
     ctx context.Context
+    db *pgx.Conn
+}
+
+func GetUsersDao(ctx context.Context) *PostgreUsers {
+    dbConnection := connectToDb(ctx)
+    if dbConnection == nil {
+	return nil
+    }
+    
+    return &PostgreUsers{ctx, dbConnection}
 }
 
 func (p *PostgreUsers) CreateUser(user *models.User) (string, error) {

@@ -10,8 +10,17 @@ import (
 )
 
 type PostgreSessions struct {
-    db *pgx.Conn
     ctx context.Context
+    db *pgx.Conn
+}
+
+func GetSessionsDao(ctx context.Context) *PostgreSessions {
+    dbConnection := connectToDb(ctx)
+    if dbConnection == nil {
+	return nil
+    }
+    
+    return &PostgreSessions{ctx, dbConnection}
 }
 
 func (p *PostgreSessions) CreateSession(userId string) (string, error) {

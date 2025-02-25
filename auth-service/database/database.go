@@ -1,7 +1,21 @@
 package database
 
-import "github.com/lyhomyna/sf/auth-service/database/models"
+import (
+	"context"
 
-func GetDao() models.Siglog {
-    panic("Not yet implemented")
+	"github.com/lyhomyna/sf/auth-service/database/models"
+	"github.com/lyhomyna/sf/auth-service/database/postgres"
+)
+
+func GetDao() *models.Siglog {
+    ctx := context.Background()
+    usersDao := postgres.GetUsersDao(ctx)
+    sessionsDao := postgres.GetSessionsDao(ctx)
+
+    siglog := &models.Siglog{
+	Users: usersDao,
+	Sessions: sessionsDao,
+    }
+
+    return siglog
 }
