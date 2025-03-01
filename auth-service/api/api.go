@@ -21,6 +21,7 @@ func (s *SiglogServer) Run(ctx context.Context) error {
 
     errCh := make(chan error, 1)
     go func() {
+	// TODO: pass controllers
 	err := s.httpServer.Run(ctx)
 	if err != nil {
 	    err = fmt.Errorf("HTTP server error. %w", err)
@@ -46,12 +47,7 @@ func (s *httpServer) Run(ctx context.Context) error {
 	Handler: handler,
 	ReadHeaderTimeout: 5 * time.Second, // mitigate risk of Slowloris Attack
     }
-
-    siglog := database.GetDao()
-    if siglog == nil {
-	return errors.New("Couldn't get database dao.")
-    }
-
+    
     log.Println("HTTP server is running on port 8080")
     if err := s.http.ListenAndServe(); err != nil {
 	return err

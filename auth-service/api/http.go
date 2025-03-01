@@ -1,13 +1,16 @@
 package api
 
-import "net/http"
+import (
+	"net/http"
 
-func NewHttpServer() http.Handler {
+	"github.com/lyhomyna/sf/auth-service/database/models"
+)
+
+func NewHttpServer(dao *models.Siglog) http.Handler {
     mux := http.NewServeMux()
-    
-    mux.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
-	w.Write([]byte("All's OK."))
-    })
+
+    // TODO: Use controllers to manipulate endpoints
+    panic("Not yet implemented.")
 
     return mux
 }
