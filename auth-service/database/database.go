@@ -7,7 +7,7 @@ import (
 	"github.com/lyhomyna/sf/auth-service/database/postgres"
 )
 
-func GetDao() *models.Siglog {
+func GetSiglog() *models.Siglog {
     ctx := context.Background()
     usersDao := postgres.GetUsersDao(ctx)
     sessionsDao := postgres.GetSessionsDao(ctx)

@@ -7,7 +7,7 @@ import (
 )
 
 type SessionsController struct {
-    siglog *models.Siglog
+    Siglog *models.Siglog
 }
 
 func (this *SessionsController) Create(userId string, w http.ResponseWriter) error {

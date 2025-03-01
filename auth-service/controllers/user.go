@@ -5,7 +5,7 @@ import (
 )
 
 type UsersController struct {
-    siglog *models.Siglog
+    Siglog *models.Siglog
 }
 
 func (this *UsersController) Delete() {
