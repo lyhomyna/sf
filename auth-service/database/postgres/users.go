@@ -31,8 +31,8 @@ func (p *PostgreUsers) CreateUser(user *models.User) (string, error) {
     return user.Id, nil
 }
 
-func (p *PostgreUsers) DeleteUser(user *models.User) error {
-    _, err := p.db.Exec(p.ctx, "DELETE FROM users WHERE id=$1;", user.Id)
+func (p *PostgreUsers) DeleteUser(userId string) error {
+    _, err := p.db.Exec(p.ctx, "DELETE FROM users WHERE id=$1;", userId)
     if err != nil {
 	err = fmt.Errorf("Couldn't delete user: %w", err)
     }
