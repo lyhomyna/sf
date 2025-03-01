@@ -3,7 +3,6 @@ package postgres
 import (
 	"context"
 	"fmt"
-	"sync"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/lyhomyna/sf/auth-service/database/models"

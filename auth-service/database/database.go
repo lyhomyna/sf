@@ -12,6 +12,10 @@ func GetDao() *models.Siglog {
     usersDao := postgres.GetUsersDao(ctx)
     sessionsDao := postgres.GetSessionsDao(ctx)
 
+    if usersDao == nil || sessionsDao == nil {
+	return nil
+    }
+
     siglog := &models.Siglog{
 	Users: usersDao,
 	Sessions: sessionsDao,

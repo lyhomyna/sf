@@ -2,10 +2,13 @@ package api
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/lyhomyna/sf/auth-service/database"
 )
 
 type SiglogServer struct {
@@ -44,7 +47,12 @@ func (s *httpServer) Run(ctx context.Context) error {
 	ReadHeaderTimeout: 5 * time.Second, // mitigate risk of Slowloris Attack
     }
 
-    log.Println("HTTP server is running on port", )
+    siglog := database.GetDao()
+    if siglog == nil {
+	return errors.New("Couldn't get database dao.")
+    }
+
+    log.Println("HTTP server is running on port 8080")
     if err := s.http.ListenAndServe(); err != nil {
 	return err
     }
