@@ -1,11 +1,12 @@
-package postgres
+package repository
 
 import (
 	"context"
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/lyhomyna/sf/auth-service/database/models"
+	"github.com/lyhomyna/sf/auth-service/database"
+	"github.com/lyhomyna/sf/auth-service/models"
 )
 
 type PostgreUsers struct {
@@ -14,7 +15,7 @@ type PostgreUsers struct {
 }
 
 func GetUsersDao(ctx context.Context) *PostgreUsers {
-    dbConnection := connectToDb(ctx)
+    dbConnection := database.ConnectToDb(ctx)
     if dbConnection == nil {
 	return nil
     }

@@ -1,4 +1,4 @@
-package postgres
+package repository
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/lyhomyna/sf/auth-service/database"
 )
 
 type PostgreSessions struct {
@@ -15,7 +16,7 @@ type PostgreSessions struct {
 }
 
 func GetSessionsDao(ctx context.Context) *PostgreSessions {
-    dbConnection := connectToDb(ctx)
+    dbConnection := database.ConnectToDb(ctx)
     if dbConnection == nil {
 	return nil
     }

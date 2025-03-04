@@ -16,17 +16,17 @@ func Routes(siglog models.Siglog) http.Handler {
     mux := http.NewServeMux()
 
     mux.HandleFunc("/create", func(w http.ResponseWriter, req *http.Request) {
-	Create(siglog, w, req)
+	createUser(siglog, w, req)
     })
     mux.HandleFunc("/delete", func(w http.ResponseWriter, req *http.Request) {
-	Delete(siglog, w, req)
+	deleteUser(siglog, w, req)
     })
 
     return mux
 }
 
 // POST
-func Create(siglog models.Siglog, w http.ResponseWriter, req *http.Request) {
+func createUser(siglog models.Siglog, w http.ResponseWriter, req *http.Request) {
     w.Header().Set("Content-Type", "application/json")
 
     if req.Method != http.MethodPost {
@@ -66,7 +66,7 @@ func Create(siglog models.Siglog, w http.ResponseWriter, req *http.Request) {
 
 // Danger method 
 // DELETE
-func Delete(siglog models.Siglog, w http.ResponseWriter, req *http.Request) {
+func deleteUser(siglog models.Siglog, w http.ResponseWriter, req *http.Request) {
     w.Header().Set("Content-Type", "application/json")
 
     if req.Method != http.MethodDelete {

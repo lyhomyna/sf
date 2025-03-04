@@ -1,4 +1,4 @@
-package postgres
+package database 
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 
 var dbConnection *pgx.Conn
 
-func connectToDb(ctx context.Context) (*pgx.Conn) {
+func ConnectToDb(ctx context.Context) (*pgx.Conn) {
     if dbConnection == nil {
 	connString := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_NAME"))
 

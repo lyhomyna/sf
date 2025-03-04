@@ -1,16 +1,15 @@
-package database
+package repository
 
 import (
 	"context"
-
-	"github.com/lyhomyna/sf/auth-service/database/models"
-	"github.com/lyhomyna/sf/auth-service/database/postgres"
+	
+	"github.com/lyhomyna/sf/auth-service/models"
 )
 
 func GetSiglog() *models.Siglog {
     ctx := context.Background()
-    usersDao := postgres.GetUsersDao(ctx)
-    sessionsDao := postgres.GetSessionsDao(ctx)
+    usersDao := GetUsersDao(ctx)
+    sessionsDao := GetSessionsDao(ctx)
 
     if usersDao == nil || sessionsDao == nil {
 	return nil
