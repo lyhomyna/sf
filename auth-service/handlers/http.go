@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/lyhomyna/sf/auth-service/controllers"
-	"github.com/lyhomyna/sf/auth-service/database"
+	"github.com/lyhomyna/sf/auth-service/handlers/user"
+	"github.com/lyhomyna/sf/auth-service/repository"
 )
 
 type httpServer struct {
@@ -16,20 +16,17 @@ type httpServer struct {
 }
 
 func (s *httpServer) Run(ctx context.Context) error {
-    siglog := database.GetSiglog()
+    userRoutes := user.Routes()
+    sessionRoutes := user.Routes()
+
+    siglog := repository.GetSiglog()
 
     if siglog == nil {
 	return errors.New("Couldn't get SigLog.")
     }
 
-    sessionsController := controllers.SessionsController{
-	Siglog: siglog,
-    }
-    usersController := controllers.UsersController{
-	Siglog: siglog,
-    }
-
-    handler := NewHttpServer(usersController, sessionsController) 
+    handler := http.NewServeMux()
+    handler.
 
     s.http = &http.Server {
 	Addr: ":8080",
@@ -43,19 +40,4 @@ func (s *httpServer) Run(ctx context.Context) error {
     }
 
     return nil 
-}
-
-var usersController controllers.UsersController
-var sessionsController controllers.SessionsController
-
-func NewHttpServer(uc controllers.UsersController, sc controllers.SessionsController) http.Handler {
-    mux := http.NewServeMux()
-
-    panic("Not yet implemented.")
-
-    mux.HandleFunc("/login", nil)
-    mux.HandleFunc("/register", nil)
-    mux.HandleFunc("/logout", nil)
-
-    return mux
 }

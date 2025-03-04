@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/lyhomyna/sf/auth-service/database/models"
+	"github.com/lyhomyna/sf/auth-service/models"
 )
 
 func Routes(siglog models.Siglog) http.Handler {
