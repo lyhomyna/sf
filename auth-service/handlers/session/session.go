@@ -1,35 +1,25 @@
 package session
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/lyhomyna/sf/auth-service/models"
 )
 
-func Routes(siglog models.Siglog) http.Handler {
-    mux := http.NewServeMux()
+func Create(userId string, siglog *models.Siglog) (string, *models.HTTPError) {
+    sessionId, err := siglog.Sessions.CreateSession(userId)
+    if err != nil {
+	return "", &models.HTTPError{
+	    Code: http.StatusInternalServerError,
+	    Message: "User created, but couldn't create session.",
+	}
+    }
 
-    mux.HandleFunc("/register", func(w http.ResponseWriter, req *http.Request) {
-	register(siglog, w, req)
-    })
-    mux.HandleFunc("/login", func(w http.ResponseWriter, req *http.Request) {
-	login(siglog, w, req)
-    })
-    mux.HandleFunc("/logout", func(w http.ResponseWriter, req *http.Request) {
-	logout(siglog, w, req)
-    })
-
-    return mux
+    log.Println("Session created")
+    return sessionId, nil
 }
 
-func register(siglog models.Siglog, w http.ResponseWriter, req *http.Request) {
-    panic("Not yet implemented.")
-}
-
-func login(siglog models.Siglog, w http.ResponseWriter, req *http.Request) {
-    panic("Not yet implemented.")
-}
-
-func logout(siglog models.Siglog, w http.ResponseWriter, req *http.Request) {
+func Delete(sessionId string) {
     panic("Not yet implemented.")
 }
