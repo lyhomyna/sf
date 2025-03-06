@@ -35,7 +35,7 @@ func CreateUser(siglog *models.Siglog, req *http.Request) (string, *models.HTTPE
 }
 
 // danger function
-func deleteUser(userId string, siglog *models.Siglog) *models.HTTPError {
+func DeleteUser(userId string, siglog *models.Siglog) *models.HTTPError {
     if err := siglog.Users.DeleteUser(userId); err != nil {
 	return &models.HTTPError {
 	    Code: http.StatusInternalServerError,

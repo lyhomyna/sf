@@ -10,6 +10,8 @@ import (
 	"github.com/lyhomyna/sf/auth-service/database"
 )
 
+var CookieSeessionIdName = "session-id"
+
 type PostgreSessions struct {
     ctx context.Context
     db *pgx.Conn

@@ -12,7 +12,7 @@ func Create(userId string, siglog *models.Siglog) (string, *models.HTTPError) {
     if err != nil {
 	return "", &models.HTTPError{
 	    Code: http.StatusInternalServerError,
-	    Message: "User created, but couldn't create session.",
+	    Message: err.Error(),
 	}
     }
 
@@ -20,6 +20,13 @@ func Create(userId string, siglog *models.Siglog) (string, *models.HTTPError) {
     return sessionId, nil
 }
 
-func Delete(sessionId string) {
-    panic("Not yet implemented.")
+func Delete(sessionId string, siglog *models.Siglog) *models.HTTPError {
+    err := siglog.Sessions.DeleteSession(sessionId)
+    if err != nil {
+	return &models.HTTPError{
+	    Code: http.StatusInternalServerError,
+	    Message: err.Error(),
+	}
+    }
+    return nil
 }

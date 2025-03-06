@@ -14,7 +14,7 @@ import (
 	"github.com/lyhomyna/sf/auth-service/repository"
 )
 
-var cookieSeessionIdName = "session-id"
+var sessionCookieName = "session-id"
 
 type httpServer struct {
     http *http.Server
@@ -65,7 +65,7 @@ func register(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
     }
 
     http.SetCookie(w, &http.Cookie{
-	Name: cookieSeessionIdName,
+	Name: sessionCookieName,
 	Value: sessionId,
     })	
 
@@ -74,11 +74,31 @@ func register(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
 }
 
 func login(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
+    // validate user (validate by input data and if user exists in DB)
+    // create session
+    // write response
     panic("Not yet implemented.")
 }
 
 func logout(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
-    panic("Not yet implemented.")
+    cookie, err := req.Cookie(sessionCookieName)
+    if err != nil {
+	writeResponse(w, http.StatusUnauthorized, err.Error())
+	return
+    }
+    
+    err = siglog.Sessions.DeleteSession(cookie.Value)
+    if err != nil {
+	writeResponse(w, http.StatusInternalServerError, err.Error())
+	return
+    }
+
+    http.SetCookie(w, &http.Cookie{
+	Name: sessionCookieName,
+	MaxAge: -1,
+    })	
+
+    w.WriteHeader(http.StatusOK)
 }
 
 func writeResponse(w http.ResponseWriter, code int, message string) {
