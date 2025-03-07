@@ -23,7 +23,7 @@ func GetUsersDao(ctx context.Context) *PostgreUsers {
     return &PostgreUsers{ctx, dbConnection}
 }
 
-func (p *PostgreUsers) CreateUser(user *models.User) (string, error) {
+func (p *PostgreUsers) CreateUser(user *models.DbUser) (string, error) {
     _, err := p.db.Exec(p.ctx, "INSERT INTO users (id, email, password) VALUES ($1, $2, $3);", user.Id, user.Email, user.Password)
     if err != nil {
 	return "", fmt.Errorf("Couldn't create user: %w", err) 
@@ -50,4 +50,15 @@ func (p *PostgreUsers) ReadUserById(id string) (*models.User, error) {
     }
     
     return user, nil
+}
+
+func (p *PostgreUsers) FindUser(user *models.User) (string, error) {
+    row := p.db.QueryRow(p.ctx, "SELECT * FROM users WHERE email=$1, pwd=$2", user.Email, user.Password) 
+    
+    var dbUser *models.DbUser
+    err := row.Scan(dbUser)
+    if err != nil {
+	return "", fmt.Errorf("Couldn't find user. %w", err)
+    }
+    return dbUser.Id, nil
 }

@@ -1,4 +1,4 @@
-package api
+package handlers 
 
 import (
 	"context"
@@ -10,19 +10,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lyhomyna/sf/auth-service/handlers/session"
-	"github.com/lyhomyna/sf/auth-service/handlers/user"
+	"github.com/lyhomyna/sf/auth-service/service/session"
+	"github.com/lyhomyna/sf/auth-service/service/user"
 	"github.com/lyhomyna/sf/auth-service/models"
 	"github.com/lyhomyna/sf/auth-service/repository"
 )
 
 var sessionCookieName = "session-id"
 
-type httpServer struct {
+type HttpServer struct {
     http *http.Server
 }
 
-func (s *httpServer) Run(ctx context.Context) error {
+func (s *HttpServer) Run(ctx context.Context) error {
     siglog := repository.GetSiglog()
     if siglog == nil {
 	return errors.New("Couldn't get SigLog.")
@@ -77,36 +77,47 @@ func register(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
 
 func login(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
     // validate user (validate by input data and if user exists in DB)
-    var inputData struct {
-	Email string 	`json:"email"`
-	Password string	`json:"pwd"`
-    }
-    err := json.NewDecoder(req.Body).Decode(inputData)
+    var user *models.User
+    err := json.NewDecoder(req.Body).Decode(user)
     if err != nil {
 	writeResponse(w, http.StatusBadRequest, "Couldn't parse user.")
 	return
     }
 
-    if strings.Trim(inputData.Email, " ") == "" || strings.Trim(inputData.Password,  " ") == "" {
+    if strings.Trim(user.Email, " ") == "" || strings.Trim(user.Password,  " ") == "" {
 	writeResponse(w, http.StatusBadRequest, "User data can't be blank line.")
 	return
     }
 
-    if len(inputData.Password) < 6 {
+    if len(user.Password) < 6 {
 	writeResponse(w, http.StatusBadRequest, "Password should be at least 6 char length.")
 	return
     }
 
-    if strings.Contains(inputData.Password, "'\" ") {
+    if strings.Contains(user.Password, "'\" ") {
 	writeResponse(w, http.StatusBadRequest, "Password shouldn't contain ' or \".")
 	return
     }
 
-    
-
+    userId, err := siglog.Users.FindUser(user)
+    if err != nil {
+	writeResponse(w, http.StatusBadRequest, "Invalid user credentials.")
+	return
+    }
     // create session
+    sessionId, err := siglog.Sessions.CreateSession(userId)
+    if err != nil {
+	writeResponse(w, http.StatusInternalServerError, "Couldn't create session for user.")
+    }
+
+    http.SetCookie(w, &http.Cookie{
+	Name: sessionCookieName,
+	Value: sessionId,
+    })
+
     // write response
-    panic("Not yet implemented.")
+    log.Printf("User %s logged in.\n", userId)
+    w.WriteHeader(http.StatusOK)
 }
 
 func logout(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {

@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/lyhomyna/sf/auth-service/models"
 )
 
@@ -22,7 +23,13 @@ func CreateUser(siglog *models.Siglog, req *http.Request) (string, *models.HTTPE
 	} 
     }
 
-    userId, err := siglog.Users.CreateUser(user)
+    dbUser := &models.DbUser{
+	Id: uuid.NewString(),
+	Email: user.Email,
+	Password: user.Password,
+    }
+    
+    userId, err := siglog.Users.CreateUser(dbUser)
     if err != nil {
 	return "", &models.HTTPError {
 	    Code: http.StatusInternalServerError,

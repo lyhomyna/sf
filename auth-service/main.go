@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/joho/godotenv"
-	"github.com/lyhomyna/sf/auth-service/api"
+	"github.com/lyhomyna/sf/auth-service/service"
 )
 
 var envFilePath = filepath.Join(".env")
@@ -18,7 +18,7 @@ func init() {
 }
 
 func main() {
-    siglogServer := api.SiglogServer{}
+    siglogServer := service.SiglogServer{}
     ctx := context.Background()
 
     errCh := make(chan error, 1)

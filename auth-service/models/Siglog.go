@@ -6,9 +6,10 @@ type Siglog struct {
 }
 
 type UserDao interface {
-    CreateUser(user *User) (string, error)
+    CreateUser(user *DbUser) (string, error)
     DeleteUser(userId string) error
     ReadUserById(id string) (*User, error)
+    FindUser(user *User) (string, error)
 }
 
 type SessionDao interface {
