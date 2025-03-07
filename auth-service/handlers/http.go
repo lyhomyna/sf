@@ -2,10 +2,12 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/lyhomyna/sf/auth-service/handlers/session"
@@ -75,6 +77,33 @@ func register(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
 
 func login(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
     // validate user (validate by input data and if user exists in DB)
+    var inputData struct {
+	Email string 	`json:"email"`
+	Password string	`json:"pwd"`
+    }
+    err := json.NewDecoder(req.Body).Decode(inputData)
+    if err != nil {
+	writeResponse(w, http.StatusBadRequest, "Couldn't parse user.")
+	return
+    }
+
+    if strings.Trim(inputData.Email, " ") == "" || strings.Trim(inputData.Password,  " ") == "" {
+	writeResponse(w, http.StatusBadRequest, "User data can't be blank line.")
+	return
+    }
+
+    if len(inputData.Password) < 6 {
+	writeResponse(w, http.StatusBadRequest, "Password should be at least 6 char length.")
+	return
+    }
+
+    if strings.Contains(inputData.Password, "'\" ") {
+	writeResponse(w, http.StatusBadRequest, "Password shouldn't contain ' or \".")
+	return
+    }
+
+    
+
     // create session
     // write response
     panic("Not yet implemented.")
