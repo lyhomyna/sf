@@ -3,19 +3,17 @@ package main
 import (
 	"context"
 	"log"
-	"path/filepath"
 
-	"github.com/joho/godotenv"
 	"github.com/lyhomyna/sf/auth-service/service"
 )
 
-var envFilePath = filepath.Join(".env")
-
-func init() { 
-    if err := godotenv.Load(envFilePath); err != nil {
-	panic(err)
-    }
-}
+// var envFilePath = filepath.Join(".env")
+// 
+// func init() { 
+//     if err := godotenv.Load(envFilePath); err != nil {
+// 	panic(err)
+//     }
+// }
 
 func main() {
     siglogServer := service.SiglogServer{}
