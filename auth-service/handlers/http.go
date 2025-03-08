@@ -41,12 +41,12 @@ func (s *HttpServer) Run(ctx context.Context) error {
     })
 
     s.http = &http.Server {
-	Addr: ":8080",
+	Addr: ":8081",
 	Handler: mux,
 	ReadHeaderTimeout: 5 * time.Second, // mitigate risk of Slowloris Attack
     }
     
-    log.Println("HTTP server is running on port 8080")
+    log.Println("HTTP server is running on port 8081")
     if err := s.http.ListenAndServe(); err != nil {
 	return err
     }

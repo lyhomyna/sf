@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/lyhomyna/sf/server/api"
+	"github.com/lyhomyna/sf/file-service/api"
 )
 
 func main() {
@@ -19,8 +19,8 @@ func main() {
 
     handler := api.OptionsMiddleware(mux)
 
-    log.Println("Port 8080. Server is running...")
-    if err := http.ListenAndServe(":8080", handler); err != nil {
+    log.Println("Port 8082. Server is running...")
+    if err := http.ListenAndServe(":8082", handler); err != nil {
 	log.Println("Failed to start server:", err)
     }
 }
