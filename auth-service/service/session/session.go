@@ -15,7 +15,6 @@ func Create(userId string, siglog *models.Siglog) (string, *models.HTTPError) {
 	    Message: err.Error(),
 	}
     }
-
     log.Println("Session created")
     return sessionId, nil
 }

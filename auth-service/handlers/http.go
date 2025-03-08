@@ -78,8 +78,8 @@ func register(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
 
 func login(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
     // validate user (validate by input data and if user exists in DB)
-    var user *models.User
-    err := json.NewDecoder(req.Body).Decode(user)
+    var user models.User
+    err := json.NewDecoder(req.Body).Decode(&user)
     if err != nil {
 	writeResponse(w, http.StatusBadRequest, "Couldn't parse user.")
 	return
@@ -100,8 +100,9 @@ func login(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
 	return
     }
 
-    userId, err := siglog.Users.FindUser(user)
+    userId, err := siglog.Users.FindUser(&user)
     if err != nil {
+	log.Println(err)
 	writeResponse(w, http.StatusBadRequest, "Invalid user credentials.")
 	return
     }
@@ -128,6 +129,8 @@ func logout(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
 	return
     }
     
+    sessionId := cookie.Value
+
     err = siglog.Sessions.DeleteSession(cookie.Value)
     if err != nil {
 	writeResponse(w, http.StatusInternalServerError, err.Error())
@@ -139,6 +142,7 @@ func logout(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
 	MaxAge: -1,
     })	
 
+    log.Printf("Session '%s' closed.", sessionId)
     w.WriteHeader(http.StatusOK)
 }
 

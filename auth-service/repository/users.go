@@ -52,12 +52,12 @@ func (p *PostgreUsers) ReadUserById(id string) (*models.User, error) {
 }
 
 func (p *PostgreUsers) FindUser(user *models.User) (string, error) {
-    sql := fmt.Sprintf("SELECT * FROM %s WHERE %s=$1, %s=$2", DB_users_name, DB_users_email, DB_users_password)
+    sql := fmt.Sprintf("SELECT %s FROM %s WHERE %s=$1 AND %s=$2;", DB_users_id, DB_users_name, DB_users_email, DB_users_password)
     row := p.db.QueryRow(p.ctx, sql, user.Email, user.Password) 
-    var dbUser *models.DbUser
-    err := row.Scan(dbUser)
+    var userId string
+    err := row.Scan(&userId)
     if err != nil {
 	return "", fmt.Errorf("Couldn't find user. %w", err)
     }
-    return dbUser.Id, nil 
+    return userId, nil 
 }

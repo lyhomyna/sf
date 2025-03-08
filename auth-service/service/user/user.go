@@ -38,7 +38,7 @@ func CreateUser(siglog *models.Siglog, req *http.Request) (string, *models.HTTPE
 	}
     }
     
-    log.Println("User has been created.")
+    log.Println("User created.")
     return userId, nil
 }
 
