@@ -19,21 +19,21 @@ func GetUsersDao(ctx context.Context) *PostgreUsers {
     if dbConnection == nil {
 	return nil
     }
-    
     return &PostgreUsers{ctx, dbConnection}
 }
 
 func (p *PostgreUsers) CreateUser(user *models.DbUser) (string, error) {
-    _, err := p.db.Exec(p.ctx, "INSERT INTO users (id, email, password) VALUES ($1, $2, $3);", user.Id, user.Email, user.Password)
+    sql := fmt.Sprintf("INSERT INTO users (%s, %s, %s) VALUES ($1, $2, $3);", DB_users_id, DB_users_email, DB_users_password)
+    _, err := p.db.Exec(p.ctx, sql, user.Id, user.Email, user.Password)
     if err != nil {
 	return "", fmt.Errorf("Couldn't create user: %w", err) 
     }
-
     return user.Id, nil
 }
 
 func (p *PostgreUsers) DeleteUser(userId string) error {
-    _, err := p.db.Exec(p.ctx, "DELETE FROM users WHERE id=$1;", userId)
+    sql := fmt.Sprintf("DELETE FROM %s WHERE id=$1;", DB_users_name)
+    _, err := p.db.Exec(p.ctx, sql, userId)
     if err != nil {
 	err = fmt.Errorf("Couldn't delete user: %w", err)
     }
@@ -41,24 +41,23 @@ func (p *PostgreUsers) DeleteUser(userId string) error {
 }
 
 func (p *PostgreUsers) ReadUserById(id string) (*models.User, error) {
-    row := p.db.QueryRow(p.ctx, "SELECT * FROM users WHERE id=$1;", id)
-
+    sql := fmt.Sprintf("SELECT * FROM %s WHERE id=$1;", DB_users_name)
+    row := p.db.QueryRow(p.ctx, sql, id)
     var user *models.User
     err := row.Scan(user)
     if err != nil {
 	return nil, fmt.Errorf("Couldn't read user by Id: %w", err)
     }
-    
     return user, nil
 }
 
 func (p *PostgreUsers) FindUser(user *models.User) (string, error) {
-    row := p.db.QueryRow(p.ctx, "SELECT * FROM users WHERE email=$1, pwd=$2", user.Email, user.Password) 
-    
+    sql := fmt.Sprintf("SELECT * FROM %s WHERE %s=$1, %s=$2", DB_users_name, DB_users_email, DB_users_password)
+    row := p.db.QueryRow(p.ctx, sql, user.Email, user.Password) 
     var dbUser *models.DbUser
     err := row.Scan(dbUser)
     if err != nil {
 	return "", fmt.Errorf("Couldn't find user. %w", err)
     }
-    return dbUser.Id, nil
+    return dbUser.Id, nil 
 }

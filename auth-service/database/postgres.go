@@ -22,8 +22,6 @@ func ConnectToDb(ctx context.Context) (*pgx.Conn) {
 	    return nil
 	}
 
-	fmt.Println(dbConnection == nil)
-
 	if err := dbConnection.Ping(ctx); err != nil {
 	    log.Printf("Connection to DB established, but haven't got ping response.\n%s", err)
 	    return nil

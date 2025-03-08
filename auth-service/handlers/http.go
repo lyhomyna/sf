@@ -57,9 +57,10 @@ func (s *HttpServer) Run(ctx context.Context) error {
 func register(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
     userId, errHttp := user.CreateUser(siglog, req)
     if errHttp != nil {
+	writeResponse(w, errHttp.Code, errHttp.Message)
 	return
     }
-
+    
     sessionId, errHttp := session.Create(userId, siglog)
     if errHttp != nil {
 	writeResponse(w, errHttp.Code, errHttp.Message)
@@ -71,7 +72,7 @@ func register(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
 	Value: sessionId,
     })	
 
-    log.Println("Session created")
+    log.Printf("New user '%s' has been registered.", userId)
     w.WriteHeader(http.StatusOK)
 }
 
@@ -144,6 +145,6 @@ func logout(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
 func writeResponse(w http.ResponseWriter, code int, message string) {
     w.Header().Set("Content-Type", "application/json")
     w.WriteHeader(code)
-    responseMessage := fmt.Sprintf("'message':'%s'", message)
+    responseMessage := fmt.Sprintf("'message':'%s'\n", message)
     w.Write([]byte(responseMessage))
 }
