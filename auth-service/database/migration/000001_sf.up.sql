@@ -1,0 +1,14 @@
+CREATE TABLE users (
+    id TEXT PRIMARY KEY NOT NULL,
+    email TEXT UNIQUE  NOT NULL,
+    pwd TEXT NOT NULL
+);
+
+CREATE TABLE sessions (
+    id TEXT PRIMARY KEY UNIQUE  NOT NULL,
+    userId TEXT NOT NULL
+
+    CONSTRAINT session_user
+	FOREIGN KEY(userId)
+	REFERENCES users(id)
+);
