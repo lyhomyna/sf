@@ -1,7 +1,7 @@
 import { useContext } from "react";
 
 import Button from "./Button.jsx";
-import { FilesContext } from "../storage/FilesContext.jsx";
+import { FilesContext } from "../../storage/FilesContext.jsx";
 
 export default function ControlButtons({...props}) {
     const { addFilename } = useContext(FilesContext);

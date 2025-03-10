@@ -1,6 +1,6 @@
 import { useEffect, useContext } from 'react';
 
-import { FilesContext } from "../storage/FilesContext.jsx";
+import { FilesContext } from "../../storage/FilesContext.jsx";
 
 import FileItem from "./FileItem.jsx";
 

@@ -1,5 +1,5 @@
 import { useContext } from "react"; 
-import { FilesContext } from "../storage/FilesContext.jsx";
+import { FilesContext } from "../../storage/FilesContext.jsx";
 
 import Button from "./Button.jsx";
 
