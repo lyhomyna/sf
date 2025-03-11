@@ -15,6 +15,10 @@ func main() {
     mux.HandleFunc("/download/", api.HandleDownload)  // GET
     mux.HandleFunc("/filenames", api.HandleFilenames) // GET
 
+
+    mux.HandleFunc("/health", func(w http.ResponseWriter, req *http.Request) {
+	w.WriteHeader(http.StatusOK)
+    })
     mux.Handle("/favion.ico", http.NotFoundHandler())
 
     handler := api.OptionsMiddleware(mux)

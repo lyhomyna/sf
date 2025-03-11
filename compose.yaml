@@ -3,14 +3,29 @@ services:
     build:
       context: ./auth-service
       dockerfile: Dockerfile 
-    ports:
-      - "8081:8081"
+    expose:
+      - "8081"
+    env_file:
+      - ./auth-service/.env
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://auth-service:8081/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
   file-service:
     build:
       context: ./file-service
       dockerfile: Dockerfile
-    ports:
-      - "8082:8082"
+    expose:
+      - "8082"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://file-service:8082/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
   fe:
     build:
       context: ./fe
@@ -22,3 +37,22 @@ services:
         condition: service_healthy
       file-service:
         condition: service_healthy
+    volumes:
+      - ./fe:/usr/src/sf-fe
+      - /usr/src/sf-fe/node_modules
+  db:
+    image: postgres:latest
+    expose:
+      - "5432"
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "$POSTGRES_USER"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

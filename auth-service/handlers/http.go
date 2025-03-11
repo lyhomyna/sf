@@ -39,6 +39,9 @@ func (s *HttpServer) Run(ctx context.Context) error {
     mux.HandleFunc("/logout", func(w http.ResponseWriter, req *http.Request) {
 	logout(siglog, w, req)
     })
+    mux.HandleFunc("/health", func(w http.ResponseWriter, req *http.Request) {
+	w.WriteHeader(http.StatusOK)
+    })
 
     s.http = &http.Server {
 	Addr: ":8081",
