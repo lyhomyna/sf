@@ -1,0 +1,24 @@
+services:
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile 
+    ports:
+      - "8081:8081"
+  file-service:
+    build:
+      context: ./file-service
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+  fe:
+    build:
+      context: ./fe
+      dockerfile: Dockerfile
+    ports: 
+      - "3000:3000"
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      file-service:
+        condition: service_healthy

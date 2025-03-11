@@ -1,6 +1,7 @@
 import { useEffect, useContext } from 'react';
 
 import { FilesContext } from "../../storage/FilesContext.jsx";
+import { fileServiceBaseUrl } from '../../App.jsx';
 
 import FileItem from "./FileItem.jsx";
 
@@ -8,7 +9,7 @@ export default function FileList({filenames}) {
     const { addFilenames } = useContext(FilesContext);
 
     useEffect(() => {
-	fetch("http://localhost:8080/filenames")
+	fetch(`${fileServiceBaseUrl}/filenames`)
 	.then((res) => {
 	    return res.json();
 	}).then((json) => {

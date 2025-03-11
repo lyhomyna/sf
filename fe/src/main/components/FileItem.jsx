@@ -1,15 +1,14 @@
 import { useContext } from "react"; 
 import { FilesContext } from "../../storage/FilesContext.jsx";
+import { fileServiceBaseUrl } from "../../App.jsx";
 
 import Button from "./Button.jsx";
-
-const baseUrl = "http://localhost:8080"
 
 export default function FileItem({ fullFilename }) {
     const { deleteFilename } = useContext(FilesContext);
 
     const deleteItem = async () => {
-	const res = await fetch(`${baseUrl}/delete/${fullFilename}`, {
+	const res = await fetch(`${fileServiceBaseUrl}/delete/${fullFilename}`, {
 	    method: "DELETE",
 	});
 

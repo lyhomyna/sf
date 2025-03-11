@@ -2,6 +2,7 @@ import { useContext } from "react";
 
 import Button from "./Button.jsx";
 import { FilesContext } from "../../storage/FilesContext.jsx";
+import { fileServiceBaseUrl } from "../../App.jsx";
 
 export default function ControlButtons({...props}) {
     const { addFilename } = useContext(FilesContext);
@@ -16,7 +17,7 @@ export default function ControlButtons({...props}) {
 	    formData.append("file", file);
 	    
 	    try {
-		const response = await fetch("http://localhost:8080/save", {
+		const response = await fetch(`${fileServiceBaseUrl}/save`, {
 		    method: "POST", 
 		    body: formData,
 		});

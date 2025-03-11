@@ -6,6 +6,6 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN go build -v -o /usr/local/bin/auth-service ./...
+RUN go build -v -o /usr/local/bin/auth-service
 
 CMD ["auth-service"]
