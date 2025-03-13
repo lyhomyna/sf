@@ -19,7 +19,7 @@ func CreateUser(siglog *models.Siglog, req *http.Request) (string, *models.HTTPE
     if err := decodeFromTo(req.Body, &user); err != nil {
 	return "", &models.HTTPError {
 	    Code: http.StatusBadRequest,
-	    Message: "Use correct user schema.",
+	    Message: "Use correct user schema",
 	} 
     }
 
@@ -31,10 +31,10 @@ func CreateUser(siglog *models.Siglog, req *http.Request) (string, *models.HTTPE
     
     userId, err := siglog.Users.CreateUser(dbUser)
     if err != nil {
-	log.Println(err)
+	log.Println(err.Error())
 	return "", &models.HTTPError {
 	    Code: http.StatusInternalServerError,
-	    Message: "Couldn't create user.",
+	    Message: err.Error(),
 	}
     }
     

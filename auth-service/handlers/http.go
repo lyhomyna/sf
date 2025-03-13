@@ -31,12 +31,24 @@ func (s *HttpServer) Run(ctx context.Context) error {
     mux := http.NewServeMux()
 
     mux.HandleFunc("/register", func(w http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodPost {
+	    writeResponse(w, http.StatusMethodNotAllowed, "Use method POST instead")
+	    return
+	}
 	register(siglog, w, req)
     })
     mux.HandleFunc("/login", func(w http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodPost {
+	    writeResponse(w, http.StatusMethodNotAllowed, "Use method POST instead")
+	    return
+	}
 	login(siglog, w, req)
     })
     mux.HandleFunc("/logout", func(w http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodGet {
+	    writeResponse(w, http.StatusMethodNotAllowed, "Use method GET instead")
+	    return
+	}
 	logout(siglog, w, req)
     })
     mux.HandleFunc("/health", func(w http.ResponseWriter, req *http.Request) {
@@ -84,35 +96,37 @@ func login(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
     var user models.User
     err := json.NewDecoder(req.Body).Decode(&user)
     if err != nil {
-	writeResponse(w, http.StatusBadRequest, "Couldn't parse user.")
+	writeResponse(w, http.StatusBadRequest, "Couldn't parse user")
 	return
     }
 
     if strings.Trim(user.Email, " ") == "" || strings.Trim(user.Password,  " ") == "" {
-	writeResponse(w, http.StatusBadRequest, "User data can't be blank line.")
+	writeResponse(w, http.StatusBadRequest, "User data can't be blank line")
 	return
     }
 
     if len(user.Password) < 6 {
-	writeResponse(w, http.StatusBadRequest, "Password should be at least 6 char length.")
+	writeResponse(w, http.StatusBadRequest, "Password should be at least 6 chars length")
 	return
     }
 
     if strings.Contains(user.Password, "'\" ") {
-	writeResponse(w, http.StatusBadRequest, "Password shouldn't contain ' or \".")
+	writeResponse(w, http.StatusBadRequest, "Password shouldn't contain ' or \"")
 	return
     }
 
     userId, err := siglog.Users.FindUser(&user)
     if err != nil {
 	log.Println(err)
-	writeResponse(w, http.StatusBadRequest, "Invalid user credentials.")
+	writeResponse(w, http.StatusBadRequest, "Invalid user credentials")
 	return
     }
+
     // create session
-    sessionId, err := siglog.Sessions.CreateSession(userId)
-    if err != nil {
-	writeResponse(w, http.StatusInternalServerError, "Couldn't create session for user.")
+    sessionId, errHttp := session.Create(userId, siglog)
+    if errHttp != nil {
+	writeResponse(w, errHttp.Code, errHttp.Message)
+	return
     }
 
     http.SetCookie(w, &http.Cookie{
@@ -134,9 +148,9 @@ func logout(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
     
     sessionId := cookie.Value
 
-    err = siglog.Sessions.DeleteSession(cookie.Value)
-    if err != nil {
-	writeResponse(w, http.StatusInternalServerError, err.Error())
+    errHttp := session.Delete(cookie.Value, siglog)
+    if errHttp != nil {
+	writeResponse(w, errHttp.Code, errHttp.Message)
 	return
     }
 

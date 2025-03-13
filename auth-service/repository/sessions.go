@@ -45,7 +45,7 @@ func (p *PostgreSessions) DeleteSession(sessionId string) error {
     if err != nil {
 	err = fmt.Errorf("Couldn't delete session: %w", err) 
     } else if execRes.RowsAffected() != 1 {
-	err = errors.New("Nothing was deleted from sessions table.")
+	err = errors.New("Nothing was deleted from sessions table")
     }
 
     return err
