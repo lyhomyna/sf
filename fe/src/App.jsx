@@ -1,6 +1,7 @@
 import MainPage from "./main/MainPage.jsx";
 import LoginPage from "./login/LoginPage.jsx";
 
+export const authServiceBaseUrl = "http://auth-service:8081"
 export const fileServiceBaseUrl = "http://file-service:8082"
 
 export default function App() {
