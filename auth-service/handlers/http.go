@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -166,6 +165,6 @@ func logout(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
 func writeResponse(w http.ResponseWriter, code int, message string) {
     w.Header().Set("Content-Type", "application/json")
     w.WriteHeader(code)
-    responseMessage := fmt.Sprintf("'message':'%s'\n", message)
-    w.Write([]byte(responseMessage))
+    jsonResponse, _ := json.Marshal(map[string]string{"message": message})
+    w.Write(jsonResponse)
 }
