@@ -1,4 +1,30 @@
 services:
+  nginx:
+    image: nginx:latest
+    container-name: nginx-proxy
+    ports: 
+      - "80:80"
+    volumes:
+      - "./nginx.conf:/etc/nginx/nginx.conf:ro"
+    depends_on:
+      fe:
+      auth-service:
+        condition: service_healthy
+      file-service:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+
+  fe:
+    build:
+      context: ./fe
+      dockerfile: Dockerfile
+    ports: 
+      - "3000:3000"
+    volumes:
+      - ./fe:/usr/src/sf-fe
+      - /usr/src/sf-fe/node_modules
+
   auth-service:
     build:
       context: ./auth-service
@@ -15,6 +41,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
   file-service:
     build:
       context: ./file-service
@@ -26,20 +53,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-  fe:
-    build:
-      context: ./fe
-      dockerfile: Dockerfile
-    ports: 
-      - "3000:3000"
-    depends_on:
-      auth-service:
-        condition: service_healthy
-      file-service:
-        condition: service_healthy
-    volumes:
-      - ./fe:/usr/src/sf-fe
-      - /usr/src/sf-fe/node_modules
+
   db:
     image: postgres:latest
     expose:
