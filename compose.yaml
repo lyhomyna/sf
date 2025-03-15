@@ -20,8 +20,8 @@ services:
     build:
       context: ./fe
       dockerfile: Dockerfile
-    ports: 
-      - "3000:3000"
+    expose: 
+      - "3000"
     volumes:
       - ./fe:/usr/src/sf-fe
       - /usr/src/sf-fe/node_modules
@@ -68,6 +68,7 @@ services:
       - .env
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "$POSTGRES_USER"]
       interval: 10s
