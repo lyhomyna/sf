@@ -16,7 +16,7 @@ export default function App() {
 	{isAuthenticated ?
 	    <MainPage />
 	    :
-	    <div class="h-screen flex flex-col items-center justify-center">
+	    <div className="h-screen flex flex-col items-center justify-center">
 		<LoginPage authenticate={authUser}/>
 	    </div>
 	}

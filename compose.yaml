@@ -20,8 +20,8 @@ services:
     build:
       context: ./fe
       dockerfile: Dockerfile
-    expose: 
-      - "3000"
+    ports: 
+      - "3000:3000"
     volumes:
       - ./fe:/usr/src/sf-fe
       - /usr/src/sf-fe/node_modules

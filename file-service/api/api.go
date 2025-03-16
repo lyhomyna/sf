@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"mime/multipart"
@@ -187,6 +188,7 @@ func writeResponse(w http.ResponseWriter, data any, code int) {
     }
 
     response, err := json.Marshal(d)
+    fmt.Println(string(response))
     if err != nil {
 	panic(err)
     }
