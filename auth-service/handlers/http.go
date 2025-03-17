@@ -50,6 +50,13 @@ func (s *HttpServer) Run(ctx context.Context) error {
 	}
 	logout(siglog, w, req)
     })
+    mux.HandleFunc("/check-auth", func(w http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodGet {
+	    writeResponse(w, http.StatusMethodNotAllowed, "Use method GET instead")
+	    return
+	}
+	checkAuth(siglog, w, req)
+    })
     mux.HandleFunc("/health", func(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(http.StatusOK)
     })
@@ -160,6 +167,27 @@ func logout(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
 
     log.Printf("Session '%s' closed.", sessionId)
     w.WriteHeader(http.StatusOK)
+}
+
+func checkAuth(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
+    sessionCookie, err := req.Cookie(sessionCookieName)
+    if err != nil {
+	log.Println("No cookie present")
+	w.WriteHeader(http.StatusUnauthorized)
+	return
+    }
+
+    if session.IsSessionExists(sessionCookie.Value, siglog) {
+	w.WriteHeader(http.StatusOK)
+	return
+    }
+
+    log.Println("WTF IS THAT COOKIE???")
+    http.SetCookie(w, &http.Cookie{
+	Name: sessionCookieName,
+	MaxAge: -1,
+    })	
+    w.WriteHeader(http.StatusUnauthorized)
 }
 
 func writeResponse(w http.ResponseWriter, code int, message string) {

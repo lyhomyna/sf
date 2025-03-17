@@ -12,6 +12,15 @@ export default function App() {
 	setAuthenticated(true);
     }
 
+    (async () => {
+	const res = await fetch(`${authServiceBaseUrl}/check-auth`);
+	
+	if (res.status === 200) {
+	    setAuthenticated(true);
+	}
+	setAuthenticated(false);
+    })();
+
     return <>
 	{isAuthenticated ?
 	    <MainPage />

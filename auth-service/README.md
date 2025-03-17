@@ -66,3 +66,12 @@ Possible responses:
 
     Code: statusinternalservererror 500
     R_JSON: { message: "Nothing was deleted from sessions table" }
+
+# /check-auth
+Method:  GET
+
+Possible responses:
+
+    Code: StatusOK 200
+
+    Code: StatusUnauthorized 401
