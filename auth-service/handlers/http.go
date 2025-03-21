@@ -170,6 +170,8 @@ func logout(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
 }
 
 func checkAuth(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
+    logConnection(req)
+
     sessionCookie, err := req.Cookie(sessionCookieName)
     if err != nil {
 	log.Println("No cookie present")
@@ -195,4 +197,9 @@ func writeResponse(w http.ResponseWriter, code int, message string) {
     w.WriteHeader(code)
     jsonResponse, _ := json.Marshal(map[string]string{"message": message})
     w.Write(jsonResponse)
+}
+
+// logConnection is a 'logger' of each request
+func logConnection(req *http.Request) {
+    log.Printf("%s | %s %s\n", req.RemoteAddr, req.Method,  req.URL.Path)
 }

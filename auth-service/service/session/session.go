@@ -31,9 +31,7 @@ func Delete(sessionId string, siglog *models.Siglog) *models.HTTPError {
 }
 
 func IsSessionExists(sessionId string, siglog *models.Siglog) bool {
-    userId, err := siglog.Sessions.UserIdFromSessionId(sessionId)
-    log.Printf("UserID for session %s is %s\n", sessionId, userId)
-    log.Printf("FUCKING ERROR is: %s\n", err.Error())
+    userId, _ := siglog.Sessions.UserIdFromSessionId(sessionId)
     if userId != "" {
 	return true 
     }
