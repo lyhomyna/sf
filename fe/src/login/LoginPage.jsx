@@ -1,7 +1,10 @@
-import { useRef } from "react";
+import { useRef, useContext } from "react";
 import { authServiceBaseUrl } from "../App.jsx";
+import { AuthContext } from "../storage/SfContext.jsx";
 
-export default function LoginPage({authenticate}) {
+export default function LoginPage() {
+    const { changeAuthStatus } = useContext(AuthContext);
+
     const emailRef = useRef("");
     const passwordRef = useRef("");
 
@@ -16,7 +19,7 @@ export default function LoginPage({authenticate}) {
 	    return;
 	}
 
-	const resp = await fetch(`${authServiceBaseUrl}/login`, {
+	const res = await fetch(`${authServiceBaseUrl}/login`, {
 	    method: "POST",
 	    body: JSON.stringify({
 		email: email,
@@ -24,12 +27,12 @@ export default function LoginPage({authenticate}) {
 	    }),
 	});
 
-	if (resp.status !== 200) {
-	    console.log(await resp.json());
+	if (res.status !== 200) {
+	    console.log(await res.json());
 	    return;
 	}
 
-	authenticate();
+	changeAuthStatus();
     }
 
     return <div className="w-full max-w-xs">

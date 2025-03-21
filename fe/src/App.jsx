@@ -2,6 +2,7 @@ import MainPage from "./main/MainPage.jsx";
 import LoginPage from "./login/LoginPage.jsx";
 import { useState, useEffect } from "react";
 import { RingLoader } from "react-spinners";
+import { AuthContext } from "./storage/SfContext.jsx";
 
 export const authServiceBaseUrl = "/api/auth"
 export const fileServiceBaseUrl = "/api/files"
@@ -9,10 +10,8 @@ export const fileServiceBaseUrl = "/api/files"
 export default function App() {
     const [isAuthenticated, setAuthenticated] = useState(undefined);
 
-    console.log("AUTH STATUS: ", isAuthenticated);
-
-    const authUser = () => {
-	setAuthenticated(true);
+    const changeAuthStatus = () => {
+	setAuthenticated(current => !current);
     }
 
     useEffect(() => {
@@ -20,7 +19,6 @@ export default function App() {
 	    const res = await fetch(`${authServiceBaseUrl}/check-auth`);
 	    
 	    if (res.status === 200) {
-		console.log("User authenticated. Status 200")
 		setAuthenticated(true);
 		return;
 	    }
@@ -35,20 +33,14 @@ export default function App() {
 
     if (isAuthenticated != undefined && !isAuthenticated) {
 	page = <div className="h-screen flex flex-col items-center justify-center">
-	   <LoginPage authenticate={authUser}/>
+	   <LoginPage />
 	</div>;
     } else {
 	page = <MainPage />;
     }
 
-    return page;
+    return <AuthContext value={{changeAuthStatus: changeAuthStatus}}>
+	{page}
+    </AuthContext>;
 }
 
-
-	//{isAuthenticated ?
-	 //   <MainPage />
-	 //   :
-	 //   <div className="h-screen flex flex-col items-center justify-center">
-	//	<LoginPage authenticate={authUser}/>
-	 //   </div>
-	//}

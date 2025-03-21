@@ -6,3 +6,7 @@ export const FilesContext = createContext({
     addFilename: () => {},
     deleteFilename: () => {},
 });
+
+export const AuthContext = createContext({
+    changeAuthStatus: () => {},
+})

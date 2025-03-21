@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import TopBar from "./components/TopBar.jsx";
 import FileList from "./components/FileList.jsx";
-import { FilesContext } from "../storage/FilesContext.jsx";
+import { FilesContext } from "../storage/SfContext.jsx";
 
 export default function MainPage() {
     const email="supercoolemail@super.mail" 
