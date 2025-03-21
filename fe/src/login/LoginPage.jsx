@@ -33,18 +33,18 @@ export default function LoginPage({authenticate}) {
     }
 
     return <div className="w-full max-w-xs">
-  <form className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+  <form className="bg-stone-900 shadow-md rounded px-8 pt-6 pb-8 mb-4">
     <div className="mb-4">
-      <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
+      <label className="block text-gray-300 text-sm font-bold mb-2" htmlFor="email">
 	Email 
       </label>
-      <input ref={emailRef} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="email" type="text" placeholder="supermail@gmail.com"/>
+      <input ref={emailRef} className="shadow appearance-none rounded w-full py-2 px-3 text-gray-100 leading-tight focus:outline-none focus:shadow-outline bg-[#2B2A33]" id="email" type="text" placeholder="supermail@gmail.com"/>
     </div>
     <div className="mb-6">
-      <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
+      <label className="block text-gray-300 text-sm font-bold mb-2" htmlFor="password">
         Password
       </label>
-      <input ref={passwordRef} className="shadow appearance-none border border-red-500 rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline" id="password" type="password" placeholder="******************"/>
+      <input ref={passwordRef} className="shadow appearance-none rounded w-full py-2 px-3 text-gray-100 mb-3 leading-tight focus:outline-none focus:shadow-outline bg-[#2B2A33]" id="password" type="password" placeholder="******************"/>
       <p className="text-red-500 text-xs italic">Please write a password.</p>
     </div>
     <div className="flex items-center justify-between">

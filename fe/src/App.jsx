@@ -33,12 +33,12 @@ export default function App() {
 	<RingLoader color="#58a6d8"/>
     </div>;
 
-    if (isAuthenticated) {
-	page = <MainPage />;
-    } else {
-	<div className="h-screen flex flex-col items-center justify-center">
+    if (isAuthenticated != undefined && !isAuthenticated) {
+	page = <div className="h-screen flex flex-col items-center justify-center">
 	   <LoginPage authenticate={authUser}/>
-	</div>
+	</div>;
+    } else {
+	page = <MainPage />;
     }
 
     return page;
