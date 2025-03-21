@@ -4,27 +4,27 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/lyhomyna/sf/auth-service/database"
 	"github.com/lyhomyna/sf/auth-service/models"
 )
 
 type PostgreUsers struct {
     ctx context.Context
-    db *pgx.Conn
+    pool *pgxpool.Pool
 }
 
 func GetUsersDao(ctx context.Context) *PostgreUsers {
-    dbConnection := database.ConnectToDb(ctx)
-    if dbConnection == nil {
+    connPool := database.ConnectToDb(ctx)
+    if connPool == nil {
 	return nil
     }
-    return &PostgreUsers{ctx, dbConnection}
+    return &PostgreUsers{ctx, connPool}
 }
 
 func (p *PostgreUsers) CreateUser(user *models.DbUser) (string, error) {
     sql := fmt.Sprintf("INSERT INTO users (%s, %s, %s) VALUES ($1, $2, $3);", DB_users_id, DB_users_email, DB_users_password)
-    _, err := p.db.Exec(p.ctx, sql, user.Id, user.Email, user.Password)
+    _, err := p.pool.Exec(p.ctx, sql, user.Id, user.Email, user.Password)
     if err != nil {
 	return "", fmt.Errorf("Couldn't create user: %w", err) 
     }
@@ -33,7 +33,7 @@ func (p *PostgreUsers) CreateUser(user *models.DbUser) (string, error) {
 
 func (p *PostgreUsers) DeleteUser(userId string) error {
     sql := fmt.Sprintf("DELETE FROM %s WHERE id=$1;", DB_users_name)
-    _, err := p.db.Exec(p.ctx, sql, userId)
+    _, err := p.pool.Exec(p.ctx, sql, userId)
     if err != nil {
 	err = fmt.Errorf("Couldn't delete user: %w", err)
     }
@@ -42,7 +42,7 @@ func (p *PostgreUsers) DeleteUser(userId string) error {
 
 func (p *PostgreUsers) ReadUserById(id string) (*models.User, error) {
     sql := fmt.Sprintf("SELECT * FROM %s WHERE id=$1;", DB_users_name)
-    row := p.db.QueryRow(p.ctx, sql, id)
+    row := p.pool.QueryRow(p.ctx, sql, id)
     var user *models.User
     err := row.Scan(user)
     if err != nil {
@@ -53,7 +53,7 @@ func (p *PostgreUsers) ReadUserById(id string) (*models.User, error) {
 
 func (p *PostgreUsers) FindUser(user *models.User) (string, error) {
     sql := fmt.Sprintf("SELECT %s FROM %s WHERE %s=$1 AND %s=$2;", DB_users_id, DB_users_name, DB_users_email, DB_users_password)
-    row := p.db.QueryRow(p.ctx, sql, user.Email, user.Password) 
+    row := p.pool.QueryRow(p.ctx, sql, user.Email, user.Password) 
     var userId string
     err := row.Scan(&userId)
     if err != nil {

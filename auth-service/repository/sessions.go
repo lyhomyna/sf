@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/lyhomyna/sf/auth-service/database"
 )
 
@@ -14,22 +14,22 @@ var CookieSeessionIdName = "session-id"
 
 type PostgreSessions struct {
     ctx context.Context
-    db *pgx.Conn
+    pool *pgxpool.Pool
 }
 
 func GetSessionsDao(ctx context.Context) *PostgreSessions {
-    dbConnection := database.ConnectToDb(ctx)
-    if dbConnection == nil {
+    connPool := database.ConnectToDb(ctx)
+    if connPool == nil {
 	return nil
     }
     
-    return &PostgreSessions{ctx, dbConnection}
+    return &PostgreSessions{ctx, connPool}
 }
 
 func (p *PostgreSessions) CreateSession(userId string) (string, error) {
     sql := fmt.Sprintf("INSERT INTO %s (%s, %s) VALUES ($1, $2);", DB_sessions_name, DB_sessions_id, DB_sessions_userId)
     sessionId := uuid.NewString()
-    _, err := p.db.Exec(p.ctx, sql, sessionId, userId)
+    _, err := p.pool.Exec(p.ctx, sql, sessionId, userId)
 
     if err != nil {
 	return "", fmt.Errorf("Couldn't create session: %w", err)
@@ -40,7 +40,7 @@ func (p *PostgreSessions) CreateSession(userId string) (string, error) {
 
 func (p *PostgreSessions) DeleteSession(sessionId string) error {
     sql := fmt.Sprintf("DELETE FROM %s WHERE id=$1;", DB_sessions_name)
-    execRes, err := p.db.Exec(p.ctx, sql, sessionId)
+    execRes, err := p.pool.Exec(p.ctx, sql, sessionId)
 
     if err != nil {
 	err = fmt.Errorf("Couldn't delete session: %w", err) 
@@ -53,7 +53,7 @@ func (p *PostgreSessions) DeleteSession(sessionId string) error {
 
 func (p *PostgreSessions) UserIdFromSessionId(sessionId string) (string, error) {
     sql := fmt.Sprintf("SELECT %s FROM %s WHERE id=$1", DB_sessions_userId, DB_sessions_name)
-    row := p.db.QueryRow(p.ctx, sql, sessionId)
+    row := p.pool.QueryRow(p.ctx, sql, sessionId)
 
     var	userId string
 
