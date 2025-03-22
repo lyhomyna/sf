@@ -19,6 +19,8 @@ Possible responces:
     Code: StatusInternalServerError 500 
     R_JSON: { message: "Couldn't create session: DATABASE_ERROR_MESSAGE" } // unknown message
 
+    Code: StatusInternalServerError 500 
+    R_JSON: { message: "Can't encrypt password. BCYRPT_ERROR_MESSAGE" } // unknown message
 
 # /login
 Method: POST 
@@ -44,8 +46,14 @@ Possible responses:
     Code: StatusBadRequest 400 
     R_JSON: { message: "Password shouldn't contain ' or \"" }
 
-    Code: StatusBadRequest 400 
-    R_JSON: { message: "Invalid user creadentials" }
+    Code: StatusNotFound 404 
+    R_JSON: { message: "User not found" }
+
+    Code: StatusBadRequest 403 
+    R_JSON: { message: "Passwords don't match" }
+
+    Code: StatusInternalServerError 500 
+    R_JSON: { message: "Internal server error" }
 
     Code: StatusInternalServerError 500 
     R_JSON: { message: "Couldn't create session: DATABASE_ERROR_MESSAGE" } // unknown message

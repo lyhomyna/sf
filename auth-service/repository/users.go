@@ -2,8 +2,10 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/lyhomyna/sf/auth-service/database"
 	"github.com/lyhomyna/sf/auth-service/models"
@@ -61,3 +63,25 @@ func (p *PostgreUsers) FindUser(user *models.User) (string, error) {
     }
     return userId, nil 
 }
+
+func (p *PostgreUsers) GetUserByEmail(email string) (*models.DbUser, error) {
+    sql := fmt.Sprintf("SELECT * FROM %s WHERE %s=$1;", DB_users_name, DB_users_email)
+    row := p.pool.QueryRow(p.ctx, sql, email)
+
+    var dbUser models.DbUser
+    err := row.Scan(&dbUser.Id, &dbUser.Email, &dbUser.Password)
+    if err != nil {
+	if errors.Is(err, pgx.ErrNoRows) {
+	    return nil, nil    
+	}
+	return nil, fmt.Errorf("Couldn't get user. %w", err)
+    }
+
+    return &dbUser, nil
+}
+
+
+
+
+
+

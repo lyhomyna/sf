@@ -10,4 +10,4 @@ CREATE TABLE sessions (
 );
 
 ALTER TABLE sessions 
-    ADD FOREIGN KEY (userId) REFERENCES users(id); 
+    ADD FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE; 

@@ -10,6 +10,7 @@ type UserDao interface {
     DeleteUser(userId string) error
     ReadUserById(id string) (*User, error)
     FindUser(user *User) (string, error)
+    GetUserByEmail(email string) (*DbUser, error)
 }
 
 type SessionDao interface {

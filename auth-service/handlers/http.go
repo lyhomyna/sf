@@ -99,37 +99,42 @@ func register(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
 
 func login(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
     // validate user (validate by input data and if user exists in DB)
-    var user models.User
-    err := json.NewDecoder(req.Body).Decode(&user)
+    var userData models.User
+    err := json.NewDecoder(req.Body).Decode(&userData)
     if err != nil {
 	writeResponse(w, http.StatusBadRequest, "Couldn't parse user")
 	return
     }
 
-    if strings.Trim(user.Email, " ") == "" || strings.Trim(user.Password,  " ") == "" {
+    if strings.Trim(userData.Email, " ") == "" || strings.Trim(userData.Password,  " ") == "" {
 	writeResponse(w, http.StatusBadRequest, "User data can't be blank line")
 	return
     }
 
-    if len(user.Password) < 6 {
+    if len(userData.Password) < 6 {
 	writeResponse(w, http.StatusBadRequest, "Password should be at least 6 chars length")
 	return
     }
 
-    if strings.Contains(user.Password, "'\" ") {
+    if strings.Contains(userData.Password, "'\" ") {
 	writeResponse(w, http.StatusBadRequest, "Password shouldn't contain ' or \"")
 	return
     }
 
-    userId, err := siglog.Users.FindUser(&user)
-    if err != nil {
-	log.Println(err)
-	writeResponse(w, http.StatusBadRequest, "Invalid user credentials")
+    // find user by email
+    dbUser, httpError := user.GetUserByEmail(userData.Email, siglog);
+    if httpError != nil {
+	writeResponse(w, httpError.Code, httpError.Message);
+	return
+    }
+
+    if err := user.ComparePasswords(dbUser.Password, userData.Password); err != nil {
+	writeResponse(w, http.StatusForbidden, "Passwords don't match")
 	return
     }
 
     // create session
-    sessionId, errHttp := session.Create(userId, siglog)
+    sessionId, errHttp := session.Create(dbUser.Id, siglog)
     if errHttp != nil {
 	writeResponse(w, errHttp.Code, errHttp.Message)
 	return
@@ -141,7 +146,7 @@ func login(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
     })
 
     // write response
-    log.Printf("User %s logged in.\n", userId)
+    log.Printf("User %s logged in.\n", dbUser.Id)
     w.WriteHeader(http.StatusOK)
 }
 

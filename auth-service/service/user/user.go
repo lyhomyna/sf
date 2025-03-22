@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/lyhomyna/sf/auth-service/models"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func CreateUser(siglog *models.Siglog, req *http.Request) (string, *models.HTTPError) {
@@ -23,12 +24,11 @@ func CreateUser(siglog *models.Siglog, req *http.Request) (string, *models.HTTPE
 	} 
     }
 
-    dbUser := &models.DbUser{
-	Id: uuid.NewString(),
-	Email: user.Email,
-	Password: user.Password,
+    dbUser, errHttp := constructDbUser(&user);   
+    if errHttp != nil {
+	return "", *&errHttp
     }
-    
+
     userId, err := siglog.Users.CreateUser(dbUser)
     if err != nil {
 	log.Println(err.Error())
@@ -42,6 +42,33 @@ func CreateUser(siglog *models.Siglog, req *http.Request) (string, *models.HTTPE
     return userId, nil
 }
 
+func constructDbUser(user *models.User) (*models.DbUser, *models.HTTPError) {
+    encryptedPassword, err := encryptPassword(user.Password)
+    if err != nil {
+	return nil, &models.HTTPError {
+	    Code: http.StatusInternalServerError,
+	    Message: err.Error(),
+	}
+    }
+
+    dbUser := &models.DbUser{
+	Id: uuid.NewString(),
+	Email: user.Email,
+	Password: encryptedPassword,
+    }
+
+    return dbUser, nil
+}
+
+func encryptPassword(password string) (string, error) {
+    bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+    if err != nil {
+        return "", errors.New(fmt.Sprintf("Can't encrypt password. %s", err))
+    }
+    return string(bytes), nil
+}
+
+
 // danger function
 func DeleteUser(userId string, siglog *models.Siglog) *models.HTTPError {
     if err := siglog.Users.DeleteUser(userId); err != nil {
@@ -53,6 +80,29 @@ func DeleteUser(userId string, siglog *models.Siglog) *models.HTTPError {
 
     log.Println("User and session has been deleted.")
     return nil
+}
+
+func GetUserByEmail(email string, siglog *models.Siglog) (*models.DbUser, *models.HTTPError) {
+    dbUser, err := siglog.Users.GetUserByEmail(email)
+    if err != nil {
+	log.Println(err.Error())
+	return nil, &models.HTTPError{
+	    Code: http.StatusInternalServerError,
+	    Message: "Internal server error",
+	}
+    }
+    if dbUser == nil {
+	return nil, &models.HTTPError {
+	    Code: http.StatusNotFound,
+	    Message: "User not found",
+	}
+    }
+    return dbUser, nil
+}
+
+func ComparePasswords(passwordHash string, possiblePassword string) error {
+    err := bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(possiblePassword))
+    return err
 }
 
 func decodeFromTo(rc io.ReadCloser, target any) error {
