@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -140,17 +141,53 @@ func HandleDownload(w http.ResponseWriter, req *http.Request) {
     http.ServeFile(w,req, filepath.Join(filesDirectory, filename))
 }
 
+var sessionCookieName = "session-id"
+var authServiceBaseUrl = "http://auth-service"
+
 func HandleFilenames(w http.ResponseWriter, req *http.Request) {
     if req.Method != http.MethodGet {
 	http.Error(w, "Use GET method instead", http.StatusBadRequest)
 	return
     }
 
-    if filenames, err := getFilenames(); err != nil {
+    // get session cookie
+    sessionCookie, err := req.Cookie(sessionCookieName)
+    if err != nil {
+	writeResponse(w, "Session cookie missing", http.StatusUnauthorized)
+	return
+    }
+    // verify session cookie and get user id
+    userId, err := verifySession(sessionCookie.Value)
+
+    if filenames, err := getFilenames(userId); err != nil {
 	writeResponse(w, err.Message, err.Code)
     } else {
 	writeResponse(w, filenames, http.StatusOK)
     }
+}
+
+func verifySession(sessionId string) (string, error) {
+    reqUrl := fmt.Sprintf("%s/check-auth", authServiceBaseUrl)
+    req, _ := http.NewRequest("get", reqUrl, nil)
+
+    sessionCookie := fmt.Sprintf("%s=%s", sessionCookieName, sessionId)
+    req.Header.Set("Cookie", sessionCookie)
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+
+    if err != nil && resp.StatusCode != http.StatusOK {
+	return "", errors.New("Invalid session")
+    }
+
+    defer resp.Body.Close()
+
+    var res struct {
+	Id string `json:"userId"`
+    }
+    json.NewDecoder(resp.Body).Decode(&res)
+
+    return res.Id, nil
 }
 
 type responseError struct {
@@ -158,8 +195,9 @@ type responseError struct {
     Message string
 }
 
-func getFilenames() ([]string, *responseError) {
-    entries, err := os.ReadDir(filesDirectory)
+func getFilenames(userId string) ([]string, *responseError) {
+    filesPath := filepath.Join(filesDirectory, userId)
+    entries, err := os.ReadDir(filesPath)
     if err != nil {
 	return nil, &responseError {
 	    Code: http.StatusInternalServerError,

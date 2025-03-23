@@ -72,3 +72,5 @@ Possible responses:
     Code: StatusInternalServerError 500
     R_JSON: { data: "Cannot read from user directory" }
 
+    Code: StatusUnauthorized 401 
+    R_JSON: { data: "Session cookie missing" }
