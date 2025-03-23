@@ -1,0 +1,10 @@
+CREATE TABLE files (
+    id TEXT PRIMARY KEY,
+    userId TEXT NOT NULL,
+    filepath TEXT NOT NULL,
+    filename TEXT NOT NULL,
+    uploadTime TIMESTAMPZ DEFAULT now() NOT NULL,
+    FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+);
+
+ALTER TABLE users ADD COLUMN createdAt TIMESTAMPZ DEFAULT now() NOT NULL;
