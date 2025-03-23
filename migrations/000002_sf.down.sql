@@ -1,1 +1,2 @@
 DROP TABLE files;
+ALTER TABLE users DROP COLUMN createdAt;
