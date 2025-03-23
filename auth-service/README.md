@@ -81,5 +81,6 @@ Method:  GET
 Possible responses:
 
     Code: StatusOK 200
+    R_JSON: { uid: "USER_ID" }
 
     Code: StatusUnauthorized 401

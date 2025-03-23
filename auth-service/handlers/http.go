@@ -184,8 +184,10 @@ func checkAuth(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) 
 	return
     }
 
-    if session.IsSessionExists(sessionCookie.Value, siglog) {
+    if uid, ok := session.IsSessionExists(sessionCookie.Value, siglog); ok {
 	w.WriteHeader(http.StatusOK)
+	jsonResponse, _ := json.Marshal(map[string]string{"userId": uid})
+	w.Write(jsonResponse)
 	return
     }
 

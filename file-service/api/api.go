@@ -14,7 +14,7 @@ import (
 )
 
 // directory where uploaded files will be saved
-var filesDirectory = filepath.Join("..", "..", "files")
+var filesDirectory = filepath.Join("..", "..", "..", "files")
 
 func OptionsMiddleware(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -153,6 +153,7 @@ func HandleFilenames(w http.ResponseWriter, req *http.Request) {
     // get session cookie
     sessionCookie, err := req.Cookie(sessionCookieName)
     if err != nil {
+	log.Println(err)
 	writeResponse(w, "Session cookie missing", http.StatusUnauthorized)
 	return
     }
@@ -226,7 +227,6 @@ func writeResponse(w http.ResponseWriter, data any, code int) {
     }
 
     response, err := json.Marshal(d)
-    fmt.Println(string(response))
     if err != nil {
 	panic(err)
     }

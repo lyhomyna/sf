@@ -45,12 +45,12 @@ func (p *PostgreUsers) DeleteUser(userId string) error {
 func (p *PostgreUsers) ReadUserById(id string) (*models.User, error) {
     sql := fmt.Sprintf("SELECT * FROM %s WHERE id=$1;", DB_users_name)
     row := p.pool.QueryRow(p.ctx, sql, id)
-    var user *models.User
-    err := row.Scan(user)
+    var user models.User
+    err := row.Scan(&user.Email, &user.Password)
     if err != nil {
 	return nil, fmt.Errorf("Couldn't read user by Id: %w", err)
     }
-    return user, nil
+    return &user, nil
 }
 
 func (p *PostgreUsers) FindUser(user *models.User) (string, error) {
@@ -69,7 +69,7 @@ func (p *PostgreUsers) GetUserByEmail(email string) (*models.DbUser, error) {
     row := p.pool.QueryRow(p.ctx, sql, email)
 
     var dbUser models.DbUser
-    err := row.Scan(&dbUser.Id, &dbUser.Email, &dbUser.Password)
+    err := row.Scan(&dbUser.Id, &dbUser.Email, &dbUser.Password, &dbUser.CreatedAt)
     if err != nil {
 	if errors.Is(err, pgx.ErrNoRows) {
 	    return nil, nil    

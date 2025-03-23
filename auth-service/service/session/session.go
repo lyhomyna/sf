@@ -30,10 +30,10 @@ func Delete(sessionId string, siglog *models.Siglog) *models.HTTPError {
     return nil
 }
 
-func IsSessionExists(sessionId string, siglog *models.Siglog) bool {
+func IsSessionExists(sessionId string, siglog *models.Siglog) (string, bool) {
     userId, _ := siglog.Sessions.UserIdFromSessionId(sessionId)
     if userId != "" {
-	return true 
+	return userId, true 
     }
-    return false
+    return "", false
 }
