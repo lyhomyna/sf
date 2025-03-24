@@ -9,17 +9,19 @@ export default function FileList({filenames}) {
     const { addFilenames } = useContext(FilesContext);
 
     useEffect(() => {
-	fetch(`${fileServiceBaseUrl}/filenames`)
-	.then((res) => {
-	    return res.json();
-	}).then((json) => {
-	    if (Array.isArray(json.data)) {
-                addFilenames(json.data);
-            } else {
-                console.error("Invalid data format:", json);
-                addFilenames([]);
-            }
-	}).catch((err) => console.error("Failed to fetch filenames:", err));
+	(async () => {
+	    const res = await fetch(`${fileServiceBaseUrl}/filenames`, {
+		credentials: "include",
+	    })
+
+	    const resJson = await res.json()
+	    if (res.status !== 200) {
+		console.error(resJson.data)
+		return
+	    }
+
+            addFilenames(resJson.data);
+	})()
     }, [])
 
     return filenames.length === 0 ? (
