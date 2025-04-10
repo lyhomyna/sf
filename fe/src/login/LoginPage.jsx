@@ -55,7 +55,7 @@ export default function LoginPage() {
       <p class="wrong text-red-500 text-xs italic hidden">Invalid credentials.</p>
     </div>
     <div className="flex items-center justify-between">
-      <button className="bg-blue-500 hover:bg-blue-300 transition-all text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button" onClick={doLogIn}>
+      <button className="bg-blue-500 hover:bg-blue-300 transition-all text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline active:scale-150" type="button" onClick={doLogIn}>
         Sign In
       </button>
       <a className="inline-block align-baseline font-bold text-sm text-blue-500 hover:scale-50 hover:text-blue-900 transition-all" href="#">

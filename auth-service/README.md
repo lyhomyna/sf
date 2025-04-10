@@ -1,5 +1,6 @@
 # /register
 Method: POST
+{"email": "mail@example.com", "password": "superpassword"}
 
 Possible responces: 
 
@@ -24,6 +25,7 @@ Possible responces:
 
 # /login
 Method: POST 
+{"email": "mail@example.com", "password": "superpassword"}
 
 Possible responses: 
 
