@@ -27,10 +27,14 @@ export default function LoginPage() {
 	    }),
 	});
 
+
 	if (res.status !== 200) {
 	    console.log(await res.json());
+	    document.querySelector("form").reset();
+	    document.querySelector(".wrong").classList.remove("hidden");
 	    return;
 	}
+	document.querySelector("form").reset();
 
 	changeAuthStatus();
     }
@@ -48,13 +52,13 @@ export default function LoginPage() {
         Password
       </label>
       <input ref={passwordRef} className="shadow appearance-none rounded w-full py-2 px-3 text-gray-100 mb-3 leading-tight focus:outline-none focus:shadow-outline bg-[#2B2A33]" id="password" type="password" placeholder="******************"/>
-      <p className="text-red-500 text-xs italic">Please write a password.</p>
+      <p class="wrong text-red-500 text-xs italic hidden">Invalid credentials.</p>
     </div>
     <div className="flex items-center justify-between">
-      <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button" onClick={doLogIn}>
+      <button className="bg-blue-500 hover:bg-blue-300 transition-all text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button" onClick={doLogIn}>
         Sign In
       </button>
-      <a className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800" href="#">
+      <a className="inline-block align-baseline font-bold text-sm text-blue-500 hover:scale-50 hover:text-blue-900 transition-all" href="#">
         Forgot Password?
       </a>
     </div>
