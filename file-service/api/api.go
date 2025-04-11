@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -14,7 +13,10 @@ import (
 )
 
 // directory where uploaded files will be saved
-var filesDirectory = filepath.Join("..", "..", "..", "files")
+var filesDirectory = filepath.Join("/", "home", "qqweq", "d", "files")
+
+var sessionCookieName = "session-id"
+var authServiceBaseUrl = "http://auth-service"
 
 func OptionsMiddleware(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -38,6 +40,19 @@ func HandleSave(w http.ResponseWriter, req *http.Request) {
 	return
     }
 
+    sessionCookie, err := req.Cookie(sessionCookieName)
+    if err != nil {
+	log.Println(err)
+	writeResponse(w, "Session cookie missing", http.StatusUnauthorized)
+	return
+    }
+
+    userId, err := verifySession(sessionCookie.Value)
+    if err != nil {
+	writeResponse(w, err.Error(), http.StatusUnauthorized)
+	return
+    }
+
     f, fh, err := req.FormFile("file")
     if err != nil {
 	log.Println("Failed to read form value", err)
@@ -46,7 +61,7 @@ func HandleSave(w http.ResponseWriter, req *http.Request) {
     }
     defer f.Close()
     
-    if errMsg, statusCode := saveUploadedFile(fh.Filename, f); errMsg != "" && statusCode != -1 {
+    if errMsg, statusCode := saveUploadedFile(userId, fh.Filename, f); errMsg != "" && statusCode != -1 {
 	writeResponse(w, errMsg, statusCode)
 	return
     }
@@ -55,12 +70,16 @@ func HandleSave(w http.ResponseWriter, req *http.Request) {
 }
 
 // saveupLoadedFile saves file into server's forlder and returns error message as string and http status code as int. If error message == "" and status code == -1 there is not errors and file uploaded successfully.
-func saveUploadedFile(filename string, uploadedFile multipart.File) (string, int) {
-    newFilepath := filepath.Join(filesDirectory, filename)
+func saveUploadedFile(userId string, filename string, uploadedFile io.Reader) (string, int) {
+    newFilepath := filepath.Join(filesDirectory, userId, filename)
 
     if _, err := os.Stat(newFilepath); err == nil {
 	log.Println("File with the same name already exists")
 	return "File with the same name already exists", http.StatusBadRequest 
+    }
+
+    if err := os.MkdirAll(filepath.Dir(newFilepath), os.ModePerm); err != nil {
+	return "Something went wrong", http.StatusInternalServerError
     }
 
     nf, err := os.Create(newFilepath)
@@ -87,9 +106,22 @@ func HandleDelete(w http.ResponseWriter, req *http.Request) {
 	return
     }
 
+    sessionCookie, err := req.Cookie(sessionCookieName)
+    if err != nil {
+	log.Println(err)
+	writeResponse(w, "Session cookie missing", http.StatusUnauthorized)
+	return
+    }
+
+    userId, err := verifySession(sessionCookie.Value)
+    if err != nil {
+	writeResponse(w, err.Error(), http.StatusUnauthorized)
+	return
+    }
+
     filename := strings.TrimPrefix(req.URL.Path, "/delete/")
 
-    errMsg, statusCode := deleteFile(filename)
+    errMsg, statusCode := deleteFile(userId, filename)
     if errMsg != "" && statusCode != -1 {
 	writeResponse(w, errMsg, statusCode)
 	return
@@ -99,8 +131,8 @@ func HandleDelete(w http.ResponseWriter, req *http.Request) {
 }
 
 // deleteFile deletes file from server and returns error message as string and http response code as int. If error message == "" and status code == -1 there is not errors and file uploaded successfully.
-func deleteFile(filename string) (string, int) {
-    fullFilepath := filepath.Join(filesDirectory, filename)
+func deleteFile(userId string, filename string) (string, int) {
+    fullFilepath := filepath.Join(filesDirectory, userId, filename)
 
     if _, err := os.Stat(fullFilepath); err != nil {
 	return "File doesn't exist", http.StatusNoContent 
@@ -115,8 +147,6 @@ func deleteFile(filename string) (string, int) {
 
 // handleDownload downloads file into client downloads folder
 func HandleDownload(w http.ResponseWriter, req *http.Request) {
-    logConnection(req)
-
     if req.Method != http.MethodGet {
 	http.Error(w, "Use GET method instead", http.StatusBadRequest)
 	return
@@ -141,9 +171,6 @@ func HandleDownload(w http.ResponseWriter, req *http.Request) {
     http.ServeFile(w,req, filepath.Join(filesDirectory, filename))
 }
 
-var sessionCookieName = "session-id"
-var authServiceBaseUrl = "http://auth-service"
-
 func HandleFilenames(w http.ResponseWriter, req *http.Request) {
     if req.Method != http.MethodGet {
 	http.Error(w, "Use GET method instead", http.StatusBadRequest)
@@ -153,7 +180,6 @@ func HandleFilenames(w http.ResponseWriter, req *http.Request) {
     // get session cookie
     sessionCookie, err := req.Cookie(sessionCookieName)
     if err != nil {
-	log.Println(err)
 	writeResponse(w, "Session cookie missing", http.StatusUnauthorized)
 	return
     }

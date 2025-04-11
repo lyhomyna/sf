@@ -40,6 +40,7 @@ func (p *PostgreSessions) CreateSession(userId string) (string, error) {
 
 func (p *PostgreSessions) DeleteSession(sessionId string) error {
     sql := fmt.Sprintf("DELETE FROM %s WHERE id=$1;", DB_sessions_name)
+
     execRes, err := p.pool.Exec(p.ctx, sql, sessionId)
 
     if err != nil {

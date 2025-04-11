@@ -159,7 +159,7 @@ func logout(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
     
     sessionId := cookie.Value
 
-    errHttp := session.Delete(cookie.Value, siglog)
+    errHttp := session.Delete(sessionId, siglog)
     if errHttp != nil {
 	writeResponse(w, errHttp.Code, errHttp.Message)
 	return
