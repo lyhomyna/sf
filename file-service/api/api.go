@@ -13,7 +13,7 @@ import (
 )
 
 // directory where uploaded files will be saved
-var filesDirectory = filepath.Join("/", "home", "qqweq", "d", "files")
+var filesDirectory = filepath.Join("files")
 
 var sessionCookieName = "session-id"
 var authServiceBaseUrl = "http://auth-service:8081"
