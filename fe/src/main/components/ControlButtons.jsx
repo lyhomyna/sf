@@ -21,6 +21,7 @@ export default function ControlButtons({...props}) {
 		const response = await fetch(`${fileServiceBaseUrl}/save`, {
 		    method: "POST", 
 		    body: formData,
+		    credentials: "include",
 		});
 		
 		if (response.ok) {
