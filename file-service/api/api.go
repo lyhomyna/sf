@@ -16,7 +16,7 @@ import (
 var filesDirectory = filepath.Join("/", "home", "qqweq", "d", "files")
 
 var sessionCookieName = "session-id"
-var authServiceBaseUrl = "http://auth-service"
+var authServiceBaseUrl = "http://auth-service:8081"
 
 func OptionsMiddleware(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -47,7 +47,7 @@ func HandleSave(w http.ResponseWriter, req *http.Request) {
 	return
     }
 
-    userId, err := verifySession(sessionCookie.Value)
+    userId, err := verifySession(sessionCookie)
     if err != nil {
 	writeResponse(w, err.Error(), http.StatusUnauthorized)
 	return
@@ -113,7 +113,7 @@ func HandleDelete(w http.ResponseWriter, req *http.Request) {
 	return
     }
 
-    userId, err := verifySession(sessionCookie.Value)
+    userId, err := verifySession(sessionCookie)
     if err != nil {
 	writeResponse(w, err.Error(), http.StatusUnauthorized)
 	return
@@ -184,7 +184,7 @@ func HandleFilenames(w http.ResponseWriter, req *http.Request) {
 	return
     }
     // verify session cookie and get user id
-    userId, err := verifySession(sessionCookie.Value)
+    userId, err := verifySession(sessionCookie)
 
     if filenames, err := getFilenames(userId); err != nil {
 	writeResponse(w, err.Message, err.Code)
@@ -193,21 +193,27 @@ func HandleFilenames(w http.ResponseWriter, req *http.Request) {
     }
 }
 
-func verifySession(sessionId string) (string, error) {
+func verifySession(sessionCookie *http.Cookie) (string, error) {
     reqUrl := fmt.Sprintf("%s/check-auth", authServiceBaseUrl)
-    req, _ := http.NewRequest("get", reqUrl, nil)
+    
+    req, _ := http.NewRequest("GET", reqUrl, nil)
 
-    sessionCookie := fmt.Sprintf("%s=%s", sessionCookieName, sessionId)
-    req.Header.Set("Cookie", sessionCookie)
+    req.AddCookie(sessionCookie)
 
     client := &http.Client{}
-    resp, err := client.Do(req)
 
-    if err != nil && resp.StatusCode != http.StatusOK {
-	return "", errors.New("Invalid session")
+    resp, err := client.Do(req)
+    if err != nil {
+	log.Println("Unable to verify session:", err)
+	return "", errors.New("Unable to verify session")
     }
 
     defer resp.Body.Close()
+
+    if resp.StatusCode != http.StatusOK {
+	log.Println("Unable to verify session: Status", resp.StatusCode)
+	return "", errors.New("Unable to verify session")
+    }
 
     var res struct {
 	Id string `json:"userId"`
