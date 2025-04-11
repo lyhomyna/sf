@@ -152,13 +152,27 @@ func HandleDownload(w http.ResponseWriter, req *http.Request) {
 	return
     }
 
+    // get session cookie
+    sessionCookie, err := req.Cookie(sessionCookieName)
+    if err != nil {
+	writeResponse(w, "Session cookie missing", http.StatusUnauthorized)
+	return
+    }
+    // verify session cookie and get user id
+    userId, err := verifySession(sessionCookie)
+    if err != nil {
+	writeResponse(w, err.Error(), http.StatusUnauthorized)
+	return
+    }
+
     filename := strings.TrimPrefix(req.URL.Path, "/download/")   
     if filename == "" {
 	writeResponse(w, "File not specified", http.StatusBadRequest)
 	return
     }
+    filepathToDownload := filepath.Join(filesDirectory, userId, filename) 
 
-    _, err := os.Stat(filepath.Join(filesDirectory, filename))
+    _, err = os.Stat(filepathToDownload)
     if err != nil {
 	writeResponse(w, "File not found", http.StatusNotFound)
 	return
@@ -166,9 +180,9 @@ func HandleDownload(w http.ResponseWriter, req *http.Request) {
 
     w.Header().Set("Content-Disposition", "attachment; filename="+filename)
     w.Header().Set("Content-Type", "application/octet-stream")
-    w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+    // w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 
-    http.ServeFile(w,req, filepath.Join(filesDirectory, filename))
+    http.ServeFile(w,req, filepathToDownload)
 }
 
 func HandleFilenames(w http.ResponseWriter, req *http.Request) {
@@ -185,6 +199,10 @@ func HandleFilenames(w http.ResponseWriter, req *http.Request) {
     }
     // verify session cookie and get user id
     userId, err := verifySession(sessionCookie)
+    if err != nil {
+	writeResponse(w, err.Error(), http.StatusUnauthorized)
+	return
+    }
 
     if filenames, err := getFilenames(userId); err != nil {
 	writeResponse(w, err.Message, err.Code)
