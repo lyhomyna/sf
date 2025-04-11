@@ -18,6 +18,7 @@ func CreateUser(siglog *models.Siglog, req *http.Request) (string, *models.HTTPE
 
     var user models.User
     if err := decodeFromTo(req.Body, &user); err != nil {
+	fmt.Println("Could't decode user.")
 	return "", &models.HTTPError {
 	    Code: http.StatusBadRequest,
 	    Message: "Use correct user schema",
@@ -26,6 +27,7 @@ func CreateUser(siglog *models.Siglog, req *http.Request) (string, *models.HTTPE
 
     dbUser, errHttp := constructDbUser(&user);   
     if errHttp != nil {
+	fmt.Println(errHttp.Message)
 	return "", *&errHttp
     }
 
@@ -40,6 +42,14 @@ func CreateUser(siglog *models.Siglog, req *http.Request) (string, *models.HTTPE
     
     log.Println("User created.")
     return userId, nil
+}
+
+func decodeFromTo(rc io.ReadCloser, target any) error {
+    decoder := json.NewDecoder(rc)
+    if err := decoder.Decode(target); err != nil {
+        return errors.New(fmt.Sprintf("Decode failure. %s", err))
+    }
+    return nil
 }
 
 func constructDbUser(user *models.User) (*models.DbUser, *models.HTTPError) {
@@ -72,6 +82,7 @@ func encryptPassword(password string) (string, error) {
 // danger function
 func DeleteUser(userId string, siglog *models.Siglog) *models.HTTPError {
     if err := siglog.Users.DeleteUser(userId); err != nil {
+	log.Println(fmt.Sprintf("Couldn't delete user '%s'", userId))
 	return &models.HTTPError {
 	    Code: http.StatusInternalServerError,
 	    Message: "Couldn't delete user.",
@@ -92,6 +103,7 @@ func GetUserByEmail(email string, siglog *models.Siglog) (*models.DbUser, *model
 	}
     }
     if dbUser == nil {
+	log.Println("Couldn't find user by email")
 	return nil, &models.HTTPError {
 	    Code: http.StatusNotFound,
 	    Message: "User not found",
@@ -105,10 +117,3 @@ func ComparePasswords(passwordHash string, possiblePassword string) error {
     return err
 }
 
-func decodeFromTo(rc io.ReadCloser, target any) error {
-    decoder := json.NewDecoder(rc)
-    if err := decoder.Decode(target); err != nil {
-        return errors.New(fmt.Sprintf("Decode failure. %s", err))
-    }
-    return nil
-}

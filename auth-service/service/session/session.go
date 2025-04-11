@@ -10,6 +10,7 @@ import (
 func Create(userId string, siglog *models.Siglog) (string, *models.HTTPError) {
     sessionId, err := siglog.Sessions.CreateSession(userId)
     if err != nil {
+	log.Println("Couldn't create session.", err.Error())
 	return "", &models.HTTPError{
 	    Code: http.StatusInternalServerError,
 	    Message: err.Error(),
@@ -22,6 +23,7 @@ func Create(userId string, siglog *models.Siglog) (string, *models.HTTPError) {
 func Delete(sessionId string, siglog *models.Siglog) *models.HTTPError {
     err := siglog.Sessions.DeleteSession(sessionId)
     if err != nil {
+	log.Println("Couldn't delete session.", err.Error())
 	return &models.HTTPError{
 	    Code: http.StatusInternalServerError,
 	    Message: err.Error(),

@@ -18,7 +18,7 @@ var filesDirectory = filepath.Join("..", "..", "..", "files")
 
 func OptionsMiddleware(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-	logConnection(req)
+	// logConnection(req)
 
 	if req.Method == http.MethodOptions {
 	    w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
