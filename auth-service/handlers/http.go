@@ -143,6 +143,9 @@ func login(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
     http.SetCookie(w, &http.Cookie{
 	Name: sessionCookieName,
 	Value: sessionId,
+	HttpOnly: true,
+	Path: "/",
+	SameSite: http.SameSiteLaxMode,
     })
 
     // write response
