@@ -25,7 +25,7 @@ export default function ControlButtons({...props}) {
 	} else {
 	    fileOrFiles = await openStandardFilePicker(multiple);
 	}
-	
+
 	if (fileOrFiles) {
 	    await fileOrFiles.forEach(async (file) => {
 		const formData = new FormData();
@@ -38,10 +38,9 @@ export default function ControlButtons({...props}) {
 		    });
 		    
 		    if (response.ok) {
-			// alert("File uploaded successfully!");
 			addFilename(file.name) // to show filenames in list
 		    } else if(response.status === 400) {
-			alert("File with the same filename has already uploaded.")
+			alert(`File ${file.name} has already uploaded.`)
 		    } else {
 			alert("Failed to upload file. Try again.");
 		    }
