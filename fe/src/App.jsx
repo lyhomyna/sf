@@ -3,6 +3,7 @@ import LoginPage from "./login/LoginPage.jsx";
 import { useState, useEffect } from "react";
 import { RingLoader } from "react-spinners";
 import { AuthContext } from "./storage/SfContext.jsx";
+import DragAndDropSection from "./main/components/DragAndDropSection.jsx";
 
 export const authServiceBaseUrl = "/api/auth"
 export const fileServiceBaseUrl = "/api/files"
@@ -45,6 +46,7 @@ export default function App() {
     }
 
     return <AuthContext value={{changeAuthStatus: changeAuthStatus}}>
+	<DragAndDropSection />
 	{page}
     </AuthContext>;
 }
