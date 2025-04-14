@@ -31,31 +31,38 @@ func (s *HttpServer) Run(ctx context.Context) error {
 
     mux.HandleFunc("/register", func(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost {
-	    writeResponse(w, http.StatusMethodNotAllowed, "Use method POST instead")
+	    writeResponseMessage(w, http.StatusMethodNotAllowed, "Use method POST instead")
 	    return
 	}
 	register(siglog, w, req)
     })
     mux.HandleFunc("/login", func(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost {
-	    writeResponse(w, http.StatusMethodNotAllowed, "Use method POST instead")
+	    writeResponseMessage(w, http.StatusMethodNotAllowed, "Use method POST instead")
 	    return
 	}
 	login(siglog, w, req)
     })
     mux.HandleFunc("/logout", func(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodGet {
-	    writeResponse(w, http.StatusMethodNotAllowed, "Use method GET instead")
+	    writeResponseMessage(w, http.StatusMethodNotAllowed, "Use method GET instead")
 	    return
 	}
 	logout(siglog, w, req)
     })
     mux.HandleFunc("/check-auth", func(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodGet {
-	    writeResponse(w, http.StatusMethodNotAllowed, "Use method GET instead")
+	    writeResponseMessage(w, http.StatusMethodNotAllowed, "Use method GET instead")
 	    return
 	}
 	checkAuth(siglog, w, req)
+    })
+    mux.HandleFunc("/get-user", func(w http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodGet {
+	    writeResponseMessage(w, http.StatusMethodNotAllowed, "Use method GET instead")
+	    return
+	}
+	handleGetUser(siglog, w, req)
     })
     mux.HandleFunc("/health", func(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(http.StatusOK)
@@ -78,13 +85,13 @@ func (s *HttpServer) Run(ctx context.Context) error {
 func register(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
     userId, errHttp := user.CreateUser(siglog, req)
     if errHttp != nil {
-	writeResponse(w, errHttp.Code, errHttp.Message)
+	writeResponseMessage(w, errHttp.Code, errHttp.Message)
 	return
     }
     
     sessionId, errHttp := session.Create(userId, siglog)
     if errHttp != nil {
-	writeResponse(w, errHttp.Code, errHttp.Message)
+	writeResponseMessage(w, errHttp.Code, errHttp.Message)
 	return
     }
 
@@ -102,41 +109,41 @@ func login(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
     var userData models.User
     err := json.NewDecoder(req.Body).Decode(&userData)
     if err != nil {
-	writeResponse(w, http.StatusBadRequest, "Couldn't parse user")
+	writeResponseMessage(w, http.StatusBadRequest, "Couldn't parse user")
 	return
     }
 
     if strings.Trim(userData.Email, " ") == "" || strings.Trim(userData.Password,  " ") == "" {
-	writeResponse(w, http.StatusBadRequest, "User data can't be blank line")
+	writeResponseMessage(w, http.StatusBadRequest, "User data can't be blank line")
 	return
     }
 
     if len(userData.Password) < 6 {
-	writeResponse(w, http.StatusBadRequest, "Password should be at least 6 chars length")
+	writeResponseMessage(w, http.StatusBadRequest, "Password should be at least 6 chars length")
 	return
     }
 
     if strings.Contains(userData.Password, "'\" ") {
-	writeResponse(w, http.StatusBadRequest, "Password shouldn't contain ' or \"")
+	writeResponseMessage(w, http.StatusBadRequest, "Password shouldn't contain ' or \"")
 	return
     }
 
     // find user by email
     dbUser, httpError := user.GetUserByEmail(userData.Email, siglog);
     if httpError != nil {
-	writeResponse(w, httpError.Code, httpError.Message);
+	writeResponseMessage(w, httpError.Code, httpError.Message);
 	return
     }
 
     if err := user.ComparePasswords(dbUser.Password, userData.Password); err != nil {
-	writeResponse(w, http.StatusForbidden, "Passwords don't match")
+	writeResponseMessage(w, http.StatusForbidden, "Passwords don't match")
 	return
     }
 
     // create session
     sessionId, errHttp := session.Create(dbUser.Id, siglog)
     if errHttp != nil {
-	writeResponse(w, errHttp.Code, errHttp.Message)
+	writeResponseMessage(w, errHttp.Code, errHttp.Message)
 	return
     }
 
@@ -156,7 +163,7 @@ func login(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
 func logout(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
     cookie, err := req.Cookie(sessionCookieName)
     if err != nil {
-	writeResponse(w, http.StatusUnauthorized, err.Error())
+	writeResponseMessage(w, http.StatusUnauthorized, err.Error())
 	return
     }
     
@@ -164,7 +171,7 @@ func logout(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
 
     errHttp := session.Delete(sessionId, siglog)
     if errHttp != nil {
-	writeResponse(w, errHttp.Code, errHttp.Message)
+	writeResponseMessage(w, errHttp.Code, errHttp.Message)
 	return
     }
 
@@ -202,7 +209,35 @@ func checkAuth(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) 
     w.WriteHeader(http.StatusUnauthorized)
 }
 
-func writeResponse(w http.ResponseWriter, code int, message string) {
+func handleGetUser(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
+    sessionCookie, err := req.Cookie(sessionCookieName)
+    if err != nil {
+	writeResponseMessage(w, http.StatusUnauthorized, err.Error())
+	return
+    }
+
+    userId, sessionExists := session.IsSessionExists(sessionCookie.Value, siglog)
+    if !sessionExists {
+	writeResponseMessage(w, http.StatusNotFound, "There is no associated user with session")
+	return
+    }
+
+    user, httpErr := user.GetById(userId, siglog)
+    if err != nil {
+	writeResponseMessage(w, httpErr.Code, httpErr.Message)
+	return
+    }
+
+    // TODO: change it 
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusOK)
+    jsonResponse, _ := json.Marshal(struct { 
+	Email string `json:"email"`
+    } { Email: user.Email })
+    w.Write(jsonResponse)
+}
+
+func writeResponseMessage(w http.ResponseWriter, code int, message string) {
     w.Header().Set("Content-Type", "application/json")
     w.WriteHeader(code)
     jsonResponse, _ := json.Marshal(map[string]string{"message": message})

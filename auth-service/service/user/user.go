@@ -117,3 +117,16 @@ func ComparePasswords(passwordHash string, possiblePassword string) error {
     return err
 }
 
+func GetById(userId string, siglog *models.Siglog) (*models.User, *models.HTTPError) {
+    user, err := siglog.Users.ReadUserById(userId)
+    if err != nil {
+	return nil, &models.HTTPError {
+	    Code: http.StatusNotFound, 
+	    Message: "User does not exist", 
+	}
+    }
+    return user, nil
+}
+
+
+
