@@ -18,7 +18,6 @@ export default function MainPage() {
     };
 
     const addFilename = (filename) => {
-	console.log(`Adding new filename ${filename}.`)
 	setFilenames(oldFilenames => [...oldFilenames, filename]);
     };
 

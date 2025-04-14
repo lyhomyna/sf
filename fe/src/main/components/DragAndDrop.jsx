@@ -30,7 +30,6 @@ export default function DragAndDrop() {
     const onDrop = useCallback(async (acceptedFiles) => {
 	setIsDragging(false);
 	await Promise.all(acceptedFiles.map(file => uploadFile(file)));
-
     }, []);
 
     useEffect(() => {
