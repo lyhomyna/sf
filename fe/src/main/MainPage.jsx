@@ -2,7 +2,8 @@ import { useState } from "react";
 
 import TopBar from "./components/TopBar.jsx";
 import FileList from "./components/FileList.jsx";
-import { FilesContext } from "../storage/SfContext.jsx";
+import DragAndDrop from "./components/DragAndDrop.jsx";
+import { FilesContext } from "storage/SfContext.jsx";
 
 export default function MainPage() {
     const email="supercoolemail@super.mail" 
@@ -17,6 +18,7 @@ export default function MainPage() {
     };
 
     const addFilename = (filename) => {
+	console.log(`Adding new filename ${filename}.`)
 	setFilenames(oldFilenames => [...oldFilenames, filename]);
     };
 
@@ -41,6 +43,7 @@ export default function MainPage() {
 	<div className="p-2" >
 	    <TopBar email={email} imageURL={imageURL} />
 	    <FileList filenames={filenames} />
+	    <DragAndDrop /> 
 	</div>
     </FilesContext>
 }

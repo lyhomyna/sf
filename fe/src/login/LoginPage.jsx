@@ -1,6 +1,6 @@
 import { useRef, useContext } from "react";
-import { authServiceBaseUrl } from "../App.jsx";
-import { AuthContext } from "../storage/SfContext.jsx";
+import { authServiceBaseUrl } from "config/constants.js";
+import { AuthContext } from "storage/SfContext.jsx";
 
 export default function LoginPage() {
     const { changeAuthStatus } = useContext(AuthContext);

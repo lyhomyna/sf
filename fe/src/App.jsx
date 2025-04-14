@@ -1,12 +1,9 @@
-import MainPage from "./main/MainPage.jsx";
-import LoginPage from "./login/LoginPage.jsx";
+import MainPage from "main/MainPage.jsx";
+import LoginPage from "login/LoginPage.jsx";
 import { useState, useEffect } from "react";
 import { RingLoader } from "react-spinners";
-import { AuthContext } from "./storage/SfContext.jsx";
-import DragAndDropSection from "./main/components/DragAndDropSection.jsx";
-
-export const authServiceBaseUrl = "/api/auth"
-export const fileServiceBaseUrl = "/api/files"
+import { AuthContext } from "storage/SfContext.jsx";
+import { authServiceBaseUrl } from "config/constants.js";
 
 export default function App() {
     const [isAuthenticated, setAuthenticated] = useState(undefined);
@@ -19,14 +16,13 @@ export default function App() {
     useEffect(() => {
 	(async () => {
 	    const res = await fetch(`${authServiceBaseUrl}/check-auth`);
-	    
 	    if (res.status === 200) {
 		setIsLoading(false);
 		setAuthenticated(true);
-		return;
+	    } else {
+		setIsLoading(false);
+		setAuthenticated(false);
 	    }
-	    setIsLoading(false);
-	    setAuthenticated(false);
 	})();
     }, []);
 
@@ -37,7 +33,9 @@ export default function App() {
 	</div>;
     } else {
 	if (isAuthenticated) {
-	    page = <MainPage />;
+	    page = <>
+		<MainPage/>
+	    </>;
 	} else {
 	    page = <div className="h-screen flex flex-col items-center justify-center">
 	       <LoginPage />
@@ -46,7 +44,6 @@ export default function App() {
     }
 
     return <AuthContext value={{changeAuthStatus: changeAuthStatus}}>
-	<DragAndDropSection />
 	{page}
     </AuthContext>;
 }

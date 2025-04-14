@@ -1,8 +1,7 @@
-import { useEffect, useContext } from 'react';
+import { useEffect, useContext } from "react";
 
-import { FilesContext } from "../../storage/SfContext.jsx";
-import { fileServiceBaseUrl } from '../../App.jsx';
-
+import { FilesContext } from "storage/SfContext.jsx";
+import { fileServiceBaseUrl } from "config/constants.js";
 import FileItem from "./FileItem.jsx";
 
 export default function FileList({filenames}) {

@@ -1,12 +1,13 @@
 import { useContext } from "react";
 
 import Button from "./Button.jsx";
-import { AuthContext, FilesContext } from "../../storage/SfContext.jsx";
-import { authServiceBaseUrl, fileServiceBaseUrl } from "../../App.jsx";
+import { AuthContext } from "storage/SfContext.jsx";
+import { authServiceBaseUrl } from "config/constants.js";
+import { useUploadFile } from "hooks/useUploadFile.js";
 
 export default function ControlButtons({...props}) {
-    const { addFilename } = useContext(FilesContext);
     const { changeAuthStatus } = useContext(AuthContext);
+    const { uploadFile } = useUploadFile();
 
     const uploadFileOrFiles = async (multiple = false) => {
 	const supportsFileSystemAccess = "showOpenFilePicker" in window &&
@@ -27,28 +28,8 @@ export default function ControlButtons({...props}) {
 	}
 
 	if (fileOrFiles) {
-	    await fileOrFiles.forEach(async (file) => {
-		const formData = new FormData();
-		formData.append("file", file);
-		try {
-		    const response = await fetch(`${fileServiceBaseUrl}/save`, {
-			method: "POST", 
-			body: formData,
-			credentials: "include",
-		    });
-		    
-		    if (response.ok) {
-			addFilename(file.name) // to show filenames in list
-		    } else if(response.status === 400) {
-			alert(`File ${file.name} has already uploaded.`)
-		    } else {
-			alert("Failed to upload file. Try again.");
-		    }
-		} catch (err) {
-		    console.error("Error uploading file:", err)
-		    alert("An error occured. Try again.")
-		}
-	    });
+	    const uploadPromises = fileOrFiles.map(file => uploadFile(file));
+	    await Promise.all(uploadPromises);
 	}
     }
 

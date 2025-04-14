@@ -1,6 +1,6 @@
 import { useContext } from "react"; 
-import { FilesContext } from "../../storage/SfContext.jsx";
-import { fileServiceBaseUrl } from "../../App.jsx";
+import { FilesContext } from "storage/SfContext.jsx";
+import { fileServiceBaseUrl } from "config/constants.js";
 
 import Button from "./Button.jsx";
 
