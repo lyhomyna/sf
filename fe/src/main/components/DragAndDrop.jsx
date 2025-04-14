@@ -35,9 +35,11 @@ export default function DragAndDrop() {
     useEffect(() => {
     const handleDragEnter = (e) => {
 	e.preventDefault();
-
+    
 	// show dropzone only when files are being dragged 
-	if (!e.dataTransfer.types.includes('Files')) return;
+	if (!e.dataTransfer.types.includes('Files')) {
+	    return;
+	}
 
 	dragCounter++;
 	setIsDragging(true);
@@ -47,7 +49,10 @@ export default function DragAndDrop() {
 	e.preventDefault();
 
 	// show dropzone only when files are being dragged 
-	if (!e.dataTransfer.types.includes('Files')) return;
+	if (!e.dataTransfer.types.includes('Files')) {
+	    console.log("Isn't file")
+	    return; 
+	}
 
 	dragCounter--;
 	if (dragCounter === 0) {
@@ -59,7 +64,10 @@ export default function DragAndDrop() {
 	e.preventDefault();
 
 	// show dropzone only when files are being dragged 
-	if (!e.dataTransfer.types.includes('Files')) return;
+	if (!e.dataTransfer.types.includes('Files')) {
+	    console.log("Isn't file")
+	    return; 
+	}
 
 	dragCounter = 0;
 	setIsDragging(false);
