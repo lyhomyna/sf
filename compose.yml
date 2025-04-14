@@ -54,6 +54,8 @@ services:
       dockerfile: Dockerfile
     expose:
       - "8082"
+    volumes:
+      - files:/usr/src/file-service/files 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://file-service:8082/health"]
       interval: 10s
@@ -86,3 +88,4 @@ services:
 
 volumes:
   postgres_data:
+  files:
