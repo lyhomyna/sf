@@ -1,5 +1,6 @@
 # /save
 Method: POST
+***multipart/form-data***. FormData should include variable with name **file**
 
 Possible responces: 
 
@@ -13,7 +14,13 @@ Possible responces:
     R_JSON: { data: "Provide a file" }
 
     Code: StatusBadRequest 400
-    R_JSON: { data: "File with the same name already exist." }
+    R_JSON: { data: "File with the same name already exist" }
+
+    Code: StatusUnauthorized 401
+    R_JSON: { data: "Session cookie missing" }
+
+    Code: StatusUnsupportedMediaType 415
+    R_JSON: { data: "Expected multipart/form-data"}
 
     Code: StatusInternalServerError 500
     R_JSON: { data: "Something went wrong while a server was creating file" }
@@ -74,3 +81,9 @@ Possible responses:
 
     Code: StatusUnauthorized 401 
     R_JSON: { data: "Session cookie missing" }
+
+# /health
+Method: GET
+
+Possible response:
+    Code: StatusOK 200

@@ -218,7 +218,7 @@ func handleGetUser(siglog *models.Siglog, w http.ResponseWriter, req *http.Reque
 
     userId, sessionExists := session.IsSessionExists(sessionCookie.Value, siglog)
     if !sessionExists {
-	writeResponseMessage(w, http.StatusNotFound, "There is no associated user with session")
+	writeResponseMessage(w, http.StatusNotFound, "There is no user associated with session")
 	return
     }
 

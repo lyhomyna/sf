@@ -86,3 +86,26 @@ Possible responses:
     R_JSON: { uid: "USER_ID" }
 
     Code: StatusUnauthorized 401
+
+# /get-user
+Method: GET
+
+Possible responses:
+
+    Code: StatusOK 200
+    R_JSON { email: "USER_EMAIL" }
+
+    Code: StatusUnatuhorized 401
+    R_JSON: { message: "No present cookies or smth similar"
+
+    Code: StatusNotFound 404
+    R_JSON: { message: "There is no user associated with session" }
+
+    Code: StatusNotFound 404
+    R_JSON: { message: "User does not exist" }
+
+/health
+Method: GET
+
+Possible response:
+    Code: StatusOK 200
