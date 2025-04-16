@@ -52,7 +52,7 @@ export default function LoginPage() {
         Password
       </label>
       <input ref={passwordRef} className="shadow appearance-none rounded w-full py-2 px-3 text-gray-100 mb-3 leading-tight focus:outline-none focus:shadow-outline bg-[#2B2A33]" id="password" type="password" placeholder="******************"/>
-      <p class="wrong text-red-500 text-xs italic hidden">Invalid credentials.</p>
+      <p className="wrong text-red-500 text-xs italic hidden">Invalid credentials.</p>
     </div>
     <div className="flex items-center justify-between">
       <button className="bg-blue-500 hover:bg-blue-300 transition-all text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline active:scale-150" type="button" onClick={doLogIn}>
