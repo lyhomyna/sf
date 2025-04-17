@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { Provider } from "react-redux";
 
 import TopBar from "./components/TopBar.jsx";
 import FileList from "./components/FileList.jsx";
 import DragAndDrop from "./components/DragAndDrop.jsx";
 import { FilesContext } from "storage/SfContext.jsx";
+import store from "storage/store.js"; 
 
 export default function MainPage() {
     const [filenames, setFilenames] = useState([]);
@@ -30,15 +32,17 @@ export default function MainPage() {
 	});
     };
 
-    return <FilesContext value={ { 
-	filenames: filenames, 
-	addFilenames: addFilenames, 
-	deleteFilename: deleteFilename, 
-    }}>
-	<div className="p-2" >
-	    <TopBar />
-	    <FileList />
-	    <DragAndDrop /> 
-	</div>
-    </FilesContext>
+    return <Provider store={store}>
+	<FilesContext value={ { 
+	    filenames: filenames, 
+	    addFilenames: addFilenames, 
+	    deleteFilename: deleteFilename, 
+	}}>
+	    <div className="p-2" >
+		<TopBar />
+		<FileList />
+		<DragAndDrop /> 
+	    </div>
+	</FilesContext>
+    </Provider>
 }

@@ -1,13 +1,18 @@
 import { useContext } from "react";
 import { FilesContext } from "storage/SfContext.jsx";
 import { fileServiceBaseUrl } from "config/constants.js";
+import { useDispatch, useSelector } from "react-redux";
+import { addUpload, removeUpload } from "storage/uploadSlice.js";
 
 export function useUploadFile() {
     const { addFilenames } = useContext(FilesContext);
+    const dispatch = useDispatch();
 
     const uploadFile = async (file) => {
 	const formData = new FormData();
 	formData.append("file", file);
+	const fileId = file.name+randomInt();
+	dispatch(addUpload({id: fileId}));
 	try {
 	    const response = await fetch(`${fileServiceBaseUrl}/save`, {
 		method: "POST", 
@@ -27,8 +32,14 @@ export function useUploadFile() {
 	} catch (err) {
 	    console.error("Error uploading file:", err)
 	    alert(`Failed to upload file '${file.name}. Try again.`)
+	} finally {
+	    dispatch(removeUpload({id: fileId}))
 	}
     };
 
     return { uploadFile };
+}
+
+function randomInt(min=0, max=9999999999) {
+    return Math.floor(Math.random() * (max - min + 1) + min);
 }
