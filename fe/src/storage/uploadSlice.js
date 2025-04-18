@@ -20,11 +20,8 @@ const uploadSlice = createSlice({
 
 	    console.log("total files to upload:", state.uploading.length)
 	},
-	resetUpload: (state) => {
-	    state.uploading = [];
-	},
     },
 });
 
-export const { addUpload, removeUpload, resetUpload } = uploadSlice.actions;
+export const { addUpload, removeUpload } = uploadSlice.actions;
 export default uploadSlice.reducer;

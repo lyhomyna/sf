@@ -1,7 +1,7 @@
 import { useContext } from "react";
 import { FilesContext } from "storage/SfContext.jsx";
 import { fileServiceBaseUrl } from "config/constants.js";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { addUpload, removeUpload } from "storage/uploadSlice.js";
 
 export function useUploadFile() {

@@ -104,7 +104,6 @@ export default function ControlButtons({...props}) {
 
     return (<div {...props}>
 	<Button className="bg-neutral-700" text="Log out" onClick={logout}/>
-	<Button className="bg-neutral-300" text="Cnange password" />
 	<Button className="bg-neutral-700"text="Upload file" onClick={uploadFileOrFiles} />
     </div>);
 }
