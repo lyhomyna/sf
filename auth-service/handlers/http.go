@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/lyhomyna/sf/auth-service/service/session"
-	"github.com/lyhomyna/sf/auth-service/service/user"
+	userService "github.com/lyhomyna/sf/auth-service/service/user"
 	"github.com/lyhomyna/sf/auth-service/models"
 	"github.com/lyhomyna/sf/auth-service/repository"
 )
@@ -83,29 +83,18 @@ func (s *HttpServer) Run(ctx context.Context) error {
 }
 
 func register(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
-    userId, errHttp := user.CreateUser(siglog, req)
+    userId, errHttp := userService.CreateUser(siglog, req)
     if errHttp != nil {
 	writeResponseMessage(w, errHttp.Code, errHttp.Message)
 	return
     }
-    
-    sessionId, errHttp := session.Create(userId, siglog)
-    if errHttp != nil {
-	writeResponseMessage(w, errHttp.Code, errHttp.Message)
-	return
-    }
-
-    http.SetCookie(w, &http.Cookie{
-	Name: sessionCookieName,
-	Value: sessionId,
-    })	
 
     log.Printf("New user '%s' has been registered.", userId)
     w.WriteHeader(http.StatusOK)
 }
 
 func login(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
-    // validate user (validate by input data and if user exists in DB)
+    // Decode user
     var userData models.User
     err := json.NewDecoder(req.Body).Decode(&userData)
     if err != nil {
@@ -113,30 +102,9 @@ func login(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
 	return
     }
 
-    if strings.Trim(userData.Email, " ") == "" || strings.Trim(userData.Password,  " ") == "" {
-	writeResponseMessage(w, http.StatusBadRequest, "User data can't be blank line")
-	return
-    }
-
-    if len(userData.Password) < 6 {
-	writeResponseMessage(w, http.StatusBadRequest, "Password should be at least 6 chars length")
-	return
-    }
-
-    if strings.Contains(userData.Password, "'\" ") {
-	writeResponseMessage(w, http.StatusBadRequest, "Password shouldn't contain ' or \"")
-	return
-    }
-
-    // find user by email
-    dbUser, httpError := user.GetUserByEmail(userData.Email, siglog);
-    if httpError != nil {
-	writeResponseMessage(w, httpError.Code, httpError.Message);
-	return
-    }
-
-    if err := user.ComparePasswords(dbUser.Password, userData.Password); err != nil {
-	writeResponseMessage(w, http.StatusForbidden, "Passwords don't match")
+    dbUser, httpErr := validateUser(&userData, siglog)
+    if httpErr != nil {
+	writeResponseMessage(w, httpErr.Code, httpErr.Message)
 	return
     }
 
@@ -146,7 +114,52 @@ func login(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
 	writeResponseMessage(w, errHttp.Code, errHttp.Message)
 	return
     }
+    setSessionCookie(w, sessionId)
 
+    // write response
+    log.Printf("User %s logged in.\n", dbUser.Id)
+    w.WriteHeader(http.StatusOK)
+}
+
+func validateUser(user *models.User, siglog *models.Siglog) (*models.DbUser, *models.HTTPError) {
+    if strings.Trim(user.Email, " ") == "" || strings.Trim(user.Password,  " ") == "" {
+	return nil, &models.HTTPError{
+	    Code: http.StatusBadRequest,
+	    Message: "User data can't be blank line",
+	}
+    }
+
+    if len(user.Password) < 6 {
+	return nil, &models.HTTPError{
+	    Code: http.StatusBadRequest,
+	    Message: "Password should be at least 6 chars length",
+	}
+    }
+
+    if strings.Contains(user.Password, "'\" ") {
+	return nil, &models.HTTPError{
+	    Code: http.StatusBadRequest,
+	    Message: "Password shouldn't contain ' or \"",
+	}
+    }
+
+    // find user by email
+    dbUser, httpError := userService.GetUserByEmail(user.Email, siglog);
+    if httpError != nil {
+	return nil,  httpError   
+    }
+
+    if err := userService.ComparePasswords(dbUser.Password, user.Password); err != nil {
+	return nil, &models.HTTPError{
+	    Code: http.StatusForbidden,
+	    Message: "Passwords don't match",
+	}
+    }
+
+    return dbUser, nil
+}
+
+func setSessionCookie(w http.ResponseWriter, sessionId string) {
     http.SetCookie(w, &http.Cookie{
 	Name: sessionCookieName,
 	Value: sessionId,
@@ -154,10 +167,6 @@ func login(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
 	Path: "/",
 	SameSite: http.SameSiteLaxMode,
     })
-
-    // write response
-    log.Printf("User %s logged in.\n", dbUser.Id)
-    w.WriteHeader(http.StatusOK)
 }
 
 func logout(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
@@ -222,7 +231,7 @@ func handleGetUser(siglog *models.Siglog, w http.ResponseWriter, req *http.Reque
 	return
     }
 
-    user, httpErr := user.GetById(userId, siglog)
+    user, httpErr := userService.GetById(userId, siglog)
     if err != nil {
 	writeResponseMessage(w, httpErr.Code, httpErr.Message)
 	return

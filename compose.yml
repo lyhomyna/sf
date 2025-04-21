@@ -20,13 +20,10 @@ services:
     build:
       context: ./fe
       dockerfile: Dockerfile
-    ports: 
-      - "3000:3000"
-    volumes:
-      - ./fe:/usr/src/sf-fe
-      - /usr/src/sf-fe/node_modules
+    expose:
+      - "80"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://fe:3000"]
+      test: ["CMD", "curl", "-f", "http://fe:80"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -36,7 +33,7 @@ services:
       context: ./auth-service
       dockerfile: Dockerfile 
     expose:
-      - "8081"
+      - "80"
     env_file:
       - ./auth-service/.env
     depends_on:
