@@ -24,7 +24,7 @@ export default function FileList({filenames}) {
     }, [])
 
     return filenames.length === 0 ? (
-	    <p className="text-stone-100 text-xl text-center w-[40rem]">No files uploaded yet.</p>
+	    <p className="text-stone-100 text-xl text-center w-[29rem] mt-2">No files uploaded yet.</p>
 	) : (
 	    <ul className="flex flex-col justify-start w-max">
 	    { 
