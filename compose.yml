@@ -20,10 +20,13 @@ services:
     build:
       context: ./fe
       dockerfile: Dockerfile
-    expose:
-      - "80"
+    ports: 
+      - "3000:3000"
+    volumes:
+      - ".:/usr/sf-fe"
+      - "/usr/sf-fe/node_modules"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://fe:80"]
+      test: ["CMD", "curl", "-f", "http://fe:3000"]
       interval: 10s
       timeout: 5s
       retries: 5
