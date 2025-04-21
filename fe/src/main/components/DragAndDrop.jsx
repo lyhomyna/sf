@@ -35,7 +35,7 @@ export default function DragAndDrop() {
     useEffect(() => {
     const handleDragEnter = (e) => {
 	e.preventDefault();
-    
+
 	// show dropzone only when files are being dragged 
 	if (!e.dataTransfer.types.includes('Files')) {
 	    return;

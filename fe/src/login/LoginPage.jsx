@@ -29,13 +29,15 @@ export default function LoginPage() {
 
 
 	if (res.status !== 200) {
-	    console.log(await res.json());
-	    document.querySelector("form").reset();
-	    document.querySelector(".wrong").classList.remove("hidden");
+	    const err = await res.json()
+	    console.error(err.message);
+
+	    displayErrMsg();
+
 	    return;
 	}
-	document.querySelector("form").reset();
 
+	document.querySelector("form").reset();
 	changeAuthStatus();
     }
 
@@ -67,4 +69,9 @@ export default function LoginPage() {
     &copy;2025 SF. All rights reserved.
   </p>
 </div>
+}
+
+function displayErrMsg() {
+    document.querySelector("form").reset();
+    document.querySelector(".wrong").classList.remove("hidden");
 }
