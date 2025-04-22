@@ -47,7 +47,7 @@ func HandleSave(w http.ResponseWriter, req *http.Request) {
 	return
     }
 
-    if req.Header.Get("Content-Type") != "multipart/form-data" {
+    if !strings.Contains(req.Header.Get("Content-Type"), "multipart/form-data") {
 	writeResponse(w, "Expected multipart/form-data", http.StatusUnsupportedMediaType)
 	return
     }

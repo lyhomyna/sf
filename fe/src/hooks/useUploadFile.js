@@ -16,12 +16,13 @@ export function useUploadFile() {
 	    });
 	    
 	    if (response.ok) {
-		console.log(`File '${file.name}' uploaded.`)
-		addFilename(file.name) // to show filenames in list
+		addFilename(file.name) // to show filename(s) in list of files
 	    } else if(response.status === 400) {
 		alert(`File ${file.name} has already uploaded.`)
 	    } else {
+		const httpErr = await response.json()
 		alert(`Failed to upload file '${file.name}'. Try again.`);
+		console.log(httpErr.data)
 	    }
 	} catch (err) {
 	    console.error("Error uploading file:", err)
