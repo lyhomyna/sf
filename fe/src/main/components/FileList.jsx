@@ -4,9 +4,10 @@ import { FilesContext } from "storage/SfContext.jsx";
 import { fileServiceBaseUrl } from "config/constants.js";
 import FileItem from "./FileItem.jsx";
 
-export default function FileList({filenames}) {
-    const { addFilenames } = useContext(FilesContext);
+export default function FileList() {
+    const { filenames, addFilenames } = useContext(FilesContext);
 
+    // fetch filenames on the first page load 
     useEffect(() => {
 	(async () => {
 	    const res = await fetch(`${fileServiceBaseUrl}/filenames`, {
@@ -19,7 +20,7 @@ export default function FileList({filenames}) {
 		return
 	    }
 
-            addFilenames(resJson.data);
+            addFilenames({ filenames: [...resJson.data], rewrite: true });
 	})()
     }, [])
 

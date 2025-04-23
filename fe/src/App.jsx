@@ -13,6 +13,7 @@ export default function App() {
 	setAuthenticated(current => !current);
     }
 
+    // check if user authenticated
     useEffect(() => {
 	(async () => {
 	    const res = await fetch(`${authServiceBaseUrl}/check-auth`);
@@ -26,6 +27,7 @@ export default function App() {
 	})();
     }, []);
 
+    // show either main page or loader
     let page;
     if (isLoading) {
 	page = <div className="flex justify-center items-center h-screen">

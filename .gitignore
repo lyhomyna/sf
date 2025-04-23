@@ -3,4 +3,5 @@ fe/node_modules/
 .bk
 certs/
 nginx.*.conf
-Docker.*
+Dockerfile.*
+compose.*.conf
