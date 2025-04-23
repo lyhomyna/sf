@@ -3,9 +3,10 @@ services:
     image: nginx:latest
     container_name: nginx-proxy
     ports: 
-      - "80:80"
+      - "443:443"
     volumes:
-      - ./nginx.dev.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - ./certs/:/etc/nginx/certs/
     depends_on:
       fe: 
         condition: service_healthy
@@ -19,12 +20,9 @@ services:
   fe:
     build:
       context: ./fe
-      dockerfile: Dockerfile.dev
-    ports: 
-      - "3000:3000"
-    volumes:
-      - ".:/usr/sf-fe"
-      - "/usr/sf-fe/node_modules"
+      dockerfile: Dockerfile.prod
+    expose:
+      - "80"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://fe:3000"]
       interval: 10s

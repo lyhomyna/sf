@@ -21,13 +21,14 @@ export function useUploadFile() {
 	    });
 	    
 	    if (response.ok) {
-		console.log(`File '${file.name}' uploaded.`)
 		addFilenames({filenames: [file.name]}) // to show filenames in list
 	    } else if(response.status === 400) {
 		const res = await response.json()
 		alert(await res.data)
 	    } else {
+		const httpErr = await response.json()
 		alert(`Failed to upload file '${file.name}'. Try again.`);
+		console.log(httpErr.data)
 	    }
 	} catch (err) {
 	    console.error("Error uploading file:", err)
