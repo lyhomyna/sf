@@ -5,3 +5,4 @@ certs/
 nginx.*.conf
 Dockerfile.*
 compose.*.conf
+*.tar.gz
