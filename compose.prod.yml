@@ -24,7 +24,7 @@ services:
     expose:
       - "80"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://fe:3000"]
+      test: ["CMD", "curl", "-f", "http://fe:80"]
       interval: 10s
       timeout: 5s
       retries: 5

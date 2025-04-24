@@ -2,7 +2,7 @@ fe/node_modules/
 .env
 .bk
 certs/
-nginx.*.conf
-Dockerfile.*
-compose.*.conf
+# nginx.*.conf
+# Dockerfile.*
+# compose.*.conf
 *.tar.gz
