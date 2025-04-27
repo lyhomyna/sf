@@ -60,9 +60,9 @@ export default function LoginPage() {
       <button className="bg-blue-500 hover:bg-blue-300 transition-all text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline active:scale-150" type="button" onClick={doLogIn}>
         Sign In
       </button>
-      <a className="inline-block align-baseline font-bold text-sm text-blue-500 hover:scale-50 hover:text-blue-900 transition-all" href="#">
+      <button className="inline-block align-baseline font-bold text-sm text-blue-500 hover:scale-50 hover:text-blue-900 transition-all">
         Forgot Password?
-      </a>
+      </button>
     </div>
   </form>
   <p className="text-center text-gray-500 text-xs">

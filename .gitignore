@@ -2,10 +2,10 @@ fe/node_modules/
 .env
 .bk
 certs/
-nginx.*.conf
-compose.*.conf
-*.tar.gz
-
-# fe
+*.dev.yml
+#*.prod.yml
+*.dev.conf
+#*.prod.conf
+**/Dockerfile.dev
+**/Dockerfile.prod
 fe/build
-Dockerfile.*

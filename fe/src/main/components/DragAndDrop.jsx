@@ -1,9 +1,9 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { useUploadFile } from "hooks/useUploadFile.js"; 
 
-function DragAndDropSection({ onDrop }) {
-    const { getRootProps, getInputProps } = useDropzone({ onDrop });
+function DragAndDropSection() {
+    const { getRootProps, getInputProps } = useDropzone();
 
     return (
     <div
@@ -25,12 +25,12 @@ function DragAndDropSection({ onDrop }) {
 export default function DragAndDrop() {
     const { uploadFile } = useUploadFile();
     const [isDragging, setIsDragging] = useState(false);
-    let dragCounter = 0;
+    let dragCounter = useRef(0);
 
     const onDrop = useCallback(async (acceptedFiles) => {
 	setIsDragging(false);
 	await Promise.all(acceptedFiles.map(file => uploadFile(file)));
-    }, []);
+    }, [uploadFile]);
 
     useEffect(() => {
     const handleDragEnter = (e) => {
@@ -41,7 +41,7 @@ export default function DragAndDrop() {
 	    return;
 	}
 
-	dragCounter++;
+	dragCounter.current++;
 	setIsDragging(true);
     };
 
@@ -54,7 +54,7 @@ export default function DragAndDrop() {
 	    return; 
 	}
 
-	dragCounter--;
+	dragCounter.current--;
 	if (dragCounter === 0) {
 	setIsDragging(false);
 	}
@@ -69,7 +69,7 @@ export default function DragAndDrop() {
 	    return; 
 	}
 
-	dragCounter = 0;
+	dragCounter.cuurent = 0;
 	setIsDragging(false);
     };
 

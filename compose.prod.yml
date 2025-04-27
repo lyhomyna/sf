@@ -21,8 +21,8 @@ services:
     build:
       context: ./fe
       dockerfile: Dockerfile.prod
-    expose:
-      - "80"
+    ports:
+      - "80:80"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://fe:80"]
       interval: 10s
