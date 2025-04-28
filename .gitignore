@@ -2,10 +2,4 @@ fe/node_modules/
 .env
 .bk
 certs/
-# *.dev.yml
-# *.prod.yml
-# *.dev.conf
-# *.prod.conf
-# **/Dockerfile.dev
-# **/Dockerfile.prod
 *.tar.gz
