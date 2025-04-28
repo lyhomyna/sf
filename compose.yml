@@ -21,8 +21,6 @@ services:
     build:
       context: ./fe
       dockerfile: Dockerfile
-    ports:
-      - "80:80"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://fe:80"]
       interval: 10s
@@ -33,8 +31,6 @@ services:
     build:
       context: ./auth-service
       dockerfile: Dockerfile 
-    expose:
-      - "80"
     env_file:
       - ./auth-service/.env
     depends_on:
@@ -50,8 +46,6 @@ services:
     build:
       context: ./file-service
       dockerfile: Dockerfile
-    expose:
-      - "8082"
     volumes:
       - files:/usr/src/file-service/files 
     healthcheck:
