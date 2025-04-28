@@ -5,7 +5,7 @@ services:
     ports: 
       - "443:443"
     volumes:
-      - ./nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./certs/:/etc/nginx/certs/
     depends_on:
       fe: 
@@ -20,7 +20,7 @@ services:
   fe:
     build:
       context: ./fe
-      dockerfile: Dockerfile.prod
+      dockerfile: Dockerfile
     ports:
       - "80:80"
     healthcheck:
