@@ -60,8 +60,6 @@ services:
 
   db:
     image: postgres:latest
-    expose:
-      - "5432"
     env_file:
       - .env
     volumes:
