@@ -1,37 +1,18 @@
 package api
 
 import (
-	"encoding/json"
-	"errors"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/lyhomyna/sf/file-service/api/models"
 )
 
 // directory where uploaded files will be saved
 var filesDirectory = filepath.Join("files")
-
-var sessionCookieName = "session-id"
-var authServiceBaseUrl = "http://auth-service:8081"
-
-func OptionsMiddleware(next http.Handler) http.Handler {
-    return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-	// logConnection(req)
-
-	if req.Method == http.MethodOptions {
-	    w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-	    w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
-	    w.WriteHeader(http.StatusNoContent)
-	    return
-	}
-	    
-	next.ServeHTTP(w, req)
-    })
-}
 
 // HandleSave is the handler for saving file. File should be form value with key 'file'.
 func HandleSave(w http.ResponseWriter, req *http.Request) {
@@ -104,6 +85,7 @@ func saveUploadedFile(userId string, filename string, uploadedFile io.Reader) (s
 
     return "", -1
 }
+
 
 func HandleDelete(w http.ResponseWriter, req *http.Request) {
     if req.Method != http.MethodDelete {
@@ -190,6 +172,7 @@ func HandleDownload(w http.ResponseWriter, req *http.Request) {
     http.ServeFile(w,req, filepathToDownload)
 }
 
+
 func HandleFilenames(w http.ResponseWriter, req *http.Request) {
     if req.Method != http.MethodGet {
 	http.Error(w, "Use GET method instead", http.StatusBadRequest)
@@ -216,46 +199,11 @@ func HandleFilenames(w http.ResponseWriter, req *http.Request) {
     }
 }
 
-func verifySession(sessionCookie *http.Cookie) (string, error) {
-    reqUrl := fmt.Sprintf("%s/check-auth", authServiceBaseUrl)
-    
-    req, _ := http.NewRequest("GET", reqUrl, nil)
-
-    req.AddCookie(sessionCookie)
-
-    client := &http.Client{}
-
-    resp, err := client.Do(req)
-    if err != nil {
-	log.Println("Unable to verify session:", err)
-	return "", errors.New("Unable to verify session")
-    }
-
-    defer resp.Body.Close()
-
-    if resp.StatusCode != http.StatusOK {
-	log.Println("Unable to verify session: Status", resp.StatusCode)
-	return "", errors.New("Unable to verify session")
-    }
-
-    var res struct {
-	Id string `json:"userId"`
-    }
-    json.NewDecoder(resp.Body).Decode(&res)
-
-    return res.Id, nil
-}
-
-type responseError struct {
-    Code int
-    Message string
-}
-
-func getFilenames(userId string) ([]string, *responseError) {
+func getFilenames(userId string) ([]string, *models.HttpError) {
     filesPath := filepath.Join(filesDirectory, userId)
     entries, err := os.ReadDir(filesPath)
     if err != nil {
-	return nil, &responseError {
+	return nil, &models.HttpError {
 	    Code: http.StatusInternalServerError,
 	    Message: "Cannot read from user directory",
 	}
@@ -269,26 +217,3 @@ func getFilenames(userId string) ([]string, *responseError) {
     return filenames, nil
 }
 
-
-func writeResponse(w http.ResponseWriter, data any, code int) {
-    w.Header().Set("Content-Type", "application/json")
-    w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-
-    w.WriteHeader(code)
-    d := struct {
-	Data any `json:"data"`
-    } {
-	Data: data,
-    }
-
-    response, err := json.Marshal(d)
-    if err != nil {
-	panic(err)
-    }
-    w.Write(response)
-}
-
-// logConnection is a 'logger' of each request
-func logConnection(req *http.Request) {
-    log.Printf("%s | %s %s\n", req.RemoteAddr, req.Method,  req.URL.Path)
-}
