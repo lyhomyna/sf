@@ -10,11 +10,12 @@ import (
 func main() {
     mux := http.NewServeMux()
 
-    mux.HandleFunc("/save", api.HandleSave)           // POST
-    mux.HandleFunc("/delete/", api.HandleDelete)      // DELETE
-    mux.HandleFunc("/download/", api.HandleDownload)  // GET
-    mux.HandleFunc("/filenames", api.HandleFilenames) // GET
-
+    mux.HandleFunc("/save", api.HandleSave)               // POST
+    mux.HandleFunc("/delete/", api.HandleDelete)          // DELETE
+    mux.HandleFunc("/download/", api.HandleDownload)      // GET
+    mux.HandleFunc("/filenames", api.HandleFilenames)     // GET
+    mux.HandleFunc("/avatar", api.HandleAvatarGet)        // GET
+    mux.HandleFunc("/avatar/save", api.HandleAvatarSave)  //POST
 
     mux.HandleFunc("/health", func(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(http.StatusOK)

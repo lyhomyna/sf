@@ -2,4 +2,5 @@ fe/node_modules/
 .env
 .bk
 certs/
+*.tar.gz
 fe/build
