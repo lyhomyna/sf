@@ -82,7 +82,7 @@ func TestValidImageValidation(t *testing.T) {
     }
     defer testImage.Close()
 
-    isImage := isImageValid(testImage)
+    _, isImage := validateImageFile(testImage)
     if !isImage {
 	t.Fatal("Wrong return")
     }
@@ -97,7 +97,7 @@ func TestNotValidImageValidation(t *testing.T) {
     }
     defer testFile.Close()
 
-    isImage := isImageValid(testFile)
+    _, isImage := validateImageFile(testFile)
     if isImage {
 	t.Fatal("Wrong return")
     }
