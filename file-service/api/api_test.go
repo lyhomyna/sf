@@ -1,9 +1,10 @@
 package api
 
 import (
+	"bytes"
 	"net/http"
 	"os"
-	"bytes"
+	"path/filepath"
 	"testing"
 )
 
@@ -72,3 +73,32 @@ func TestSameFileSave(t *testing.T) {
     deleteFile(tUserId, tFilename)
 }
 
+func TestValidImageValidation(t *testing.T) {
+    testImagePath := filepath.Join("/", "home", "qqweq", "d", "testdata", "hello.png")
+
+    testImage, err := os.Open(testImagePath)
+    if err != nil {
+	t.Fatal("Couldn't open test image:", err.Error())
+    }
+    defer testImage.Close()
+
+    isImage := isImageValid(testImage)
+    if !isImage {
+	t.Fatal("Wrong return")
+    }
+}
+
+func TestNotValidImageValidation(t *testing.T) {
+    testNotImagePath := filepath.Join("/", "home", "qqweq", "d", "testdata", "notimage")
+
+    testFile, err := os.Open(testNotImagePath)
+    if err != nil {
+	t.Fatal("Couldn't open test image:", err.Error())
+    }
+    defer testFile.Close()
+
+    isImage := isImageValid(testFile)
+    if isImage {
+	t.Fatal("Wrong return")
+    }
+}
