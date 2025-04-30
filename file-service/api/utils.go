@@ -6,8 +6,50 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/lyhomyna/sf/file-service/api/models"
 )
 
+
+func writeResponse(w http.ResponseWriter, data any, code int) {
+    w.Header().Set("Content-Type", "application/json")
+    w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+
+    w.WriteHeader(code)
+    d := struct {
+	Data any `json:"data"`
+    } {
+	Data: data,
+    }
+
+    response, err := json.Marshal(d)
+    if err != nil {
+	panic(err)
+    }
+    w.Write(response)
+}
+
+func checkAuth(req *http.Request) (string, *models.HttpError) {
+    sessionCookie, err := req.Cookie(sessionCookieName)
+    if err != nil {
+        return "", &models.HttpError{
+	    Code: http.StatusUnauthorized,
+	    Message: "Session cookie missing",
+	}
+    }
+
+    uid, err := verifySession(sessionCookie); 
+    if err != nil {
+        return "", &models.HttpError{
+	    Code: http.StatusUnauthorized,
+	    Message: err.Error(),
+	}
+    }
+
+    return uid, nil
+}
+
+// verifySession returns user id of error
 func verifySession(sessionCookie *http.Cookie) (string, error) {
     reqUrl := fmt.Sprintf("%s/check-auth", authServiceBaseUrl)
     
@@ -37,22 +79,3 @@ func verifySession(sessionCookie *http.Cookie) (string, error) {
 
     return res.Id, nil
 }
-
-func writeResponse(w http.ResponseWriter, data any, code int) {
-    w.Header().Set("Content-Type", "application/json")
-    w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-
-    w.WriteHeader(code)
-    d := struct {
-	Data any `json:"data"`
-    } {
-	Data: data,
-    }
-
-    response, err := json.Marshal(d)
-    if err != nil {
-	panic(err)
-    }
-    w.Write(response)
-}
-

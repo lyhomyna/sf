@@ -92,17 +92,9 @@ func HandleDelete(w http.ResponseWriter, req *http.Request) {
 	http.Error(w, "Use DELETE method instead", http.StatusBadRequest)
 	return
     }
-
-    sessionCookie, err := req.Cookie(sessionCookieName)
-    if err != nil {
-	log.Println(err)
-	writeResponse(w, "Session cookie missing", http.StatusUnauthorized)
-	return
-    }
-
-    userId, err := verifySession(sessionCookie)
-    if err != nil {
-	writeResponse(w, err.Error(), http.StatusUnauthorized)
+    userId, httpErr := checkAuth(req)
+    if httpErr != nil {
+	writeResponse(w, httpErr.Message, httpErr.Code)
 	return
     }
 
@@ -138,17 +130,9 @@ func HandleDownload(w http.ResponseWriter, req *http.Request) {
 	http.Error(w, "Use GET method instead", http.StatusBadRequest)
 	return
     }
-
-    // get session cookie
-    sessionCookie, err := req.Cookie(sessionCookieName)
-    if err != nil {
-	writeResponse(w, "Session cookie missing", http.StatusUnauthorized)
-	return
-    }
-    // verify session cookie and get user id
-    userId, err := verifySession(sessionCookie)
-    if err != nil {
-	writeResponse(w, err.Error(), http.StatusUnauthorized)
+    userId, httpErr := checkAuth(req)
+    if httpErr != nil {
+	writeResponse(w, httpErr.Message, httpErr.Code)
 	return
     }
 
@@ -159,7 +143,7 @@ func HandleDownload(w http.ResponseWriter, req *http.Request) {
     }
     filepathToDownload := filepath.Join(filesDirectory, userId, filename) 
 
-    _, err = os.Stat(filepathToDownload)
+    _, err := os.Stat(filepathToDownload)
     if err != nil {
 	writeResponse(w, "File not found", http.StatusNotFound)
 	return
@@ -178,17 +162,9 @@ func HandleFilenames(w http.ResponseWriter, req *http.Request) {
 	http.Error(w, "Use GET method instead", http.StatusBadRequest)
 	return
     }
-
-    // get session cookie
-    sessionCookie, err := req.Cookie(sessionCookieName)
-    if err != nil {
-	writeResponse(w, "Session cookie missing", http.StatusUnauthorized)
-	return
-    }
-    // verify session cookie and get user id
-    userId, err := verifySession(sessionCookie)
-    if err != nil {
-	writeResponse(w, err.Error(), http.StatusUnauthorized)
+    userId, httpErr := checkAuth(req)
+    if httpErr != nil {
+	writeResponse(w, httpErr.Message, httpErr.Code)
 	return
     }
 
