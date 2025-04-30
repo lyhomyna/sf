@@ -60,7 +60,6 @@ func HandleAvatarSave(w http.ResponseWriter, req *http.Request) {
 
     writtenBytes, err := io.Copy(outFile, avaFile)
     if err != nil {
-	log.Println("Couldn't copy file:", err.Error())
 	writeResponse(w, "Internal server error X_X", http.StatusInternalServerError)
 	return
     }
@@ -88,19 +87,16 @@ func validateImageFile(possibleImage io.Reader) (string, bool) {
     }
     
     contentType := http.DetectContentType(buffer)
-    log.Println("ContentType of avatar is:", contentType)
     if !allowed[contentType] {
 	return "", false
     }
 
-    log.Println("File is an image")
     ext := strings.Split(contentType, "/")[1]
     return ext, true
 }
 
 func initAvatarDir() error {
     err := os.MkdirAll(avatarsDirectoryPath, os.ModePerm)
-    log.Println("initAvatarDir() err is:", err)
     return err
 }
 
