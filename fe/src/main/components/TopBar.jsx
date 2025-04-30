@@ -16,11 +16,11 @@ export default function TopBar() {
 		const response = await fetch(`${authServiceBaseUrl}/get-user`);
 
 		if (response.status === 200) {
-		    //const user = await response.json(); 
-		    //setEmail(user.email);
+		    const user = await response.json(); 
+		    setEmail(user.email);
 		} else if (response.status === 404) {
-		    //const err = await response.json();
-		    //console.log(err.message)
+		    const err = await response.json();
+		    console.log(err.message)
 		}
 	    } catch (err) {
 		console.log("Failed to fetch user", err)
