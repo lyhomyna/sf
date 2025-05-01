@@ -1,7 +1,8 @@
 package repository
 
 type UserImagesRepository interface {
-    SaveUserImage(userId string, imageName string) error
+    SaveUserImage(userId string, imageUrl string) error
+    GetUserImageUrl(userId string) (string, error)
 }
 
 type FilesRepository interface {

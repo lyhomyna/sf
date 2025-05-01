@@ -27,12 +27,12 @@ func NewUserImagesService(userImagesRepository repository.UserImagesRepository) 
     }
 }
 
-func (uis *UserImagesService) GetUserImageHandler(w http.ResponseWriter, req *http.Request) {
+func (uis *UserImagesService) SaveUserImageHandler(w http.ResponseWriter, req *http.Request) {
     if req.Method != http.MethodPost {
 	http.Error(w, "Use POST method instead", http.StatusBadRequest)
 	return
     }
-    _, httpErr := utils.CheckAuth(req)
+    userId, httpErr := utils.CheckAuth(req)
     if httpErr != nil {
 	utils.WriteResponse(w, httpErr.Message, httpErr.Code)
 	return
@@ -61,7 +61,8 @@ func (uis *UserImagesService) GetUserImageHandler(w http.ResponseWriter, req *ht
     }
 
     // construct new avatar name (uuid + .ext) 
-    userImageFilepath := filepath.Join(userImagesDirectoryPath, constructFilename(userImageExt)) 
+    userImageFilename := constructFilename(userImageExt)
+    userImageFilepath := filepath.Join(userImagesDirectoryPath, userImageFilename) 
     outFile, err := os.Create(userImageFilepath)
     if err != nil {
 	log.Println("WTF! Couldn't create a file to store userImage:", err.Error())
@@ -78,10 +79,12 @@ func (uis *UserImagesService) GetUserImageHandler(w http.ResponseWriter, req *ht
 
     responseMgs := fmt.Sprintf("User image has been stored. Written %d bytes", writtenBytes)
     utils.WriteResponse(w, responseMgs, http.StatusOK)
-    // save avatar to database (OMG X_X)
-    // 
-    // side notes
-    // avatar path should be stored in the database
+
+    err = uis.repository.SaveUserImage(userId, userImageFilename)
+    if err != nil {
+	removeFile(userImageFilepath)
+	utils.WriteResponse(w, err.Error(), http.StatusInternalServerError)
+    }
 }
 
 // validateImageFile returns extension and isImage indicator
@@ -116,6 +119,27 @@ func constructFilename(extension string) string {
     newFilename := fmt.Sprintf("%s.%s", uuid.NewString(), extension)
     return newFilename 
 }
-func (uid *UserImagesService) SaveUserImageHandler(w http.ResponseWriter, req *http.Request) {
 
+func removeFile(path string) {
+    err := os.Remove(path)
+    if err == nil {
+	log.Printf("File '%s' properly removed", path)
+    }
+}
+
+
+func (uid *UserImagesService) GetUserImageHandler(w http.ResponseWriter, req *http.Request) {
+    userId, httpErr := utils.CheckAuth(req)
+    if httpErr != nil {
+	utils.WriteResponse(w, httpErr.Message, httpErr.Code)
+    }
+
+    imageUrl, err := uid.repository.GetUserImageUrl(userId)
+    if err != nil {
+	utils.WriteResponse(w, err.Error(), http.StatusNotFound)
+	return
+    }
+
+    responseDataJson := fmt.Sprintf("{'image_url': '%s'}", imageUrl)
+    utils.WriteResponse(w, responseDataJson, http.StatusOK)
 }

@@ -35,6 +35,7 @@ func WriteResponse(w http.ResponseWriter, data any, code int) {
 func CheckAuth(req *http.Request) (string, *models.HttpError) {
     sessionCookie, err := req.Cookie(sessionCookieName)
     if err != nil {
+	log.Println("Session cookie missing")
         return "", &models.HttpError{
 	    Code: http.StatusUnauthorized,
 	    Message: "Session cookie missing",
