@@ -1,4 +1,4 @@
-package api
+package utils
 
 import (
 	"encoding/json"
@@ -7,11 +7,13 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/lyhomyna/sf/file-service/api/models"
+	"github.com/lyhomyna/sf/file-service/models"
 )
 
+var sessionCookieName = "session-id"
+var authServiceBaseUrl = "http://auth-service:8081"
 
-func writeResponse(w http.ResponseWriter, data any, code int) {
+func WriteResponse(w http.ResponseWriter, data any, code int) {
     w.Header().Set("Content-Type", "application/json")
     w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 
@@ -29,7 +31,8 @@ func writeResponse(w http.ResponseWriter, data any, code int) {
     w.Write(response)
 }
 
-func checkAuth(req *http.Request) (string, *models.HttpError) {
+// returns user id or error
+func CheckAuth(req *http.Request) (string, *models.HttpError) {
     sessionCookie, err := req.Cookie(sessionCookieName)
     if err != nil {
         return "", &models.HttpError{

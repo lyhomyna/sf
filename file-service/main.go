@@ -4,28 +4,49 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/lyhomyna/sf/file-service/api"
+	"github.com/lyhomyna/sf/file-service/config"
+	"github.com/lyhomyna/sf/file-service/database"
+	"github.com/lyhomyna/sf/file-service/middleware"
+	"github.com/lyhomyna/sf/file-service/service"
+
+	filesRepository "github.com/lyhomyna/sf/file-service/repository/files"
+	userImagesRepository "github.com/lyhomyna/sf/file-service/repository/userImages"
+
+	filesService "github.com/lyhomyna/sf/file-service/service/files"
+	userImagesService "github.com/lyhomyna/sf/file-service/service/userImages"
+)
+
+var (
+    cfg = config.NewConfig().WithPostgres()
+    pgDb = database.GetPostgresDb(cfg)
+
+    fr = filesRepository.NewFilesRepository(pgDb)
+    uir = userImagesRepository.NewUserImagesRepository(pgDb)
+
+    fs service.FileService = filesService.NewFilesService(fr)
+    uis service.UserImagesService = userImagesService.NewUserImagesService(uir)
 )
 
 func main() {
     mux := http.NewServeMux()
 
-    mux.HandleFunc("/save", api.HandleSave)               // POST
-    mux.HandleFunc("/delete/", api.HandleDelete)          // DELETE
-    mux.HandleFunc("/download/", api.HandleDownload)      // GET
-    mux.HandleFunc("/filenames", api.HandleFilenames)     // GET
-    mux.HandleFunc("/avatar", api.HandleAvatarGet)        // GET
-    mux.HandleFunc("/avatar/save", api.HandleAvatarSave)  //POST
+    mux.HandleFunc("/save", fs.SaveHandler)               // POST
+    mux.HandleFunc("/delete/", fs.DeleteHandler)          // DELETE
+    mux.HandleFunc("/download/", fs.DownloadHandler)      // GET
+    mux.HandleFunc("/filenames", fs.FilenamesHanlder)     // GET
+
+    mux.HandleFunc("/avatar", uis.GetUserImageHandler)        // GET
+    mux.HandleFunc("/avatar/save", uis.SaveUserImageHandler)  // POST
 
     mux.HandleFunc("/health", func(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(http.StatusOK)
     })
     mux.Handle("/favion.ico", http.NotFoundHandler())
 
-    handler := api.OptionsMiddleware(mux)
+    handler := middleware.OptionsMiddleware(mux)
 
-    log.Println("Port 8082. Server is running...")
-    if err := http.ListenAndServe(":8082", handler); err != nil {
+    log.Printf("File service. Server is running on port %s", cfg.ServerPort)
+    if err := http.ListenAndServe(cfg.ServerPort, handler); err != nil {
 	log.Println("Failed to start server:", err)
     }
 }
