@@ -1,4 +1,4 @@
-package api
+package files
 
 import (
 	"io"
@@ -8,51 +8,57 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/lyhomyna/sf/file-service/api/models"
+	"github.com/lyhomyna/sf/file-service/models"
+	"github.com/lyhomyna/sf/file-service/utils"
+
+	"github.com/lyhomyna/sf/file-service/repository"
 )
 
-// directory where uploaded files will be saved
+type FilesService struct {
+    repository repository.FilesRepository
+}
+
+// Directory, where uploaded files will be saved
 var filesDirectory = filepath.Join("files")
 
-// HandleSave is the handler for saving file. File should be form value with key 'file'.
-func HandleSave(w http.ResponseWriter, req *http.Request) {
+func NewFilesService(filesRepository repository.FilesRepository) *FilesService {
+    return &FilesService{
+	repository: filesRepository,
+    }
+}
+
+// SaveHandler is the handler for saving file. File should be form value with key 'file'.
+func (fs *FilesService)SaveHandler(w http.ResponseWriter, req *http.Request) {
     if req.Method != http.MethodPost {
 	http.Error(w, "Use POST method instead", http.StatusBadRequest)
 	return
     }
 
-    sessionCookie, err := req.Cookie(sessionCookieName)
-    if err != nil {
-	log.Println(err)
-	writeResponse(w, "Session cookie missing", http.StatusUnauthorized)
+    userId, httpErr := utils.CheckAuth(req)
+    if httpErr != nil {
+	utils.WriteResponse(w, httpErr.Message, httpErr.Code)
 	return
     }
 
     if !strings.Contains(req.Header.Get("Content-Type"), "multipart/form-data") {
-	writeResponse(w, "Expected multipart/form-data", http.StatusUnsupportedMediaType)
-	return
-    }
-
-    userId, err := verifySession(sessionCookie)
-    if err != nil {
-	writeResponse(w, err.Error(), http.StatusUnauthorized)
+	utils.WriteResponse(w, "Expected multipart/form-data", http.StatusUnsupportedMediaType)
 	return
     }
 
     f, fh, err := req.FormFile("file")
     if err != nil {
 	log.Println("Failed to read form value", err)
-	writeResponse(w, "Provide a file", http.StatusBadRequest)
+	utils.WriteResponse(w, "Provide a file", http.StatusBadRequest)
 	return
     }
     defer f.Close()
     
     if errMsg, statusCode := saveUploadedFile(userId, fh.Filename, f); errMsg != "" && statusCode != -1 {
-	writeResponse(w, errMsg, statusCode)
+	utils.WriteResponse(w, errMsg, statusCode)
 	return
     }
 
-    writeResponse(w, "File saved", http.StatusOK)
+    utils.WriteResponse(w, "File saved", http.StatusOK)
 }
 
 // saveupLoadedFile saves file into server's forlder and returns error message as string and http status code as int. If error message == "" and status code == -1 there is not errors and file uploaded successfully.
@@ -86,15 +92,14 @@ func saveUploadedFile(userId string, filename string, uploadedFile io.Reader) (s
     return "", -1
 }
 
-
-func HandleDelete(w http.ResponseWriter, req *http.Request) {
+func (fs *FilesService) DeleteHandler(w http.ResponseWriter, req *http.Request) {
     if req.Method != http.MethodDelete {
 	http.Error(w, "Use DELETE method instead", http.StatusBadRequest)
 	return
     }
-    userId, httpErr := checkAuth(req)
+    userId, httpErr := utils.CheckAuth(req)
     if httpErr != nil {
-	writeResponse(w, httpErr.Message, httpErr.Code)
+	utils.WriteResponse(w, httpErr.Message, httpErr.Code)
 	return
     }
 
@@ -102,11 +107,11 @@ func HandleDelete(w http.ResponseWriter, req *http.Request) {
 
     errMsg, statusCode := deleteFile(userId, filename)
     if errMsg != "" && statusCode != -1 {
-	writeResponse(w, errMsg, statusCode)
+	utils.WriteResponse(w, errMsg, statusCode)
 	return
     }
 
-    writeResponse(w, "File deleted", http.StatusOK)
+    utils.WriteResponse(w, "File deleted", http.StatusOK)
 }
 
 // deleteFile deletes file from server and returns error message as string and http response code as int. If error message == "" and status code == -1 there is not errors and file uploaded successfully.
@@ -124,28 +129,28 @@ func deleteFile(userId string, filename string) (string, int) {
     return "", -1
 }
 
-// handleDownload downloads file into client downloads folder
-func HandleDownload(w http.ResponseWriter, req *http.Request) {
+// DownloadHandler downloads file into client downloads folder
+func (fs *FilesService) DownloadHandler(w http.ResponseWriter, req *http.Request) {
     if req.Method != http.MethodGet {
 	http.Error(w, "Use GET method instead", http.StatusBadRequest)
 	return
     }
-    userId, httpErr := checkAuth(req)
+    userId, httpErr := utils.CheckAuth(req)
     if httpErr != nil {
-	writeResponse(w, httpErr.Message, httpErr.Code)
+	utils.WriteResponse(w, httpErr.Message, httpErr.Code)
 	return
     }
 
     filename := strings.TrimPrefix(req.URL.Path, "/download/")   
     if filename == "" {
-	writeResponse(w, "File not specified", http.StatusBadRequest)
+	utils.WriteResponse(w, "File not specified", http.StatusBadRequest)
 	return
     }
     filepathToDownload := filepath.Join(filesDirectory, userId, filename) 
 
     _, err := os.Stat(filepathToDownload)
     if err != nil {
-	writeResponse(w, "File not found", http.StatusNotFound)
+	utils.WriteResponse(w, "File not found", http.StatusNotFound)
 	return
     }
 
@@ -155,23 +160,21 @@ func HandleDownload(w http.ResponseWriter, req *http.Request) {
 
     http.ServeFile(w,req, filepathToDownload)
 }
-
-
-func HandleFilenames(w http.ResponseWriter, req *http.Request) {
+func (fs *FilesService) FilenamesHanlder(w http.ResponseWriter, req *http.Request) {
     if req.Method != http.MethodGet {
 	http.Error(w, "Use GET method instead", http.StatusBadRequest)
 	return
     }
-    userId, httpErr := checkAuth(req)
+    userId, httpErr := utils.CheckAuth(req)
     if httpErr != nil {
-	writeResponse(w, httpErr.Message, httpErr.Code)
+	utils.WriteResponse(w, httpErr.Message, httpErr.Code)
 	return
     }
 
     if filenames, err := getFilenames(userId); err != nil {
-	writeResponse(w, err.Message, err.Code)
+	utils.WriteResponse(w, err.Message, err.Code)
     } else {
-	writeResponse(w, filenames, http.StatusOK)
+	utils.WriteResponse(w, filenames, http.StatusOK)
     }
 }
 
@@ -192,4 +195,3 @@ func getFilenames(userId string) ([]string, *models.HttpError) {
 
     return filenames, nil
 }
-
