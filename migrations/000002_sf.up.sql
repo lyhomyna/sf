@@ -1,11 +1,13 @@
 CREATE TABLE files (
     id TEXT PRIMARY KEY,
-    userId TEXT NOT NULL,
-    filepath TEXT NOT NULL,
+    user_id TEXT NOT NULL,
     filename TEXT NOT NULL,
-    uploadTime TIMESTAMPTZ DEFAULT now() NOT NULL,
-    FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+    filepath TEXT NOT NULL,
+    size INTEGER NOT NULL,
+    hash TEXT NOT NULL,
+    last_accessed TIMESTAMPTZ DEFAULT now() NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-ALTER TABLE users ADD COLUMN createdAt TIMESTAMPTZ DEFAULT now() NOT NULL;
-ALTER TABLE sessions DROP CONSTRAINT sessions_userid_fkey, ADD CONSTRAINT sessions_userid_fkey FOREIGN KEY (userid) REFERENCES users(id) ON DELETE CASCADE;
+ALTER TABLE users ADD COLUMN created_at TIMESTAMPTZ DEFAULT now() NOT NULL;
+ALTER TABLE sessions DROP CONSTRAINT sessions_user_id_fkey, ADD CONSTRAINT sessions_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;

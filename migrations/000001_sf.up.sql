@@ -6,8 +6,8 @@ CREATE TABLE users (
 
 CREATE TABLE sessions (
     id     TEXT NOT NULL PRIMARY KEY,
-    userId TEXT NOT NULL
+    user_id TEXT NOT NULL
 );
 
 ALTER TABLE sessions 
-    ADD FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE; 
+    ADD FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
