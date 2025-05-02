@@ -17,8 +17,6 @@ var db *Postgres
 func GetPostgresDb(cfg *config.Config) (*Postgres) {
     ctx := context.Background()
     if db == nil {
-	log.Printf("Conn string is '%s'. Trying to create new pool...", cfg.PostgresConfig.GetConnString())
-
 	connPool, err := pgxpool.New(ctx, cfg.PostgresConfig.GetConnString())
 	if err != nil {
 	    log.Printf("Failed to connect to DB.\n%s", err)

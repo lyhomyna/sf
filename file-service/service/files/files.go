@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/lyhomyna/sf/file-service/models"
 	"github.com/lyhomyna/sf/file-service/utils"
 
 	"github.com/lyhomyna/sf/file-service/repository"
@@ -120,7 +121,7 @@ func (fs *FilesService) DownloadHandler(w http.ResponseWriter, req *http.Request
     http.ServeFile(w, req, filepathToDownload)
 }
 
-func (fs *FilesService) FilenamesHanlder(w http.ResponseWriter, req *http.Request) {
+func (fs *FilesService) FilesHanlder(w http.ResponseWriter, req *http.Request) {
     if req.Method != http.MethodGet {
 	http.Error(w, "Use GET method instead", http.StatusBadRequest)
 	return
@@ -131,9 +132,21 @@ func (fs *FilesService) FilenamesHanlder(w http.ResponseWriter, req *http.Reques
 	return
     }
 
-    if filenames, err := fs.repository.GetFilenames(userId); err != nil {
-	utils.WriteResponse(w, err.Message, err.Code)
-    } else {
-	utils.WriteResponse(w, filenames, http.StatusOK)
+    userFiles, httpErr := fs.repository.GetFiles(userId)
+    if httpErr != nil {
+	utils.WriteResponse(w, httpErr.Message, httpErr.Code)
+	return
     }
+
+    responseUserFiles := []*models.UserFile{}
+
+    for _, userFile := range userFiles {
+	responseUserFiles = append(responseUserFiles, &models.UserFile{
+	    Id: userFile.Id,
+	    Filename: userFile.Filename,
+	    LastAccessed: userFile.LastAccessed.Unix(),
+	})
+    }
+
+    utils.WriteResponse(w, responseUserFiles, http.StatusOK)
 }

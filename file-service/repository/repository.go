@@ -12,5 +12,5 @@ type UserImagesRepository interface {
 type FilesRepository interface {
     SaveFile(userId string, filename string, fileBytes []byte) *models.HttpError 
     DeleteFile(userId string, filename string) *models.HttpError 
-    GetFilenames(userId string) ([]string, *models.HttpError)
+    GetFiles(userId string) ([]*models.DbUserFile, *models.HttpError)
 }

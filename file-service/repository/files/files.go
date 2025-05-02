@@ -3,6 +3,7 @@ package files
 import (
 	"context"
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -11,6 +12,7 @@ import (
 	"path/filepath"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/lyhomyna/sf/file-service/database"
 	"github.com/lyhomyna/sf/file-service/models"
 )
@@ -120,9 +122,6 @@ func calculateSHA256(file io.Reader) (string, error) {
 
 // DeleteFile deletes file from server and returns error if there is an error
 func (pr *FilesRepository) DeleteFile(userId string, filename string) *models.HttpError {
-    
-
-
     fullFilepath := filepath.Join(filesDirectory, userId, filename)
     if _, err := os.Stat(fullFilepath); err != nil {
 	log.Println("File doesn't exist:", err.Error())
@@ -146,18 +145,35 @@ func (pr *FilesRepository) DeleteFile(userId string, filename string) *models.Ht
 }
 
 // GetFilenames returns list of user filenames or an error
-func (pr *FilesRepository) GetFilenames(userId string) ([]string, *models.HttpError) {
-    filesPath := filepath.Join(filesDirectory, userId)
-    entries, err := os.ReadDir(filesPath)
+func (pr *FilesRepository) GetFiles(userId string) ([]*models.DbUserFile, *models.HttpError) {
+    ctx := context.Background()
+    sql := "SELECT * FROM files WHERE user_id=$1";
+    userFiles := []*models.DbUserFile{}
+
+    rows, err := pr.db.Pool.Query(ctx, sql, userId)
     if err != nil {
-	return nil, &models.HttpError { Code: http.StatusInternalServerError, Message: "Cannot read from user directory",
+	if errors.Is(err, pgx.ErrNoRows) {
+	    return userFiles, nil	
+	}
+
+	log.Println("Couldn't read user files")
+	return nil, &models.HttpError{
+	    Message: "Couldn't read user files",
+	    Code: http.StatusInternalServerError,
 	}
     }
 
-    filenames := []string {}
-    for _, entry := range entries {
-	filenames = append(filenames, entry.Name())
+    for rows.Next() {
+	var uf models.DbUserFile
+	if err := rows.Scan(&uf.Id, &uf.UserId, &uf.Filename, &uf.Filepath, &uf.Size, &uf.Hash, &uf.LastAccessed); err != nil {
+	    log.Println("Error retrieving user file:", err.Error())
+	    return nil, &models.HttpError{
+		Message: "Error retrieving user file",
+		Code: http.StatusInternalServerError,
+	    }
+	}
+	userFiles = append(userFiles, &uf)
     }
 
-    return filenames, nil
+    return userFiles, nil
 }

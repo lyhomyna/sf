@@ -33,7 +33,7 @@ func main() {
     mux.HandleFunc("/save", fs.SaveHandler)               // POST
     mux.HandleFunc("/delete/", fs.DeleteHandler)          // DELETE
     mux.HandleFunc("/download/", fs.DownloadHandler)      // GET
-    mux.HandleFunc("/filenames", fs.FilenamesHanlder)     // GET
+    mux.HandleFunc("/files", fs.FilesHanlder)     // GET
 
     mux.HandleFunc("/avatar", uis.GetUserImageHandler)        // GET
     mux.HandleFunc("/avatar/save", uis.SaveUserImageHandler)  // POST
