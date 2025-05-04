@@ -26,11 +26,11 @@ export function useUploadFile() {
 	    const resJson = await response.json();
 	    if (response.ok) {
 		// show file in list
-		addFiles({files: {
+		addFiles({files: [{
 		    id: resJson.data.id,
 		    filename: resJson.data.filename,
 		    createdAt: -1, // no creation time
-		}})
+		}]})
 	    } else if(response.status === 400) {
 		alert(await resJson.data)
 	    } else {

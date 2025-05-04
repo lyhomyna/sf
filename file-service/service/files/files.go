@@ -89,7 +89,7 @@ func (fs *FilesService) DeleteHandler(w http.ResponseWriter, req *http.Request) 
 	log.Println(err.Error())
 
 	if errors.Is(repository.FilesErrorFailureToRetrieve, err) || errors.Is(repository.FilesErrorFileNotExist, err) {
-	    utils.WriteResponse(w, "There is not file to delete", http.StatusNotFound)
+	    utils.WriteResponse(w, "There is no file to delete", http.StatusNotFound)
 	    return
 	}
 
@@ -114,23 +114,31 @@ func (fs *FilesService) DownloadHandler(w http.ResponseWriter, req *http.Request
 	return
     }
 
-    filename := strings.TrimPrefix(req.URL.Path, "/download/")   
-    if filename == "" {
+    fileId := strings.TrimPrefix(req.URL.Path, "/download/")   
+    if fileId == "" {
 	utils.WriteResponse(w, "File not specified", http.StatusBadRequest)
 	return
     }
-    filepathToDownload := filepath.Join(filesDirectory, userId, filename) 
 
-    _, err := os.Stat(filepathToDownload)
+    file, err := fs.repository.GetFile(userId, fileId)
+    if err != nil {
+	log.Println(err.Error())
+	if errors.Is(repository.FilesErrorFailureToRetrieve, err) {
+	    utils.WriteResponse(w, "Couldn't retrieve file", http.StatusNotFound)
+	    return
+	}
+    }
+
+    _, err = os.Stat(file.Filepath)
     if err != nil {
 	utils.WriteResponse(w, "File not found", http.StatusNotFound)
 	return
     }
 
-    w.Header().Set("Content-Disposition", "attachment; filename="+filename)
+    w.Header().Set("Content-Disposition", "attachment; filename="+file.Filename)
     w.Header().Set("Content-Type", "application/octet-stream")
 
-    http.ServeFile(w, req, filepathToDownload)
+    http.ServeFile(w, req, file.Filepath)
 }
 
 func (fs *FilesService) FilesHanlder(w http.ResponseWriter, req *http.Request) {

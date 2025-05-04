@@ -124,10 +124,9 @@ func calculateSHA256(file io.Reader) (string, error) {
     return fmt.Sprintf("%x", hash), nil
 }
 
-var FilesErrorFileNotExist = errors.New("File doesn't exist")
 // DeleteFile deletes file from server and returns error if there is an error
 func (pr *FilesRepository) DeleteFile(userId string, fileId string) error {
-    uf, err := pr.getFile(userId, fileId)
+    uf, err := pr.GetFile(userId, fileId)
     if err != nil {
 	return err
     }
@@ -147,7 +146,7 @@ func (pr *FilesRepository) DeleteFile(userId string, fileId string) error {
 }
 
 // Can return FilesErrorFailureToRetrieve
-func (pr *FilesRepository) getFile(userId string, fileId string) (*models.DbUserFile, error) { 
+func (pr *FilesRepository) GetFile(userId string, fileId string) (*models.DbUserFile, error) { 
     ctx := context.Background()
     sql := "SELECT * FROM files WHERE user_id=$1 AND id=$2"
 

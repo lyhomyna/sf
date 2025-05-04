@@ -11,10 +11,17 @@ export default function MainPage() {
     const [files, setFiles] = useState([]);
 
     const addFiles = ({ files, rewrite=false }) => {
+	console.log("ADDFILES")
+
+	console.log(files)
+	console.log(`type of files: ${typeof files}`)
+
 	// rewrite option is used only on first files load 
 	if (rewrite) {
+	    console.log("WITH REWRITE OPTION")
 	    setFiles(files);
 	} else {
+	    console.log("WITHOUT REWRITE OPTION")
 	    setFiles(oldFiles => [...oldFiles, ...files]);
 	}
     };

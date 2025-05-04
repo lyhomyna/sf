@@ -25,7 +25,7 @@ export default function FileItem({ file }) {
 
     const downloadFile = async () => {
 	try {
-	    const res = await fetch(`${fileServiceBaseUrl}/download/${file.filename}`);
+	    const res = await fetch(`${fileServiceBaseUrl}/download/${file.id}`);
 	    if (res.status === 404) {
 		alert("File not found. Refresh the page.");
 		return;
