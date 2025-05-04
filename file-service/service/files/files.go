@@ -1,6 +1,7 @@
 package files
 
 import (
+	"errors"
 	"io"
 	"log"
 	"net/http"
@@ -60,12 +61,14 @@ func (fs *FilesService)SaveHandler(w http.ResponseWriter, req *http.Request) {
 	utils.WriteResponse(w, "Failed to read file", http.StatusBadRequest)
     }
 
-    if httpErr := fs.repository.SaveFile(userId, fh.Filename, fileBytes); err != nil {
+
+    userFile, httpErr := fs.repository.SaveFile(userId, fh.Filename, fileBytes)
+    if httpErr != nil {
 	utils.WriteResponse(w, httpErr.Message, httpErr.Code)
 	return
     }
 
-    utils.WriteResponse(w, "File saved", http.StatusOK)
+    utils.WriteResponse(w, userFile, http.StatusOK)
 }
 
 func (fs *FilesService) DeleteHandler(w http.ResponseWriter, req *http.Request) {
@@ -79,12 +82,21 @@ func (fs *FilesService) DeleteHandler(w http.ResponseWriter, req *http.Request) 
 	return
     }
 
-    filename := strings.TrimPrefix(req.URL.Path, "/delete/")
+    fileId := strings.TrimPrefix(req.URL.Path, "/delete/")
 
-    httpErr = fs.repository.DeleteFile(userId, filename)
-    if httpErr != nil {
-	utils.WriteResponse(w, httpErr.Message, httpErr.Code)
-	return
+    err := fs.repository.DeleteFile(userId, fileId)
+    if err != nil {
+	log.Println(err.Error())
+
+	if errors.Is(repository.FilesErrorFailureToRetrieve, err) || errors.Is(repository.FilesErrorFileNotExist, err) {
+	    utils.WriteResponse(w, "There is not file to delete", http.StatusNotFound)
+	    return
+	}
+
+	if errors.Is(repository.FilesErrorDbQuery, err) {
+	    utils.WriteResponse(w, "Internal server error", http.StatusInternalServerError)
+	    return
+	}
     }
 
     utils.WriteResponse(w, "File deleted", http.StatusOK)

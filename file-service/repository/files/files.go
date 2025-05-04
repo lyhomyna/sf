@@ -15,6 +15,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/lyhomyna/sf/file-service/database"
 	"github.com/lyhomyna/sf/file-service/models"
+	"github.com/lyhomyna/sf/file-service/repository"
 )
 
 type FilesRepository struct {
@@ -31,19 +32,19 @@ func NewFilesRepository(db *database.Postgres) *FilesRepository {
 }
 
 // SaveupLoadedFile saves file into server's forlder and returns HttpError object if there is an error. 
-func (pr *FilesRepository) SaveFile(userId string, filename string, fileBytes []byte) *models.HttpError {
+func (pr *FilesRepository) SaveFile(userId string, filename string, fileBytes []byte) (*models.UserFile, *models.HttpError) {
     newFilePath := filepath.Join(filesDirectory, userId, filename)
 
     if _, err := os.Stat(newFilePath); err == nil {
 	log.Println("File with the same name already exists")
-	return &models.HttpError{
+	return nil, &models.HttpError{
 	    Message: "File with the same name already exists",
 	    Code: http.StatusBadRequest,
 	}
     }
 
     if err := os.MkdirAll(filepath.Dir(newFilePath), os.ModePerm); err != nil {
-	return &models.HttpError{
+	return nil, &models.HttpError{
 	    Message: "Something went wrong",
 	    Code: http.StatusInternalServerError,
 	}
@@ -52,7 +53,7 @@ func (pr *FilesRepository) SaveFile(userId string, filename string, fileBytes []
     nf, err := os.Create(newFilePath)
     if err != nil {
 	log.Println("Failed to create a file:", err)
-	return &models.HttpError{
+	return nil, &models.HttpError{
 	    Message: "Something went wrong while a server was creating file",
 	    Code: http.StatusInternalServerError,
 	}
@@ -64,7 +65,7 @@ func (pr *FilesRepository) SaveFile(userId string, filename string, fileBytes []
     if err != nil {
 	os.Remove(newFilePath)
 	log.Println("Failed to save file:", err)
-	return &models.HttpError{
+	return nil, &models.HttpError{
 	    Message: "Something went wrong when the server was copying content from your file",
 	    Code: http.StatusInternalServerError,
 	}
@@ -73,27 +74,30 @@ func (pr *FilesRepository) SaveFile(userId string, filename string, fileBytes []
     hash, err := calculateSHA256(nf)
     if err != nil {
 	fmt.Println("Error calculating hash for file:", err.Error())
-	return &models.HttpError{ 
+	return nil, &models.HttpError{ 
 	    Message: "Something went wrong",
 	    Code: http.StatusInternalServerError,
 	}
     }
     fmt.Println("Hash for file:", hash)
 
-    err = pr.saveFileToDb(userId, filename, newFilePath, len(fileBytes), hash)
+    fileId, err := pr.saveFileToDb(userId, filename, newFilePath, len(fileBytes), hash)
     if err != nil {
 	os.Remove(newFilePath)
 	
-	return &models.HttpError{
+	return nil, &models.HttpError{
 	    Message: "Couldn't save file",
 	    Code: http.StatusInternalServerError,
 	}
     }
 
-    return nil
+    return &models.UserFile {
+	Id: fileId,
+	Filename: filename,
+    }, nil
 }
 
-func (pr *FilesRepository) saveFileToDb(userId string, filename string, filepath string, size int, hash string) error {
+func (pr *FilesRepository) saveFileToDb(userId string, filename string, filepath string, size int, hash string) (string, error) {
     log.Println("TRYING TO SAVE FILE...")
 
     ctx := context.Background()
@@ -103,11 +107,11 @@ func (pr *FilesRepository) saveFileToDb(userId string, filename string, filepath
     _, err := pr.db.Pool.Exec(ctx, sql, fileId, userId, filename, filepath, size, hash)
     if err != nil {
 	log.Println("Failed to save file to db:", err.Error())
-	return err 
+	return "", err 
     }
 
-    log.Println("FILE SAVED SUCCESSFULY!")
-    return nil
+    log.Println("FILE SAVED SUCCESSFULLY!")
+    return fileId, nil
 }
 
 func calculateSHA256(file io.Reader) (string, error) {
@@ -120,28 +124,52 @@ func calculateSHA256(file io.Reader) (string, error) {
     return fmt.Sprintf("%x", hash), nil
 }
 
+var FilesErrorFileNotExist = errors.New("File doesn't exist")
 // DeleteFile deletes file from server and returns error if there is an error
-func (pr *FilesRepository) DeleteFile(userId string, filename string) *models.HttpError {
-    fullFilepath := filepath.Join(filesDirectory, userId, filename)
-    if _, err := os.Stat(fullFilepath); err != nil {
-	log.Println("File doesn't exist:", err.Error())
-	return &models.HttpError{
-	    Message: "File doesn't exist",
-	    Code: http.StatusNoContent,
-	}
+func (pr *FilesRepository) DeleteFile(userId string, fileId string) error {
+    uf, err := pr.getFile(userId, fileId)
+    if err != nil {
+	return err
     }
 
-    if err := os.Remove(fullFilepath); err != nil {
-	log.Println("File doesn't exist:", err.Error())
-	return &models.HttpError{
-	    Message: "Error removing file",
-	    Code: http.StatusInternalServerError,
-	}
+    if _, err := os.Stat(uf.Filepath); err != nil {
+	pr.removeFileFromDb(fileId)
+	return fmt.Errorf("%w: %v", repository.FilesErrorFileNotExist, err)
     }
 
-    // Somehow delete file from db (maybe by HASH :))) )
+    if err := pr.removeFileFromDb(fileId); err != nil {
+	return err
+    }
+
+    os.Remove(uf.Filepath)
 
     return nil 
+}
+
+// Can return FilesErrorFailureToRetrieve
+func (pr *FilesRepository) getFile(userId string, fileId string) (*models.DbUserFile, error) { 
+    ctx := context.Background()
+    sql := "SELECT * FROM files WHERE user_id=$1 AND id=$2"
+
+    var uf models.DbUserFile
+    if err := pr.db.Pool.QueryRow(ctx, sql, userId, fileId).Scan(&uf.Id, &uf.UserId, &uf.Filename, &uf.Filepath, &uf.Size, &uf.Hash, &uf.LastAccessed); err != nil {
+	return nil, fmt.Errorf("%w: %v", repository.FilesErrorFailureToRetrieve, err)
+    }
+
+    return &uf, nil
+}
+
+// Can return FilesErrorDbQuery
+func (pr *FilesRepository) removeFileFromDb(fileId string) error {
+    ctx := context.Background()
+    sql := "DELETE FROM files WHERE id=$1"
+
+    _, err := pr.db.Pool.Exec(ctx, sql, fileId)
+    if err != nil {
+	return fmt.Errorf("%w:%v", repository.FilesErrorDbQuery, err)	 
+    }
+
+    return nil
 }
 
 // GetFilenames returns list of user filenames or an error

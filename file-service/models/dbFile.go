@@ -15,5 +15,5 @@ type DbUserFile struct {
 type UserFile struct {
     Id	string		`json:"id"`
     Filename string	`json:"filename"`
-    LastAccessed int64	`json:"last_accessed"`
+    LastAccessed int64	`json:"lastAccessed"`
 }
