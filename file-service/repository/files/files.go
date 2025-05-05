@@ -6,8 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
-	"net/http"
 	"os"
 	"path/filepath"
 
@@ -132,7 +130,7 @@ func (pr *FilesRepository) removeFileFromDb(fileId string) error {
 }
 
 // GetFilenames returns list of user filenames or an error
-func (pr *FilesRepository) GetFiles(userId string) ([]*models.DbUserFile, *models.HttpError) {
+func (pr *FilesRepository) GetFiles(userId string) ([]*models.DbUserFile, error) {
     ctx := context.Background()
     sql := "SELECT * FROM files WHERE user_id=$1";
     userFiles := []*models.DbUserFile{}
@@ -143,21 +141,13 @@ func (pr *FilesRepository) GetFiles(userId string) ([]*models.DbUserFile, *model
 	    return userFiles, nil	
 	}
 
-	log.Println("Couldn't read user files")
-	return nil, &models.HttpError{
-	    Message: "Couldn't read user files",
-	    Code: http.StatusInternalServerError,
-	}
+	return nil, fmt.Errorf("%w: %v", repository.FilesErrorDbQuery, err)
     }
 
     for rows.Next() {
 	var uf models.DbUserFile
 	if err := rows.Scan(&uf.Id, &uf.UserId, &uf.Filename, &uf.Filepath, &uf.Size, &uf.Hash, &uf.LastAccessed); err != nil {
-	    log.Println("Error retrieving user file:", err.Error())
-	    return nil, &models.HttpError{
-		Message: "Error retrieving user file",
-		Code: http.StatusInternalServerError,
-	    }
+	    return nil, fmt.Errorf("%w :%v", repository.FilesErrorDbScan, err)
 	}
 	userFiles = append(userFiles, &uf)
     }

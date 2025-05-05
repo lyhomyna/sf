@@ -54,13 +54,6 @@ func (fs *FilesService)SaveHandler(w http.ResponseWriter, req *http.Request) {
     }
     defer f.Close()
 
-    //fileBytes, err := io.ReadAll(f)
-    //if err != nil {
-    //	log.Println("Failed to read from file:", err)
-    //	utils.WriteResponse(w, "Failed to read from file", http.StatusBadRequest)
-    //	return
-    //}
-
     if fh.Filename == "" {
 	    utils.WriteResponse(w, "Filename is required", http.StatusBadRequest)
 	    return
@@ -177,9 +170,20 @@ func (fs *FilesService) FilesHanlder(w http.ResponseWriter, req *http.Request) {
 	return
     }
 
-    userFiles, httpErr := fs.repository.GetFiles(userId)
-    if httpErr != nil {
-	utils.WriteResponse(w, httpErr.Message, httpErr.Code)
+    userFiles, err := fs.repository.GetFiles(userId)
+    if err != nil {
+	log.Println(err)
+	
+	switch {
+	    case errors.Is(repository.FilesErrorDbQuery, err):
+		utils.WriteResponse(w, "Couldn't get your files from database", http.StatusInternalServerError)
+	    case errors.Is(repository.FilesErrorDbScan, err):
+		utils.WriteResponse(w, "Couldn't process file data from database", http.StatusInternalServerError)
+
+	    default:
+		utils.WriteResponse(w, "Unknown error occured", http.StatusInternalServerError)
+	}
+
 	return
     }
 
