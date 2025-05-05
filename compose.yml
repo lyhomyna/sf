@@ -48,6 +48,9 @@ services:
       dockerfile: Dockerfile
     volumes:
       - files:/usr/src/file-service/files 
+    depends_on:
+      db:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://file-service:8082/health"]
       interval: 10s
