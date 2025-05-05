@@ -214,6 +214,8 @@ func checkAuth(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) 
     http.SetCookie(w, &http.Cookie{
 	Name: sessionCookieName,
 	MaxAge: -1,
+	Value: "",
+	Path: "/",
     })	
     w.WriteHeader(http.StatusUnauthorized)
 }

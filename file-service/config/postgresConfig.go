@@ -14,7 +14,7 @@ type postgresConfig struct {
 
 func (c *postgresConfig) GetConnString() string {
     connString := fmt.Sprintf(
-	"postgres://%s:%s@%s:%s/%d?sslmode=disable",
+	"postgres://%s:%s@%s:%s/%s?sslmode=disable",
 	c.User,
 	c.Password,
 	c.Host,

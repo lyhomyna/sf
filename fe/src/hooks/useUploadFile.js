@@ -5,14 +5,17 @@ import { useDispatch } from "react-redux";
 import { addUpload, removeUpload } from "storage/uploadSlice.js";
 
 export function useUploadFile() {
-    const { addFilenames } = useContext(FilesContext);
+    const { addFiles } = useContext(FilesContext);
     const dispatch = useDispatch();
 
     const uploadFile = async (file) => {
 	const formData = new FormData();
 	formData.append("file", file);
-	const fileId = file.name+randomInt();
-	dispatch(addUpload({id: fileId}));
+
+	// to show progress at top right corner
+	const tempFileId = file.name+randomInt();
+	dispatch(addUpload({id: tempFileId}));
+
 	try {
 	    const response = await fetch(`${fileServiceBaseUrl}/save`, {
 		method: "POST", 
@@ -20,21 +23,26 @@ export function useUploadFile() {
 		credentials: "include",
 	    });
 	    
+	    const resJson = await response.json();
 	    if (response.ok) {
-		addFilenames({filenames: [file.name]}) // to show filenames in list
+		// show file in list
+		addFiles({files: [{
+		    id: resJson.data.id,
+		    filename: resJson.data.filename,
+		    createdAt: -1, // no creation time
+		}]})
 	    } else if(response.status === 400) {
-		const res = await response.json()
-		alert(await res.data)
+		alert(await resJson.data)
 	    } else {
-		const httpErr = await response.json()
 		alert(`Failed to upload file '${file.name}'. Try again.`);
-		console.log(httpErr.data)
+		console.log(resJson.data)
 	    }
 	} catch (err) {
 	    console.error("Error uploading file:", err)
 	    alert(`Failed to upload file '${file.name}. Try again.`)
 	} finally {
-	    dispatch(removeUpload({id: fileId}))
+	    // to remove progress at top right corner
+	    dispatch(removeUpload({id: tempFileId}))
 	}
     };
 

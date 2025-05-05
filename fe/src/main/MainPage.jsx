@@ -8,35 +8,35 @@ import { FilesContext } from "storage/SfContext.jsx";
 import store from "storage/store.js"; 
 
 export default function MainPage() {
-    const [filenames, setFilenames] = useState([]);
+    const [files, setFiles] = useState([]);
 
-    const addFilenames = ({ filenames, rewrite=false }) => {
+    const addFiles = ({ files, rewrite=false }) => {
+	console.log("ADDFILES")
+
+	console.log(files)
+	console.log(`type of files: ${typeof files}`)
+
+	// rewrite option is used only on first files load 
 	if (rewrite) {
-	    setFilenames(filenames);
+	    console.log("WITH REWRITE OPTION")
+	    setFiles(files);
 	} else {
-	    setFilenames(oldFilenames => [...oldFilenames, ...filenames]);
+	    console.log("WITHOUT REWRITE OPTION")
+	    setFiles(oldFiles => [...oldFiles, ...files]);
 	}
     };
 
-    const deleteFilename = (filename) => {
-	setFilenames(oldFilenames => { 
-	    let withoutFilename;
-	    oldFilenames.forEach((_, i) => {
-		if (oldFilenames[i] === filename) {
-		    withoutFilename = [...oldFilenames.slice(0, i), ...oldFilenames.slice(i+1, oldFilenames.length)]
-		    return
-		}
-	    });
-
-	    return withoutFilename;
+    const deleteFile = (file) => {
+	setFiles(oldFiles => { 
+	    return oldFiles.filter(f => f.id !== file.id)
 	});
     };
 
     return <Provider store={store}>
 	<FilesContext value={ { 
-	    filenames: filenames, 
-	    addFilenames: addFilenames, 
-	    deleteFilename: deleteFilename, 
+	    files: files, 
+	    addFiles: addFiles, 
+	    deleteFile: deleteFile, 
 	}}>
 	    <div className="p-2" >
 		<TopBar />

@@ -4,11 +4,11 @@ import { fileServiceBaseUrl } from "config/constants.js";
 
 import Button from "./Button.jsx";
 
-export default function FileItem({ fullFilename }) {
-    const { deleteFilename } = useContext(FilesContext);
+export default function FileItem({ file }) {
+    const { deleteFile } = useContext(FilesContext);
 
     const deleteItem = async () => {
-	const res = await fetch(`${fileServiceBaseUrl}/delete/${fullFilename}`, {
+	const res = await fetch(`${fileServiceBaseUrl}/delete/${file.id}`, {
 	    method: "DELETE",
 	});
 
@@ -16,15 +16,16 @@ export default function FileItem({ fullFilename }) {
 	    alert("File has already deleted.");
 	} else if (res.status !== 200) {
 	    alert("Something went wrong while deleting file. Try again.");
+	    return
 	}
 	
 	// allert("File deleted successfuly");
-	deleteFilename(fullFilename);
+	deleteFile(file);
     }
 
     const downloadFile = async () => {
 	try {
-	    const res = await fetch(`${fileServiceBaseUrl}/download/${fullFilename}`);
+	    const res = await fetch(`${fileServiceBaseUrl}/download/${file.id}`);
 	    if (res.status === 404) {
 		alert("File not found. Refresh the page.");
 		return;
@@ -38,7 +39,7 @@ export default function FileItem({ fullFilename }) {
 
 	    const a = document.createElement("a");
 	    a.href = url;
-	    a.download = fullFilename;
+	    a.download = file.filename;
 
 	    document.body.appendChild(a);
 	    a.click();
@@ -47,22 +48,24 @@ export default function FileItem({ fullFilename }) {
 	    window.URL.revokeObjectURL(url);
 	} catch (e) {
 	    console.log(e)
-	    alert("Something went wrong. Refresh the page and try again.")
+	    alert("Something went wrong downloading the file. Refresh the page and try again.")
 	}
     }
 
-    return (<div className="flex flex-row justify-between gap-2 items-center mt-3">
-	<div className="flex gap-[0.3rem]">
-	    <button onClick={deleteItem} className="w-[15px] h-[2.1rem] bg-red-200 hover:bg-red-700 duration-300" title="Delete" />
-	    <div className="flex flex-row gap-x-2">
-		<div className="border border-stone-300 text-slate-300 p-1">
-		    .{ fullFilename.split(".")[1] }
+    return (<li key={file.id}>
+	<div className="flex flex-row justify-between gap-2 items-center mt-3">
+	    <div className="flex gap-[0.3rem]">
+		<button onClick={deleteItem} className="w-[15px] h-[2.1rem] bg-red-200 hover:bg-red-700 duration-300" title="Delete" />
+		<div className="flex flex-row gap-x-2">
+		    <div className="border border-stone-300 text-slate-300 p-1">
+			.{ file.filename.split(".")[1] }
+		    </div>
+		    <p className="text-xl text-slate-300" title={file.filename}>
+			{ file.filename }
+		    </p>
 		</div>
-		<p className="text-xl text-slate-300" title={fullFilename}>
-		    { fullFilename }
-		</p>
 	    </div>
+	    <Button className="bg-neutral-700" text="Download" onClick={downloadFile}/>
 	</div>
-	<Button className="bg-neutral-700" text="Download" onClick={downloadFile}/>
-    </div>);
+    </li>);
 }

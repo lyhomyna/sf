@@ -71,7 +71,7 @@ func (p *PostgreUsers) GetUserByEmail(email string) (*models.DbUser, error) {
     row := p.pool.QueryRow(p.ctx, sql, email)
 
     var dbUser models.DbUser
-    err := row.Scan(&dbUser.Id, &dbUser.Email, &dbUser.Password, &dbUser.CreatedAt)
+    err := row.Scan(&dbUser.Id, &dbUser.Email, &dbUser.Password, &dbUser.CreatedAt, &dbUser.ImageUrl)
     if err != nil {
 	if errors.Is(err, pgx.ErrNoRows) {
 	    return nil, nil    
