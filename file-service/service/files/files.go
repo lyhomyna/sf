@@ -2,7 +2,6 @@ package files
 
 import (
 	"errors"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -31,7 +30,7 @@ func NewFilesService(filesRepository repository.FilesRepository) *FilesService {
 // SaveHandler is the handler for saving file. File should be form value with key 'file'.
 func (fs *FilesService)SaveHandler(w http.ResponseWriter, req *http.Request) {
     if req.Method != http.MethodPost {
-	http.Error(w, "Use POST method instead", http.StatusBadRequest)
+	http.Error(w, "Use POST method instead", http.StatusMethodNotAllowed)
 	return
     }
 
@@ -49,22 +48,48 @@ func (fs *FilesService)SaveHandler(w http.ResponseWriter, req *http.Request) {
     // Read file
     f, fh, err := req.FormFile("file")
     if err != nil {
-	log.Println("Failed to read form value", err)
+	log.Println("Failed to read form file:", err)
 	utils.WriteResponse(w, "Provide a file", http.StatusBadRequest)
 	return
     }
     defer f.Close()
 
-    fileBytes, err := io.ReadAll(f)
-    if err != nil {
-	log.Println("Failed to read file", err)
-	utils.WriteResponse(w, "Failed to read file", http.StatusBadRequest)
+    //fileBytes, err := io.ReadAll(f)
+    //if err != nil {
+    //	log.Println("Failed to read from file:", err)
+    //	utils.WriteResponse(w, "Failed to read from file", http.StatusBadRequest)
+    //	return
+    //}
+
+    if fh.Filename == "" {
+	    utils.WriteResponse(w, "Filename is required", http.StatusBadRequest)
+	    return
     }
 
+    userFile, err := fs.repository.SaveFile(userId, fh.Filename, f)
+    if err != nil {
+	log.Println(err)
 
-    userFile, httpErr := fs.repository.SaveFile(userId, fh.Filename, fileBytes)
-    if httpErr != nil {
-	utils.WriteResponse(w, httpErr.Message, httpErr.Code)
+	switch {
+	    case errors.Is(repository.FilesErrorFileExist, err):
+		utils.WriteResponse(w, "File with the same name already exists", http.StatusConflict)
+
+	    case errors.Is(repository.FilesErrorInternal, err):
+		utils.WriteResponse(w, "Internal server error", http.StatusInternalServerError)
+
+	    case errors.Is(repository.FilesErrorFailureCreateFile, err):
+		utils.WriteResponse(w, "Couldn't save file", http.StatusInternalServerError)
+
+	    case errors.Is(repository.FilesErrorCopyFailure, err):
+		utils.WriteResponse(w, "Couldn't save file", http.StatusInternalServerError)
+
+	    case errors.Is(repository.FilesErrorDbSave, err):
+		utils.WriteResponse(w, "Couldn't save your file to the database", http.StatusInternalServerError)
+
+	    default:
+		utils.WriteResponse(w, "Unknown error occurred", http.StatusInternalServerError)
+	}
+
 	return
     }
 
@@ -73,7 +98,7 @@ func (fs *FilesService)SaveHandler(w http.ResponseWriter, req *http.Request) {
 
 func (fs *FilesService) DeleteHandler(w http.ResponseWriter, req *http.Request) {
     if req.Method != http.MethodDelete {
-	http.Error(w, "Use DELETE method instead", http.StatusBadRequest)
+	http.Error(w, "Use DELETE method instead", http.StatusMethodNotAllowed)
 	return
     }
     userId, httpErr := utils.CheckAuth(req)
@@ -105,7 +130,7 @@ func (fs *FilesService) DeleteHandler(w http.ResponseWriter, req *http.Request) 
 // DownloadHandler downloads file into client downloads folder
 func (fs *FilesService) DownloadHandler(w http.ResponseWriter, req *http.Request) {
     if req.Method != http.MethodGet {
-	http.Error(w, "Use GET method instead", http.StatusBadRequest)
+	http.Error(w, "Use GET method instead", http.StatusMethodNotAllowed)
 	return
     }
     userId, httpErr := utils.CheckAuth(req)
@@ -143,7 +168,7 @@ func (fs *FilesService) DownloadHandler(w http.ResponseWriter, req *http.Request
 
 func (fs *FilesService) FilesHanlder(w http.ResponseWriter, req *http.Request) {
     if req.Method != http.MethodGet {
-	http.Error(w, "Use GET method instead", http.StatusBadRequest)
+	http.Error(w, "Use GET method instead", http.StatusMethodNotAllowed)
 	return
     }
     userId, httpErr := utils.CheckAuth(req)

@@ -31,64 +31,38 @@ func NewFilesRepository(db *database.Postgres) *FilesRepository {
     }
 }
 
+var FileErrorFileExist = errors.New("File with the save name already exists")
 // SaveupLoadedFile saves file into server's forlder and returns HttpError object if there is an error. 
-func (pr *FilesRepository) SaveFile(userId string, filename string, fileBytes []byte) (*models.UserFile, *models.HttpError) {
+func (pr *FilesRepository) SaveFile(userId string, filename string, file io.Reader) (*models.UserFile, error) {
     newFilePath := filepath.Join(filesDirectory, userId, filename)
 
     if _, err := os.Stat(newFilePath); err == nil {
-	log.Println("File with the same name already exists")
-	return nil, &models.HttpError{
-	    Message: "File with the same name already exists",
-	    Code: http.StatusBadRequest,
-	}
+	return nil, fmt.Errorf("%w: %v", repository.FilesErrorFileExist, err)
     }
 
     if err := os.MkdirAll(filepath.Dir(newFilePath), os.ModePerm); err != nil {
-	return nil, &models.HttpError{
-	    Message: "Something went wrong",
-	    Code: http.StatusInternalServerError,
-	}
+	return nil, fmt.Errorf("%w: %v", repository.FilesErrorInternal, err) 
     }
 
     nf, err := os.Create(newFilePath)
     if err != nil {
-	log.Println("Failed to create a file:", err)
-	return nil, &models.HttpError{
-	    Message: "Something went wrong while a server was creating file",
-	    Code: http.StatusInternalServerError,
-	}
+	return nil, fmt.Errorf("%w: %v", repository.FilesErrorFailureCreateFile, err)
     }
     defer nf.Close()
 
     // Copy content
-    _, err = nf.Write(fileBytes)
+    hash := sha256.New()
+    writtenBytes, err := io.Copy(nf, io.TeeReader(file, hash))
     if err != nil {
 	os.Remove(newFilePath)
-	log.Println("Failed to save file:", err)
-	return nil, &models.HttpError{
-	    Message: "Something went wrong when the server was copying content from your file",
-	    Code: http.StatusInternalServerError,
-	}
+	return nil, fmt.Errorf("%w: %v", repository.FilesErrorCopyFailure, err)
     }
 
-    hash, err := calculateSHA256(nf)
-    if err != nil {
-	fmt.Println("Error calculating hash for file:", err.Error())
-	return nil, &models.HttpError{ 
-	    Message: "Something went wrong",
-	    Code: http.StatusInternalServerError,
-	}
-    }
-    fmt.Println("Hash for file:", hash)
-
-    fileId, err := pr.saveFileToDb(userId, filename, newFilePath, len(fileBytes), hash)
+    hashString := fmt.Sprintf("%x", hash.Sum(nil))
+    fileId, err := pr.saveFileToDb(userId, filename, newFilePath, writtenBytes, hashString)
     if err != nil {
 	os.Remove(newFilePath)
-	
-	return nil, &models.HttpError{
-	    Message: "Couldn't save file",
-	    Code: http.StatusInternalServerError,
-	}
+	return nil, fmt.Errorf("%w: %v", repository.FilesErrorDbSave, err)
     }
 
     return &models.UserFile {
@@ -97,31 +71,17 @@ func (pr *FilesRepository) SaveFile(userId string, filename string, fileBytes []
     }, nil
 }
 
-func (pr *FilesRepository) saveFileToDb(userId string, filename string, filepath string, size int, hash string) (string, error) {
-    log.Println("TRYING TO SAVE FILE...")
-
+func (pr *FilesRepository) saveFileToDb(userId string, filename string, filepath string, size int64, hash string) (string, error) {
     ctx := context.Background()
     fileId := uuid.NewString()
     sql := "INSERT INTO files (id, user_id, filename, filepath, size, hash) VALUES ($1, $2, $3, $4, $5, $6)"
 
     _, err := pr.db.Pool.Exec(ctx, sql, fileId, userId, filename, filepath, size, hash)
     if err != nil {
-	log.Println("Failed to save file to db:", err.Error())
 	return "", err 
     }
 
-    log.Println("FILE SAVED SUCCESSFULLY!")
     return fileId, nil
-}
-
-func calculateSHA256(file io.Reader) (string, error) {
-    hasher := sha256.New()
-    if _, err := io.Copy(hasher, file); err != nil {
-	return "", err
-    }
-
-    hash := hasher.Sum(nil)
-    return fmt.Sprintf("%x", hash), nil
 }
 
 // DeleteFile deletes file from server and returns error if there is an error

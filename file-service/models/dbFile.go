@@ -7,7 +7,7 @@ type DbUserFile struct {
     UserId 		string
     Filename		string
     Filepath		string
-    Size		int
+    Size		int64
     Hash		string
     LastAccessed	time.Time
 }
