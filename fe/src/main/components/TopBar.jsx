@@ -37,6 +37,7 @@ export default function TopBar() {
     }, [])
 
     const changeImage = async () => {
+	const maxImageSize = 11
 	let image = undefined;
 	image = await showImagePicker()
 
@@ -47,6 +48,14 @@ export default function TopBar() {
 	      alert("Only png, jpg or jpeg image types are allowed.");
 	      return;
 	    }
+
+	    if (image.size > maxImageSize * 1024 * 1024) {
+	      alert("File should be less than 11MB");
+	      return;
+	    } 
+
+	    // clean file from funky names
+	    image = cleanFile(image);
 
 	    // upload file
 	    const formData = new FormData();
@@ -128,4 +137,17 @@ export default function TopBar() {
 	    </div>
 	}
     </div>;
+}
+
+function cleanFile(file) {
+  const safeName = file.name.replace(/[^a-z0-9.\-_]/gi, "_");
+
+  if (safeName === file.name) {
+    return file;
+  }
+
+  return new File([file], safeName, {
+    type: file.type,
+    lastModified: file.lastModified,
+  });
 }
