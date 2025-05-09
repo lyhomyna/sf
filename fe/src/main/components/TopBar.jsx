@@ -1,15 +1,18 @@
 import { CircleLoader } from "react-spinners";
 import ControlButtons from "./ControlButtons.jsx";
-import { authServiceBaseUrl } from "config/constants.js";
+import { authServiceBaseUrl, fileServiceBaseUrl } from "config/constants.js";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 
 export default function TopBar() {
-    const imageURL="https://static.vecteezy.com/system/resources/previews/018/871/797/non_2x/happy-cat-transparent-background-png.png"
-    const [email, setEmail] = useState("supercoolemail@super.mail");
+    const defaultImageURL="https://static.vecteezy.com/system/resources/previews/018/871/797/non_2x/happy-cat-transparent-background-png.png"
+    const [user, setUser] = useState({
+	email: "mail@example.com",
+	imageUrl: "default",
+    });
     const uploadCounter = useSelector(state => state.upload.uploading.length);
 
-    // to retrieve user's email
+    // to retrieve user's image and email
     useEffect(() => {
 	const fetchUser = async () => {
 	    try {
@@ -17,7 +20,10 @@ export default function TopBar() {
 
 		if (response.status === 200) {
 		    const user = await response.json(); 
-		    setEmail(user.email);
+		    setUser({
+			email: user.email,
+			imageUrl: user.imageUrl,
+		    });
 		} else if (response.status === 404) {
 		    const err = await response.json();
 		    console.log(err.message)
@@ -30,13 +36,93 @@ export default function TopBar() {
 	fetchUser();
     }, [])
 
+    const changeImage = async () => {
+	let image = undefined;
+	image = await showImagePicker()
+
+	if (image) {
+	    // upload file
+	    const formData = new FormData();
+	    formData.append("image", image)
+	    
+	    try {
+		const response = await fetch(`${fileServiceBaseUrl}/save-image`, {
+		    method: "POST",
+		    body: formData,
+		    credentials: "include",
+		})
+
+		const resJson = await response.json();
+		if (response.ok) {
+		    setUser( oldUser => {
+			const newUser = {
+			    email: oldUser.email,
+			    imageUrl: resJson.imageUrl,
+			}
+
+			return newUser 
+		    })
+		} else if (response.status !== 500) {
+		    alert(resJson.data)
+		} else {
+		    alert(`Failed to change an image '${image.name}'. Try again.`)
+		    console.log(resJson.data)
+		}
+	    } catch (e) {
+		console.log(e)
+	    }
+	}
+    };
+
+    const showImagePicker = async () => {
+	const image = new Promise((resolve) => {
+	    const input = document.createElement("input");
+	    input.type = "file";
+	    input.style.display = "none";
+	    input.multiple = false;
+
+	    document.body.append(input);
+
+	    input.addEventListener("change", () => {
+		input.remove();
+		
+		if (!input.files) {
+		    return;
+		}
+
+		resolve(input.files[0])
+	    });
+
+	    if ('showPicker' in HTMLInputElement.prototype) {
+		input.showPicker({
+		    types: [
+			{
+			    description: "Images",
+			    accept: {
+				"image/*": [".png", ".jpeg", ".jpg"]
+			    }
+			}	
+		    ],
+		    excludeAcceptAllOption: true,
+		    multiple: false,
+		});
+	    } else {
+		input.click();
+	    }
+	});
+
+	return await image;
+    }
+
     return <div className="flex flex-row justify-between items-center">
 	<div className="flex flex-row items-center gap-5 flex-wrap">
-	    <div className="w-16 h-16 bg-stone-700 rounded-md shadow-md">
-		<img src={ imageURL } alt="Avatar"/>
-	    </div>
+	    <img className="object-fill w-16 h-16 bg-stone-700 rounded-md shadow-md cursor-pointer" src={ user.imageUrl === "default" 
+		? defaultImageURL 
+		: `${fileServiceBaseUrl}/${user.imageUrl}` } 
+	     alt="Avatar"
+	     onClick={ changeImage }/>
 	    <div className="font-medium text-slate-300">
-		{ email }
+		{ user.email }
 	    </div>
 	    <ControlButtons className="flex items-center gap-x-1" />
 	</div>

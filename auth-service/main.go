@@ -7,14 +7,6 @@ import (
 	"github.com/lyhomyna/sf/auth-service/service"
 )
 
-// var envFilePath = filepath.Join(".env")
-// 
-// func init() { 
-//     if err := godotenv.Load(envFilePath); err != nil {
-// 	panic(err)
-//     }
-// }
-
 func main() {
     siglogServer := service.SiglogServer{}
     ctx := context.Background()

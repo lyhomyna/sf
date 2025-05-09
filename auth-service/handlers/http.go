@@ -187,6 +187,8 @@ func logout(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
     http.SetCookie(w, &http.Cookie{
 	Name: sessionCookieName,
 	MaxAge: -1,
+	Value: "",
+	Path: "/",
     })	
 
     log.Printf("Session '%s' closed.", sessionId)
@@ -244,7 +246,8 @@ func handleGetUser(siglog *models.Siglog, w http.ResponseWriter, req *http.Reque
     w.WriteHeader(http.StatusOK)
     jsonResponse, _ := json.Marshal(struct { 
 	Email string `json:"email"`
-    } { Email: user.Email })
+	ImageUrl string `json:"imageUrl"`
+    } { Email: user.Email, ImageUrl: user.ImageUrl })
     w.Write(jsonResponse)
 }
 

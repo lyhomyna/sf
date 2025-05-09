@@ -31,6 +31,16 @@ func WriteResponse(w http.ResponseWriter, data any, code int) {
     w.Write(response)
 }
 
+func WriteResponseV2(w http.ResponseWriter, data any, code int) {
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(200)
+    response, err := json.Marshal(data)
+    if err != nil {
+	panic(err)
+    }
+    w.Write(response)
+}
+
 // returns user id or error
 func CheckAuth(req *http.Request) (string, *models.HttpError) {
     sessionCookie, err := req.Cookie(sessionCookieName)

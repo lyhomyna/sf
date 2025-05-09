@@ -32,7 +32,7 @@ export function useUploadFile() {
 		    createdAt: -1, // no creation time
 		}]})
 	    } else if(response.status === 400) {
-		alert(await resJson.data)
+		alert(resJson.data)
 	    } else {
 		alert(`Failed to upload file '${file.name}'. Try again.`);
 		console.log(resJson.data)

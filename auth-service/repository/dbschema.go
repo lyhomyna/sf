@@ -11,6 +11,6 @@ const (
     DB_users_id = "id"
     DB_users_email = "email"
     DB_users_password = "pwd"
-    DB_created_at = "created_at"
-    DB_image_url = "image_url"
+    DB_users_created_at = "created_at"
+    DB_users_image_url = "image_url"
 )
