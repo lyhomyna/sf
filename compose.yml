@@ -50,8 +50,13 @@ services:
     build:
       context: ./file-service
       dockerfile: Dockerfile
+    env_file:
+      - ./file-service/.env
     volumes:
       - files:/usr/src/file-service/files 
+      - images:/usr/src/file-service/userImages
+    expose:
+      - 8082
     depends_on:
       db:
         condition: service_healthy
@@ -86,3 +91,4 @@ services:
 volumes:
   postgres_data:
   files:
+  images:
