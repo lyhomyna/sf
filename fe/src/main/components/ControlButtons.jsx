@@ -82,7 +82,7 @@ export default function ControlButtons({...props}) {
 	    });
 
 	    if ('showPicker' in HTMLInputElement.prototype) {
-		input.showPicker();
+		input.showPicker({ multiple: multiple });
 	    } else {
 		input.click();
 	    }
@@ -104,6 +104,5 @@ export default function ControlButtons({...props}) {
 
     return (<div {...props}>
 	<Button className="bg-neutral-700" text="Log out" onClick={logout}/>
-	<Button className="bg-neutral-700"text="Upload file" onClick={uploadFileOrFiles} />
-    </div>);
-}
+	<Button className="bg-neutral-700"text="Upload file" onClick={ uploadFileOrFiles } />
+    </div>);}

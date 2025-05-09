@@ -35,8 +35,8 @@ func main() {
     mux.HandleFunc("/download/", fs.DownloadHandler)      // GET
     mux.HandleFunc("/files", fs.FilesHanlder)     // GET
 
-    mux.HandleFunc("/avatar", uis.GetUserImageHandler)        // GET
-    mux.HandleFunc("/avatar/save", uis.SaveUserImageHandler)  // POST
+    mux.HandleFunc("/image/", uis.GetUserImageHandler)        // GET
+    mux.HandleFunc("/save-image", uis.SaveUserImageHandler)  // POST
 
     mux.HandleFunc("/health", func(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(http.StatusOK)
@@ -49,4 +49,6 @@ func main() {
     if err := http.ListenAndServe(cfg.ServerPort, handler); err != nil {
 	log.Println("Failed to start server:", err)
     }
+
+    log.Println("Bye-bye")
 }

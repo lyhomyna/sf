@@ -30,7 +30,7 @@ export default function FileList() {
 	    <ul className="flex flex-col justify-start w-max">
 	    { 
 		files.map((file) => {
-		    return ( <FileItem file={file}/> );
+		    return ( <FileItem key={file.id} file={file}/> );
 		})
 	    }
 	    </ul>

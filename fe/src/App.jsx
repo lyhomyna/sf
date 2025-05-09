@@ -13,7 +13,7 @@ export default function App() {
 	setAuthenticated(current => !current);
     }
 
-    // check if user authenticated
+    // Auth check
     useEffect(() => {
 	(async () => {
 	    const res = await fetch(`${authServiceBaseUrl}/check-auth`);

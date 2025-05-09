@@ -43,11 +43,11 @@ func (p *PostgreUsers) DeleteUser(userId string) error {
 }
 
 func (p *PostgreUsers) ReadUserById(id string) (*models.User, error) {
-    sql := fmt.Sprintf("SELECT %s, %s FROM %s WHERE id=$1;", DB_users_email, DB_users_password, DB_users_name)
+    sql := fmt.Sprintf("SELECT %s, %s, %s FROM %s WHERE id=$1;", DB_users_email, DB_users_password, DB_users_image_url, DB_users_name)
     row := p.pool.QueryRow(p.ctx, sql, id)
     var user models.User
 
-    err := row.Scan(&user.Email, &user.Password)
+    err := row.Scan(&user.Email, &user.Password, &user.ImageUrl)
     if err != nil {
 	return nil, fmt.Errorf("Couldn't read user by Id: %w", err)
     }

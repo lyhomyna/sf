@@ -3,8 +3,6 @@ package config
 import (
 	"log"
 	"os"
-
-	"github.com/joho/godotenv"
 )
 
 // Default values
@@ -33,11 +31,6 @@ func NewConfig() *Config {
 }
 
 func (c *Config) WithPostgres() *Config {
-    err := godotenv.Load()
-    if err != nil {
-	log.Fatalf("Error loading .env file: %s", err)
-    }
-
     if os.Getenv("POSTGRES_HOST") == "" {
 	 os.Setenv("POSTGRES_HOST", POSTGRES_HOST)
     }
