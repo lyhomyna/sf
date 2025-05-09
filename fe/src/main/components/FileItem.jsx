@@ -51,8 +51,8 @@ export default function FileItem({ file }) {
 	    alert("Something went wrong downloading the file. Refresh the page and try again.")
 	}
     }
-
-    return (<li key={file.id}>
+    
+    return <li>
 	<div className="flex flex-row justify-between gap-2 items-center mt-3">
 	    <div className="flex gap-[0.3rem]">
 		<button onClick={deleteItem} className="w-[15px] h-[2.1rem] bg-red-200 hover:bg-red-700 duration-300" title="Delete" />
@@ -67,5 +67,5 @@ export default function FileItem({ file }) {
 	    </div>
 	    <Button className="bg-neutral-700" text="Download" onClick={downloadFile}/>
 	</div>
-    </li>);
+    </li>;
 }

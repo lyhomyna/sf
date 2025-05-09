@@ -41,6 +41,13 @@ export default function TopBar() {
 	image = await showImagePicker()
 
 	if (image) {
+	    const allowedImageTypes = ["image/jpeg", "image/png"];
+
+	    if (!allowedImageTypes.includes(image.type)) {
+	      alert("Only png, jpg or jpeg image types are allowed.");
+	      return;
+	    }
+
 	    // upload file
 	    const formData = new FormData();
 	    formData.append("image", image)
@@ -78,6 +85,7 @@ export default function TopBar() {
 	const image = new Promise((resolve) => {
 	    const input = document.createElement("input");
 	    input.type = "file";
+	    input.accept = "image/png, image/jpeg, image/jpg";
 	    input.style.display = "none";
 	    input.multiple = false;
 
@@ -93,22 +101,7 @@ export default function TopBar() {
 		resolve(input.files[0])
 	    });
 
-	    if ('showPicker' in HTMLInputElement.prototype) {
-		input.showPicker({
-		    types: [
-			{
-			    description: "Images",
-			    accept: {
-				"image/*": [".png", ".jpeg", ".jpg"]
-			    }
-			}	
-		    ],
-		    excludeAcceptAllOption: true,
-		    multiple: false,
-		});
-	    } else {
-		input.click();
-	    }
+	    input.click();
 	});
 
 	return await image;
