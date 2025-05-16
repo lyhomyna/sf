@@ -137,7 +137,7 @@ func (pr *FilesRepository) removeFileFromDb(fileId string) error {
 // GetFilenames returns list of user filenames or an error
 func (pr *FilesRepository) GetFiles(userId string) ([]*models.DbUserFile, error) {
     ctx := context.Background()
-    sql := "SELECT * FROM files WHERE user_id=$1";
+    sql := "SELECT * FROM files WHERE user_id=$1"
     userFiles := []*models.DbUserFile{}
 
     rows, err := pr.db.Pool.Query(ctx, sql, userId)

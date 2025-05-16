@@ -21,7 +21,9 @@ func NewUserImagesRepository(db *database.Postgres) *UserImagesRepository {
 
 func (r *UserImagesRepository) SaveUserImage(userId string, imageUrl string) error {
     ctx := context.Background()
+
     sql := "UPDATE users SET image_url=$1 WHERE id=$2"
+
     _, err := r.db.Pool.Exec(ctx, sql, imageUrl, userId)
     if err != nil {
 	log.Printf("Failed to update image for user %s: %v", userId, err)
