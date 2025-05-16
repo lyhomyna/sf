@@ -1,9 +1,8 @@
-FROM golang:latest
+FROM alpine:3.19
 
 WORKDIR /app
+RUN apk add --no-cache curl
 
-RUN go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+RUN curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.tar.gz | tar xzf - "migrate" && mv migrate /usr/bin
 
 COPY . ./migrations
-
-CMD ["bash"]

@@ -1,3 +1,5 @@
+version: "2.4"
+
 services:
   nginx:
     image: nginx:latest
@@ -13,8 +15,6 @@ services:
       auth-service:
         condition: service_healthy
       file-service:
-        condition: service_healthy
-      db:
         condition: service_healthy
 
   fe:
@@ -32,10 +32,10 @@ services:
       context: ./auth-service
       dockerfile: Dockerfile 
     env_file:
-      - ./auth-service/.env
+      - .env
     depends_on:
-      db:
-        condition: service_healthy
+      migration:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "curl", "-f", "http://auth-service:8081/health"]
       interval: 10s
@@ -47,15 +47,13 @@ services:
       context: ./file-service
       dockerfile: Dockerfile
     env_file:
-      - ./file-service/.env
+      - .env
     volumes:
       - files:/usr/src/file-service/files 
       - images:/usr/src/file-service/userImages
-    expose:
-      - 8082
     depends_on:
-      db:
-        condition: service_healthy
+      migration:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "curl", "-f", "http://file-service:8082/health"]
       interval: 10s
@@ -79,10 +77,19 @@ services:
     build:
       context: ./migrations
       dockerfile: Dockerfile
-    profiles:
-      - migrations
-    stdin_open: true
-    tty: true
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    entrypoint: [
+      "migrate",
+      "-path", "/app/migrations",
+      "-database", "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_NAME}?sslmode=disable",
+      "up"
+    ]
+    restart: no
+
 
 volumes:
   postgres_data:

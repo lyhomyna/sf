@@ -29,8 +29,7 @@ export default function DragAndDrop() {
 
     const onDrop = useCallback(async (acceptedFiles) => {
 	setIsDragging(false);
-	await Promise.all(
-	    acceptedFiles.map(file => uploadFile(file)));
+	await Promise.all(acceptedFiles.map(file => uploadFile(file)));
     }, [uploadFile]);
 
     useEffect(() => {
@@ -51,13 +50,13 @@ export default function DragAndDrop() {
 
 	// show dropzone only when files are being dragged 
 	if (!e.dataTransfer.types.includes('Files')) {
-	    console.log("Dropped file isn't a file")
+	    alert("Isn't a file")
 	    return; 
 	}
 
 	dragCounter.current--;
 	if (dragCounter === 0) {
-	    setIsDragging(false);
+	setIsDragging(false);
 	}
     };
 
@@ -66,11 +65,11 @@ export default function DragAndDrop() {
 
 	// show dropzone only when files are being dragged 
 	if (!e.dataTransfer.types.includes('Files')) {
-	    console.log("Dropped file isn't a file")
+	    alert("Isn't a file")
 	    return; 
 	}
 
-	dragCounter.cuurent = 0;
+	dragCounter.current = 0;
 	setIsDragging(false);
     };
 

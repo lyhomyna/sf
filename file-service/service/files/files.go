@@ -99,9 +99,15 @@ func (fs *FilesService) DeleteHandler(w http.ResponseWriter, req *http.Request) 
 	utils.WriteResponse(w, httpErr.Message, httpErr.Code)
 	return
     }
+    
+    // to do not go beyond permitted access limits
+    splittedUrl := strings.Split(req.URL.Path, "/") 
+    if (len(splittedUrl) < 2 || len(splittedUrl) > 2) {
+	utils.WriteResponse(w,  "Access denied. You don't have permission to perform this action.", http.StatusForbidden)
+	return
+    }
 
     fileId := strings.TrimPrefix(req.URL.Path, "/delete/")
-
     err := fs.repository.DeleteFile(userId, fileId)
     if err != nil {
 	log.Println(err.Error())
@@ -129,6 +135,13 @@ func (fs *FilesService) DownloadHandler(w http.ResponseWriter, req *http.Request
     userId, httpErr := utils.CheckAuth(req)
     if httpErr != nil {
 	utils.WriteResponse(w, httpErr.Message, httpErr.Code)
+	return
+    }
+
+    // to do not go beyond permitted access limits
+    splittedUrl := strings.Split(req.URL.Path, "/") 
+    if (len(splittedUrl) < 2 || len(splittedUrl) > 2) {
+	utils.WriteResponse(w,  "Access denied. You don't have permission to perform this action.", http.StatusForbidden)
 	return
     }
 

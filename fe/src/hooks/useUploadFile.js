@@ -12,7 +12,7 @@ export function useUploadFile() {
 	const formData = new FormData();
 	formData.append("file", file);
 
-	// to show progress at top right corner
+	// to show progress at the top right corner
 	const tempFileId = file.name+randomInt();
 	dispatch(addUpload({id: tempFileId}));
 

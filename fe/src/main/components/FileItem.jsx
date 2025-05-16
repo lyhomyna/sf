@@ -47,7 +47,7 @@ export default function FileItem({ file }) {
 
 	    window.URL.revokeObjectURL(url);
 	} catch (e) {
-	    console.log(e)
+	    console.error(e)
 	    alert("Something went wrong downloading the file. Refresh the page and try again.")
 	}
     }
