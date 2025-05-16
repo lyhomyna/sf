@@ -101,8 +101,7 @@ func (fs *FilesService) DeleteHandler(w http.ResponseWriter, req *http.Request) 
     }
     
     // to do not go beyond permitted access limits
-    splittedUrl := strings.Split(req.URL.Path, "/") 
-    if (len(splittedUrl) < 2 || len(splittedUrl) > 2) {
+    if !isUrlPathCorrect(req.URL.Path) {
 	utils.WriteResponse(w,  "Access denied. You don't have permission to perform this action.", http.StatusForbidden)
 	return
     }
@@ -126,6 +125,15 @@ func (fs *FilesService) DeleteHandler(w http.ResponseWriter, req *http.Request) 
     utils.WriteResponse(w, "File deleted", http.StatusOK)
 }
 
+// path must start with '/'
+func isUrlPathCorrect(path string) bool {
+    splitted := strings.Split(path[1:], "/") 
+    if (len(splitted) < 2 || len(splitted) > 2) {
+	return false
+    }
+    return true
+}
+
 // DownloadHandler downloads file into client downloads folder
 func (fs *FilesService) DownloadHandler(w http.ResponseWriter, req *http.Request) {
     if req.Method != http.MethodGet {
@@ -139,8 +147,7 @@ func (fs *FilesService) DownloadHandler(w http.ResponseWriter, req *http.Request
     }
 
     // to do not go beyond permitted access limits
-    splittedUrl := strings.Split(req.URL.Path, "/") 
-    if (len(splittedUrl) < 2 || len(splittedUrl) > 2) {
+    if !isUrlPathCorrect(req.URL.Path) {
 	utils.WriteResponse(w,  "Access denied. You don't have permission to perform this action.", http.StatusForbidden)
 	return
     }
