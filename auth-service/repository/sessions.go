@@ -27,7 +27,7 @@ func GetSessionsDao(ctx context.Context) *PostgreSessions {
 }
 
 func (p *PostgreSessions) CreateSession(userId string) (string, error) {
-    sql := fmt.Sprintf("INSERT INTO %s (%s, %s) VALUES ($1, $2);", DB_sessions_name, DB_sessions_id, DB_sessions_userId)
+    sql := fmt.Sprintf("INSERT INTO %s (%s, %s) VALUES ($1, $2)", DB_sessions_name, DB_sessions_id, DB_sessions_userId)
     sessionId := uuid.NewString()
     _, err := p.pool.Exec(p.ctx, sql, sessionId, userId)
 
@@ -39,7 +39,7 @@ func (p *PostgreSessions) CreateSession(userId string) (string, error) {
 }
 
 func (p *PostgreSessions) DeleteSession(sessionId string) error {
-    sql := fmt.Sprintf("DELETE FROM %s WHERE id=$1;", DB_sessions_name)
+    sql := fmt.Sprintf("DELETE FROM %s WHERE id=$1", DB_sessions_name)
 
     execRes, err := p.pool.Exec(p.ctx, sql, sessionId)
 

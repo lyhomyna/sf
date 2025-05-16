@@ -72,7 +72,10 @@ func (pr *FilesRepository) SaveFile(userId string, filename string, file io.Read
 func (pr *FilesRepository) saveFileToDb(userId string, filename string, filepath string, size int64, hash string) (string, error) {
     ctx := context.Background()
     fileId := uuid.NewString()
-    sql := "INSERT INTO files (id, user_id, filename, filepath, size, hash) VALUES ($1, $2, $3, $4, $5, $6)"
+    sql := 
+
+    `INSERT INTO files (id, user_id, filename, filepath, size, hash) 
+	VALUES ($1, $2, $3, $4, $5, $6)`
 
     _, err := pr.db.Pool.Exec(ctx, sql, fileId, userId, filename, filepath, size, hash)
     if err != nil {
@@ -106,6 +109,7 @@ func (pr *FilesRepository) DeleteFile(userId string, fileId string) error {
 // Can return FilesErrorFailureToRetrieve
 func (pr *FilesRepository) GetFile(userId string, fileId string) (*models.DbUserFile, error) { 
     ctx := context.Background()
+
     sql := "SELECT * FROM files WHERE user_id=$1 AND id=$2"
 
     var uf models.DbUserFile
@@ -119,6 +123,7 @@ func (pr *FilesRepository) GetFile(userId string, fileId string) (*models.DbUser
 // Can return FilesErrorDbQuery
 func (pr *FilesRepository) removeFileFromDb(fileId string) error {
     ctx := context.Background()
+
     sql := "DELETE FROM files WHERE id=$1"
 
     _, err := pr.db.Pool.Exec(ctx, sql, fileId)

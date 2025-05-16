@@ -25,7 +25,7 @@ func GetUsersDao(ctx context.Context) *PostgreUsers {
 }
 
 func (p *PostgreUsers) CreateUser(user *models.DbUser) (string, error) {
-    sql := fmt.Sprintf("INSERT INTO users (%s, %s, %s) VALUES ($1, $2, $3);", DB_users_id, DB_users_email, DB_users_password)
+    sql := fmt.Sprintf("INSERT INTO users (%s, %s, %s) VALUES ($1, $2, $3)", DB_users_id, DB_users_email, DB_users_password)
     _, err := p.pool.Exec(p.ctx, sql, user.Id, user.Email, user.Password)
     if err != nil {
 	return "", fmt.Errorf("Couldn't create user: %w", err) 
@@ -34,7 +34,7 @@ func (p *PostgreUsers) CreateUser(user *models.DbUser) (string, error) {
 }
 
 func (p *PostgreUsers) DeleteUser(userId string) error {
-    sql := fmt.Sprintf("DELETE FROM %s WHERE id=$1;", DB_users_name)
+    sql := fmt.Sprintf("DELETE FROM %s WHERE id=$1", DB_users_name)
     _, err := p.pool.Exec(p.ctx, sql, userId)
     if err != nil {
 	err = fmt.Errorf("Couldn't delete user: %w", err)
@@ -43,7 +43,7 @@ func (p *PostgreUsers) DeleteUser(userId string) error {
 }
 
 func (p *PostgreUsers) ReadUserById(id string) (*models.User, error) {
-    sql := fmt.Sprintf("SELECT %s, %s, %s FROM %s WHERE id=$1;", DB_users_email, DB_users_password, DB_users_image_url, DB_users_name)
+    sql := fmt.Sprintf("SELECT %s, %s, %s FROM %s WHERE id=$1", DB_users_email, DB_users_password, DB_users_image_url, DB_users_name)
     row := p.pool.QueryRow(p.ctx, sql, id)
     var user models.User
 
@@ -56,7 +56,7 @@ func (p *PostgreUsers) ReadUserById(id string) (*models.User, error) {
 }
 
 func (p *PostgreUsers) FindUser(user *models.User) (string, error) {
-    sql := fmt.Sprintf("SELECT %s FROM %s WHERE %s=$1 AND %s=$2;", DB_users_id, DB_users_name, DB_users_email, DB_users_password)
+    sql := fmt.Sprintf("SELECT %s FROM %s WHERE %s=$1 AND %s=$2", DB_users_id, DB_users_name, DB_users_email, DB_users_password)
     row := p.pool.QueryRow(p.ctx, sql, user.Email, user.Password) 
     var userId string
     err := row.Scan(&userId)
@@ -67,7 +67,7 @@ func (p *PostgreUsers) FindUser(user *models.User) (string, error) {
 }
 
 func (p *PostgreUsers) GetUserByEmail(email string) (*models.DbUser, error) {
-    sql := fmt.Sprintf("SELECT * FROM %s WHERE %s=$1;", DB_users_name, DB_users_email)
+    sql := fmt.Sprintf("SELECT * FROM %s WHERE %s=$1", DB_users_name, DB_users_email)
     row := p.pool.QueryRow(p.ctx, sql, email)
 
     var dbUser models.DbUser
