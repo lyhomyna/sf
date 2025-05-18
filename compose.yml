@@ -2,12 +2,12 @@ version: "2.4"
 
 services:
   nginx:
-    image: nginx:latest
     container_name: nginx-proxy
+    build:
+      context: ./reverse-proxy
+      dockerfile: Dockerfile
     ports: 
       - "80:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       fe: 
         condition: service_healthy
@@ -17,14 +17,14 @@ services:
         condition: service_healthy
 
   fe:
+    container_name: frontend
     build:
       context: ./fe
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
     volumes:
-      - ".:/usr/sf-fe"
-      - "/usr/sf-fe/node_modules"
+      - "./fe:/usr/src/sf-fe"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://fe:3000"]
       interval: 10s
@@ -32,6 +32,7 @@ services:
       retries: 5
 
   auth-service:
+    container_name: auth-service
     build:
       context: ./auth-service
       dockerfile: Dockerfile 
@@ -47,6 +48,7 @@ services:
       retries: 5
 
   file-service:
+    container_name: file-service
     build:
       context: ./file-service
       dockerfile: Dockerfile
@@ -65,6 +67,7 @@ services:
       retries: 5
 
   db:
+    container_name: postgres
     image: postgres:latest
     env_file:
       - .env
@@ -78,6 +81,7 @@ services:
       retries: 5
 
   migration:
+    container_name: migration
     build:
       context: ./migrations
       dockerfile: Dockerfile
