@@ -14,3 +14,6 @@ FROM nginx:stable-alpine
 COPY --from=builder /usr/src/sf-fe/build /usr/share/nginx/html
 
 CMD ["nginx", "-g", "daemon off;"]
+
+
+
