@@ -179,7 +179,7 @@ func (fs *FilesService) DownloadHandler(w http.ResponseWriter, req *http.Request
     http.ServeFile(w, req, file.Filepath)
 }
 
-func (fs *FilesService) FilesHanlder(w http.ResponseWriter, req *http.Request) {
+func (fs *FilesService) FilesHandler(w http.ResponseWriter, req *http.Request) {
     if req.Method != http.MethodGet {
 	http.Error(w, "Use GET method instead", http.StatusMethodNotAllowed)
 	return
@@ -218,4 +218,17 @@ func (fs *FilesService) FilesHanlder(w http.ResponseWriter, req *http.Request) {
     }
 
     utils.WriteResponse(w, responseUserFiles, http.StatusOK)
+}
+
+func FilesHandler(w http.ResponseWriter, req *http.Request) {
+    if req.Method != http.MethodGet {
+	http.Error(w, "Use GET method instead", http.StatusMethodNotAllowed)
+	return
+    }
+    userId, httpErr := utils.CheckAuth(req)
+    if httpErr != nil {
+	utils.WriteResponse(w, httpErr.Message, httpErr.Code)
+	return
+    }
+
 }

@@ -104,5 +104,6 @@ export default function ControlButtons({...props}) {
 
     return (<div {...props}>
 	<Button className="bg-neutral-700" text="Log out" onClick={logout}/>
-	<Button className="bg-neutral-700"text="Upload file" onClick={ uploadFileOrFiles } />
+	<Button className="bg-neutral-700" text="Upload file" onClick={ uploadFileOrFiles } />
+	<Button className="bg-neutral-700" text="Create Dir" />
     </div>);}

@@ -159,3 +159,11 @@ func (pr *FilesRepository) GetFiles(userId string) ([]*models.DbUserFile, error)
 
     return userFiles, nil
 }
+
+
+func (pr *FilesRepository) GetItemsFromDir(dir string, userId string) ([]*models.DbDirItem, error) {
+    sql := "SELECT * FROM files WHERE user_id=$1 AND filepath=$2";
+
+
+    return nil, nil
+}

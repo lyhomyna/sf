@@ -6,7 +6,8 @@ type FileService interface {
     SaveHandler(w http.ResponseWriter, req *http.Request)
     DeleteHandler(w http.ResponseWriter, req *http.Request)
     DownloadHandler(w http.ResponseWriter, req *http.Request)
-    FilesHanlder(w http.ResponseWriter, req *http.Request)
+    FilesHandler(w http.ResponseWriter, req *http.Request)
+    FilesHandlerV2(w http.ResponseWriter, req *http.Request)
 }
 
 type UserImagesService interface {

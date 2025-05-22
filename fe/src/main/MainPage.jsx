@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Provider } from "react-redux";
+import { Routes, Route } from 'react-router-dom';
 
 import TopBar from "./components/TopBar.jsx";
 import FileList from "./components/FileList.jsx";
@@ -26,16 +27,18 @@ export default function MainPage() {
     };
 
     return <Provider store={store}>
-	<FilesContext value={ { 
-	    files: files, 
-	    addFiles: addFiles, 
-	    deleteFile: deleteFile, 
-	}}>
-	    <div className="p-2" >
-		<TopBar />
-		<FileList />
-		<DragAndDrop /> 
-	    </div>
-	</FilesContext>
-    </Provider>
+	    <FilesContext value={ { 
+		files: files, 
+		addFiles: addFiles, 
+		deleteFile: deleteFile, 
+	    }}>
+		<div className="p-2" >
+		    <TopBar />
+		    <Routes>
+			<Route path="*" element={<FileList />} />
+		    </Routes>
+		    <DragAndDrop /> 
+		</div>
+	    </FilesContext>
+	</Provider>
 }

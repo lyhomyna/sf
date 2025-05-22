@@ -30,10 +30,12 @@ var (
 func main() {
     mux := http.NewServeMux()
 
+    mux.HandleFunc("/files", fs.FilesHandler)     // GET
+    mux.HandleFunc("/", fs.FilesHanlderV2)
+
     mux.HandleFunc("/save", fs.SaveHandler)               // POST
     mux.HandleFunc("/delete/", fs.DeleteHandler)          // DELETE
     mux.HandleFunc("/download/", fs.DownloadHandler)      // GET
-    mux.HandleFunc("/files", fs.FilesHanlder)     // GET
 
     mux.HandleFunc("/image/", uis.GetUserImageHandler)        // GET
     mux.HandleFunc("/save-image", uis.SaveUserImageHandler)  // POST

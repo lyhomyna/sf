@@ -2,6 +2,11 @@ package models
 
 import "time"
 
+type DbDirItem struct {
+    Id		string
+    Type	string
+}
+
 type DbUserFile struct {
     Id 			string
     UserId 		string

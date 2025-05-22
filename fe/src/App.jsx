@@ -35,9 +35,7 @@ export default function App() {
 	</div>;
     } else {
 	if (isAuthenticated) {
-	    page = <>
-		<MainPage/>
-	    </>;
+	    page = <MainPage/>;
 	} else {
 	    page = <div className="h-screen flex flex-col items-center justify-center">
 	       <LoginPage />

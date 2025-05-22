@@ -16,4 +16,5 @@ type FilesRepository interface {
     DeleteFile(userId string, fileId string) error 
     GetFile(userId string, fileId string) (*models.DbUserFile, error)
     GetFiles(userId string) ([]*models.DbUserFile, error)
+    GetItemsFromDir(dir string, userId string) ([]*models.DbDirItem, error)
 }
