@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -187,7 +188,8 @@ func (fs *FilesService) DownloadHandler(w http.ResponseWriter, req *http.Request
     http.ServeFile(w, req, file.Filepath)
 }
 
-func (fs *FilesService) FilesHandler(w http.ResponseWriter, req *http.Request) {
+// Dir comes from request URL path
+func (fs *FilesService) ListDirHandler(w http.ResponseWriter, req *http.Request) {
     if req.Method != http.MethodGet {
 	http.Error(w, "Use GET method instead", http.StatusMethodNotAllowed)
 	return
@@ -198,39 +200,27 @@ func (fs *FilesService) FilesHandler(w http.ResponseWriter, req *http.Request) {
 	return
     }
 
-    userFiles, err := fs.repository.GetFiles(userId)
+    cleanPath := path.Clean("/" + strings.Trim(req.URL.Path, "/"))
+
+    entries, err := fs.repository.ListDir(cleanPath, userId)
     if err != nil {
 	log.Println(err)
 	
-	switch {
-	    case errors.Is(repository.FilesErrorDbQuery, err):
-		utils.WriteResponse(w, "Couldn't get your files from database", http.StatusInternalServerError)
-	    case errors.Is(repository.FilesErrorDbScan, err):
-		utils.WriteResponse(w, "Couldn't process file data from database", http.StatusInternalServerError)
-
-	    default:
-		utils.WriteResponse(w, "Unknown error occured", http.StatusInternalServerError)
+	if errors.Is(repository.ErrorDirectoryNotFound, err) {
+	    utils.WriteResponse(w, "Directory not found", http.StatusNotFound)
+	    return
 	}
 
+	utils.WriteResponse(w, "Something went wrong. Try again", http.StatusInternalServerError)
 	return
     }
 
-    responseUserFiles := []*models.UserFile{}
-
-    for _, userFile := range userFiles {
-	responseUserFiles = append(responseUserFiles, &models.UserFile{
-	    Id: userFile.Id,
-	    Filename: userFile.Filename,
-	    LastAccessed: userFile.LastAccessed.Unix(),
-	})
-    }
-
-    utils.WriteResponse(w, responseUserFiles, http.StatusOK)
+    utils.WriteResponseV2(w, entries, http.StatusOK)
 }
 
-func (fs *FilesService) FilesHandlerV2(w http.ResponseWriter, req *http.Request) {
-    if req.Method != http.MethodGet {
-	http.Error(w, "Use GET method instead", http.StatusMethodNotAllowed)
+func (fs *FilesService) CreateDirectoryHandler(w http.ResponseWriter, req *http.Request) {
+    if req.Method != http.MethodPost {
+	http.Error(w, "Use POST method instead", http.StatusMethodNotAllowed)
 	return
     }
     userId, httpErr := utils.CheckAuth(req)
@@ -239,18 +229,46 @@ func (fs *FilesService) FilesHandlerV2(w http.ResponseWriter, req *http.Request)
 	return
     }
 
-    dirFilepath := req.URL.Path
+    dirName := req.FormValue("name")
+    parentDir := req.FormValue("curr_dir")
 
-    dirItems, err := fs.repository.GetItemsFromDir(dirFilepath, userId)
+    // What errors can GetDirIdByPath return?
+    parentDirId, err := fs.repository.GetDirIdByPath(userId, parentDir)
     if err != nil {
 	log.Println(err)
-	if errors.Is(repository.ErrorDirNotExist, err) {
-	    utils.WriteResponse(w, err.Error(), http.StatusNotFound)
+
+	// TODO: combine these two errors 
+	if errors.Is(repository.ErrorRootDirNotFound, err) || errors.Is(repository.ErrorDirectoryNotFound, err) {
+	    utils.WriteResponse(w, "Parent directory not found", http.StatusNoContent)
 	    return
 	}
-	panic(fmt.Sprintf("WTF ERROR, %s", err))
+
+	utils.WriteResponse(w, "Something went wrong. Try again", http.StatusInternalServerError)
+	return
     }
 
-    utils.WriteResponseV2(w, dirItems, http.StatusOK)
-    w.WriteHeader(http.StatusAccepted)
+    dirId, err := fs.repository.CreateDir(userId, parentDirId, dirName)
+    if err != nil {
+	log.Println(err)
+    
+	if errors.Is(repository.ErrorDirectoryAlreadyExist, err) {
+	    utils.WriteResponse(w, "Directory already exist", http.StatusConflict)
+	    return
+	}
+
+	utils.WriteResponse(w, "Couldn't create folder. Try again", http.StatusInternalServerError)
+	return
+    }
+
+    response := struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+	FullPath string `json:"fullPath"`
+    }{
+	    Id: dirId,
+	    Name: dirName,
+	    FullPath: path.Clean("/" + strings.Trim(parentDir, "/") + "/" + dirName),
+    }
+
+    utils.WriteResponseV2(w, response, http.StatusOK)
 }

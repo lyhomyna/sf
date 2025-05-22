@@ -36,7 +36,7 @@ var FileErrorFileExist = errors.New("File with the save name already exists")
 // SaveupLoadedFile saves file into server's forlder and returns HttpError object if there is an error. 
 func (pr *FilesRepository) SaveFile(userId string, filename string, file io.Reader, dirPath string) (*models.UserFile, error) {
     // get directory id
-    dirId, err := pr.getDirIdByPath(userId, dirPath)
+    dirId, err := pr.GetDirIdByPath(userId, dirPath)
     if err != nil {
 	return nil, fmt.Errorf("%w: %v", repository.ErrorDirectoryNotFound, err)
     }	
@@ -181,7 +181,7 @@ func (pr *FilesRepository) GetFiles(userId string) ([]*models.DbUserFile, error)
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 func (pr *FilesRepository) ListDir(path, userId string) ([]models.DirEntry, error) {
-    dirId, err := pr.getDirIdByPath(userId, path)
+    dirId, err := pr.GetDirIdByPath(userId, path)
     if err != nil {
 	return nil, fmt.Errorf("%w: %v", repository.ErrorPathNotFound, err)
     }
@@ -200,6 +200,67 @@ func (pr *FilesRepository) ListDir(path, userId string) ([]models.DirEntry, erro
 
     return append(dirs, files...), nil
 }
+
+// path should look like this: /inner/directory
+func (pr *FilesRepository) GetDirIdByPath(userId, path string) (string, error) {
+    if path == "/" {
+	return pr.getRootDirId(userId)
+    }
+    return pr.getNestedDirId(userId, path)
+}
+
+func (pr *FilesRepository) getRootDirId(userId string) (string, error) {
+    sql := "SELECT id FROM DIRECTORIES WHERE user_id=$1 AND parent_id=NULL"
+
+    var rootId string
+    err := pr.db.Pool.QueryRow(context.Background(), sql, userId).Scan(&rootId)
+    if err != nil {
+	if errors.Is(err, pgx.ErrNoRows) {
+	    return "", repository.ErrorRootDirNotFound
+	}
+	return "", fmt.Errorf("%w: %v", repository.ErrorGetDirFailed, err)
+    }
+
+    return rootId, nil
+}
+
+func (pr *FilesRepository) getNestedDirId(userId, path string) (string, error) {
+    // $1 - userId, $2 - top dir name, $3 - depth
+    recursiveSql := `
+	WITH RECURSIVE dir_path AS (
+	    SELECT id, name, parent_id, 1 AS depth
+	    FROM directories
+	    WHERE user_id = $1 AND parent_id IS NULL
+
+	    UNION ALL
+
+	    SELECT d.id, d.name, d.parent_id, dp.depth + 1
+	    FROM directories d
+	    JOIN dir_path dp ON d.parent_id = dp.id
+	    WHERE d.user_id = $1
+	)
+	SELECT id
+	FROM dir_path
+	WHERE name = $2 
+	  AND depth = $3;
+    `
+
+    segments := strings.Split(strings.Trim(path, "/"), "/")
+    depth := len(segments)
+    dirName := segments[depth-1]
+
+    var dirId string
+    err := pr.db.Pool.QueryRow(context.Background(), recursiveSql, userId, dirName, depth).Scan(&dirId)
+    if err != nil {
+	if errors.Is(err, pgx.ErrNoRows) {
+	    return "", repository.ErrorDirectoryNotFound
+	}
+	return "", fmt.Errorf("%w: %v", repository.ErrorGetDirFailed, err)
+    }
+
+    return dirId, nil
+}
+
 
 func (pr *FilesRepository) fetchSubdirectories(userId, dirId, path string) ([]models.DirEntry, error) {
     const dirsSQL = `
@@ -266,66 +327,6 @@ func joinPath(base, name string, isDir bool) string {
 	return base + "/" + name + "/"
     }
     return base + "/" + name
-}
-
-// path should look like this: /inner/directory
-func (pr *FilesRepository) getDirIdByPath(userId, path string) (string, error) {
-    if path == "/" {
-	return pr.getRootDirId(userId)
-    }
-    return pr.getNestedDirId(userId, path)
-}
-
-func (pr *FilesRepository) getRootDirId(userId string) (string, error) {
-    sql := "SELECT id FROM DIRECTORIES WHERE user_id=$1 AND parent_id=NULL"
-
-    var rootId string
-    err := pr.db.Pool.QueryRow(context.Background(), sql, userId).Scan(&rootId)
-    if err != nil {
-	if errors.Is(err, pgx.ErrNoRows) {
-	    return "", repository.ErrorRootDirNotFound
-	}
-	return "", fmt.Errorf("%w: %v", repository.ErrorGetDirFailed, err)
-    }
-
-    return rootId, nil
-}
-
-func (pr *FilesRepository) getNestedDirId(userId, path string) (string, error) {
-    // $1 - userId, $2 - top dir name, $3 - depth
-    recursiveSql := `
-	WITH RECURSIVE dir_path AS (
-	    SELECT id, name, parent_id, 1 AS depth
-	    FROM directories
-	    WHERE user_id = $1 AND parent_id IS NULL
-
-	    UNION ALL
-
-	    SELECT d.id, d.name, d.parent_id, dp.depth + 1
-	    FROM directories d
-	    JOIN dir_path dp ON d.parent_id = dp.id
-	    WHERE d.user_id = $1
-	)
-	SELECT id
-	FROM dir_path
-	WHERE name = $2 
-	  AND depth = $3;
-    `
-
-    segments := strings.Split(strings.Trim(path, "/"), "/")
-    depth := len(segments)
-    dirName := segments[depth-1]
-
-    var dirId string
-    err := pr.db.Pool.QueryRow(context.Background(), recursiveSql, userId, dirName, depth).Scan(&dirId)
-    if err != nil {
-	if errors.Is(err, pgx.ErrNoRows) {
-	    return "", repository.ErrorDirectoryNotFound
-	}
-	return "", fmt.Errorf("%w: %v", repository.ErrorGetDirFailed, err)
-    }
-
-    return dirId, nil
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

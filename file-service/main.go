@@ -30,9 +30,8 @@ var (
 func main() {
     mux := http.NewServeMux()
 
-    mux.HandleFunc("/", fs.FilesHandlerV2)
-
-    mux.HandleFunc("/files", fs.FilesHandler)     // GET
+    mux.HandleFunc("/", fs.ListDirHandler)     // GET
+    mux.HandleFunc("/create-directory", fs.CreateDirectoryHandler)
 
     mux.HandleFunc("/save", fs.SaveHandler)               // POST
     mux.HandleFunc("/delete/", fs.DeleteHandler)          // DELETE
