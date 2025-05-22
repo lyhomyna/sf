@@ -32,24 +32,32 @@ func NewFilesRepository(db *database.Postgres) *FilesRepository {
 
 var FileErrorFileExist = errors.New("File with the save name already exists")
 // SaveupLoadedFile saves file into server's forlder and returns HttpError object if there is an error. 
-func (pr *FilesRepository) SaveFile(userId string, filename string, file io.Reader, dir string) (*models.UserFile, error) {
-    newFilePath := filepath.Join(filesDirectory, userId, dir, filename)
+func (pr *FilesRepository) SaveFile(userId string, filename string, file io.Reader, dirPath string) (*models.UserFile, error) {
+    // get directory id
+    dirId, err := pr.getDirIdByPath(userId, dirPath)
+    if err != nil {
+	return nil, fmt.Errorf("%w: %v", repository.ErrorDirectoryNotFound)
+    }	
 
+    newFilePath := filepath.Join(filesDirectory, userId, dirPath, filename)
+
+    // check if file already exists on disk
     if _, err := os.Stat(newFilePath); err == nil {
 	return nil, fmt.Errorf("%w: %v", repository.FilesErrorFileExist, err)
     }
 
+    // create directory if not exitst (this only for new users)
     if err := os.MkdirAll(filepath.Dir(newFilePath), os.ModePerm); err != nil {
 	return nil, fmt.Errorf("%w: %v", repository.FilesErrorInternal, err) 
     }
 
+    // create file in filesystem and compute hash
     nf, err := os.Create(newFilePath)
     if err != nil {
 	return nil, fmt.Errorf("%w: %v", repository.FilesErrorFailureCreateFile, err)
     }
     defer nf.Close()
 
-    // Copy content
     hash := sha256.New()
     writtenBytes, err := io.Copy(nf, io.TeeReader(file, hash))
     if err != nil {
@@ -58,7 +66,7 @@ func (pr *FilesRepository) SaveFile(userId string, filename string, file io.Read
     }
 
     hashString := fmt.Sprintf("%x", hash.Sum(nil))
-    fileId, err := pr.saveFileToDb(userId, filename, newFilePath, writtenBytes, hashString)
+    fileId, err := pr.saveFileToDb(userId, dirId, filename, newFilePath, writtenBytes, hashString)
     if err != nil {
 	os.Remove(newFilePath)
 	return nil, fmt.Errorf("%w: %v", repository.FilesErrorDbSave, err)
@@ -70,14 +78,14 @@ func (pr *FilesRepository) SaveFile(userId string, filename string, file io.Read
     }, nil
 }
 
-func (pr *FilesRepository) saveFileToDb(userId string, filename string, filepath string, size int64, hash string) (string, error) {
+func (pr *FilesRepository) saveFileToDb(userId, dirId, filename, filepath string, size int64, hash string) (string, error) {
     ctx := context.Background()
     fileId := uuid.NewString()
     sql := 
-    `INSERT INTO files (id, user_id, filename, filepath, size, hash) 
-	VALUES ($1, $2, $3, $4, $5, $6)`
+    `INSERT INTO files (id, user_id, directory_id, filename, filepath, size, hash) 
+	VALUES ($1, $2, $3, $4, $5, $6, $7)`
 
-    _, err := pr.db.Pool.Exec(ctx, sql, fileId, userId, filename, filepath, size, hash)
+    _, err := pr.db.Pool.Exec(ctx, sql, fileId, userId, dirId, filename, filepath, size, hash)
     if err != nil {
 	return "", err 
     }
