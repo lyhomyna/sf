@@ -2,6 +2,7 @@ package files
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -232,11 +233,24 @@ func (fs *FilesService) FilesHandlerV2(w http.ResponseWriter, req *http.Request)
 	http.Error(w, "Use GET method instead", http.StatusMethodNotAllowed)
 	return
     }
-    _, httpErr := utils.CheckAuth(req)
+    userId, httpErr := utils.CheckAuth(req)
     if httpErr != nil {
 	utils.WriteResponse(w, httpErr.Message, httpErr.Code)
 	return
     }
 
+    dirFilepath := req.URL.Path
+
+    dirItems, err := fs.repository.GetItemsFromDir(dirFilepath, userId)
+    if err != nil {
+	log.Println(err)
+	if errors.Is(repository.ErrorDirNotExist, err) {
+	    utils.WriteResponse(w, err.Error(), http.StatusNotFound)
+	    return
+	}
+	panic(fmt.Sprintf("WTF ERROR, %s", err))
+    }
+
+    utils.WriteResponseV2(w, dirItems, http.StatusOK)
     w.WriteHeader(http.StatusAccepted)
 }

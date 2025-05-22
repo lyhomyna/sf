@@ -12,3 +12,6 @@ var FilesErrorCopyFailure = errors.New("File couldn't be saved")
 var FilesErrorDbSave = errors.New("Couldn't save file to the database")
 var FilesErrorNoFilesForUser = errors.New("There is no files for user")
 var FilesErrorDbScan = errors.New("Failed to scan database row")
+
+
+var ErrorDirNotExist = errors.New("Dir don't exist")
