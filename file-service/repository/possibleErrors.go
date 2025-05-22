@@ -21,3 +21,6 @@ var ErrorGetDirFailed = errors.New("Failed to get directory id")
 var ErrorPathNotFound = errors.New("Directory path not found")
 var ErrorQueryFailed = errors.New("Failed to query database")
 var ErrorScanFailed = errors.New("Failed to scan row")
+
+var ErrorParentDirNotFound = errors.New("Parent directory not found or doesn't belong to user")
+var ErrorDirectoryAlreadyExist = errors.New("Directory already exists")

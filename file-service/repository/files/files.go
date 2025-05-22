@@ -30,13 +30,15 @@ func NewFilesRepository(db *database.Postgres) *FilesRepository {
     }
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 var FileErrorFileExist = errors.New("File with the save name already exists")
 // SaveupLoadedFile saves file into server's forlder and returns HttpError object if there is an error. 
 func (pr *FilesRepository) SaveFile(userId string, filename string, file io.Reader, dirPath string) (*models.UserFile, error) {
     // get directory id
     dirId, err := pr.getDirIdByPath(userId, dirPath)
     if err != nil {
-	return nil, fmt.Errorf("%w: %v", repository.ErrorDirectoryNotFound)
+	return nil, fmt.Errorf("%w: %v", repository.ErrorDirectoryNotFound, err)
     }	
 
     newFilePath := filepath.Join(filesDirectory, userId, dirPath, filename)
@@ -93,6 +95,8 @@ func (pr *FilesRepository) saveFileToDb(userId, dirId, filename, filepath string
     return fileId, nil
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 // DeleteFile deletes file from server and returns error if there is an error
 func (pr *FilesRepository) DeleteFile(userId string, fileId string) error {
     uf, err := pr.GetFile(userId, fileId)
@@ -114,20 +118,6 @@ func (pr *FilesRepository) DeleteFile(userId string, fileId string) error {
     return nil 
 }
 
-// Can return FilesErrorFailureToRetrieve
-func (pr *FilesRepository) GetFile(userId string, fileId string) (*models.DbUserFile, error) { 
-    ctx := context.Background()
-
-    sql := "SELECT * FROM files WHERE user_id=$1 AND id=$2"
-
-    var uf models.DbUserFile
-    if err := pr.db.Pool.QueryRow(ctx, sql, userId, fileId).Scan(&uf.Id, &uf.UserId, &uf.Filename, &uf.Filepath, &uf.Size, &uf.Hash, &uf.LastAccessed); err != nil {
-	return nil, fmt.Errorf("%w: %v", repository.FilesErrorFailureToRetrieve, err)
-    }
-
-    return &uf, nil
-}
-
 // Can return FilesErrorDbQuery
 func (pr *FilesRepository) removeFileFromDb(fileId string) error {
     ctx := context.Background()
@@ -142,6 +132,26 @@ func (pr *FilesRepository) removeFileFromDb(fileId string) error {
     return nil
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Can return FilesErrorFailureToRetrieve
+func (pr *FilesRepository) GetFile(userId string, fileId string) (*models.DbUserFile, error) { 
+    ctx := context.Background()
+
+    sql := "SELECT * FROM files WHERE user_id=$1 AND id=$2"
+
+    var uf models.DbUserFile
+    if err := pr.db.Pool.QueryRow(ctx, sql, userId, fileId).Scan(&uf.Id, &uf.UserId, &uf.Filename, &uf.Filepath, &uf.Size, &uf.Hash, &uf.LastAccessed); err != nil {
+	return nil, fmt.Errorf("%w: %v", repository.FilesErrorFailureToRetrieve, err)
+    }
+
+    return &uf, nil
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ::::::::::::::::::
+// ::: DEPRECATED :::
+// ::::::::::::::::::
 // GetFilenames returns list of user filenames or an error
 func (pr *FilesRepository) GetFiles(userId string) ([]*models.DbUserFile, error) {
     ctx := context.Background()
@@ -168,6 +178,7 @@ func (pr *FilesRepository) GetFiles(userId string) ([]*models.DbUserFile, error)
     return userFiles, nil
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 func (pr *FilesRepository) ListDir(path, userId string) ([]models.DirEntry, error) {
     dirId, err := pr.getDirIdByPath(userId, path)
@@ -315,4 +326,40 @@ func (pr *FilesRepository) getNestedDirId(userId, path string) (string, error) {
     }
 
     return dirId, nil
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+func (pr *FilesRepository) CreateDir(userId, parentDirId, name string) (string, error) {
+    ctx := context.Background()
+
+    // check if parent directory exist and belongs to user
+    var tmp string
+    checkSql:= `SELECT id FROM directories WHERE id=$1 AND user_id=$2`
+    err := pr.db.Pool.QueryRow(ctx, checkSql, parentDirId, userId).Scan(&tmp)
+    if err == pgx.ErrNoRows {
+	return "", repository.ErrorParentDirNotFound
+    } else if err != nil {
+	return "", fmt.Errorf("Check parent dir error: %w", err)
+    }
+
+    // check if directory exist
+    dupCheckSql := "SELECT id FROM directories WHERE name=$1 AND parent_id=$2 AND user_id=$3"
+    err = pr.db.Pool.QueryRow(ctx, dupCheckSql, name, parentDirId, userId).Scan(&tmp)
+    if err == nil {
+	return "", repository.ErrorDirectoryAlreadyExist
+    } else if err != pgx.ErrNoRows {
+	return "", fmt.Errorf("Check duplicate dir error: %w", err)
+    }
+
+    newDirId := uuid.NewString()
+    insertSql := `
+	INSERT INTO directories (id, name, parent_id, user_id)
+	VALUES ($1, $2, $3, $4, $5)` 
+    _, err = pr.db.Pool.Exec(ctx, insertSql, newDirId, name, parentDirId, userId)
+    if err != nil {
+	return "", fmt.Errorf("Create dir insert error: %w", err)
+    }
+
+    return newDirId, nil
 }
