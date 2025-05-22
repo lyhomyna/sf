@@ -162,8 +162,7 @@ func (pr *FilesRepository) GetFiles(userId string) ([]*models.DbUserFile, error)
 
 
 func (pr *FilesRepository) GetItemsFromDir(dir string, userId string) ([]*models.DbDirItem, error) {
-    sql := "SELECT * FROM files WHERE user_id=$1 AND filepath=$2";
-
+    // sql := "SELECT * FROM files WHERE user_id=$1 AND filepath=$2";
 
     return nil, nil
 }

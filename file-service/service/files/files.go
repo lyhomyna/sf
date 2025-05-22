@@ -28,7 +28,7 @@ func NewFilesService(filesRepository repository.FilesRepository) *FilesService {
 }
 
 // SaveHandler is the handler for saving file. File should be form value with key 'file'.
-func (fs *FilesService)SaveHandler(w http.ResponseWriter, req *http.Request) {
+func (fs *FilesService) SaveHandler(w http.ResponseWriter, req *http.Request) {
     if req.Method != http.MethodPost {
 	http.Error(w, "Use POST method instead", http.StatusMethodNotAllowed)
 	return
@@ -42,6 +42,13 @@ func (fs *FilesService)SaveHandler(w http.ResponseWriter, req *http.Request) {
 
     if !strings.Contains(req.Header.Get("Content-Type"), "multipart/form-data") {
 	utils.WriteResponse(w, "Expected multipart/form-data", http.StatusUnsupportedMediaType)
+	return
+    }
+
+    // Read file's dir
+    dir := req.FormValue("dir");
+    if dir == "" {
+	utils.WriteResponse(w, "File's dire couldn't be empty.", http.StatusBadRequest)
 	return
     }
 
@@ -220,15 +227,16 @@ func (fs *FilesService) FilesHandler(w http.ResponseWriter, req *http.Request) {
     utils.WriteResponse(w, responseUserFiles, http.StatusOK)
 }
 
-func FilesHandler(w http.ResponseWriter, req *http.Request) {
+func (fs *FilesService) FilesHandlerV2(w http.ResponseWriter, req *http.Request) {
     if req.Method != http.MethodGet {
 	http.Error(w, "Use GET method instead", http.StatusMethodNotAllowed)
 	return
     }
-    userId, httpErr := utils.CheckAuth(req)
+    _, httpErr := utils.CheckAuth(req)
     if httpErr != nil {
 	utils.WriteResponse(w, httpErr.Message, httpErr.Code)
 	return
     }
 
+    w.WriteHeader(http.StatusAccepted)
 }

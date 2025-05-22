@@ -31,7 +31,7 @@ func main() {
     mux := http.NewServeMux()
 
     mux.HandleFunc("/files", fs.FilesHandler)     // GET
-    mux.HandleFunc("/", fs.FilesHanlderV2)
+    mux.HandleFunc("/", fs.FilesHandlerV2)
 
     mux.HandleFunc("/save", fs.SaveHandler)               // POST
     mux.HandleFunc("/delete/", fs.DeleteHandler)          // DELETE
