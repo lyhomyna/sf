@@ -67,7 +67,7 @@ func (fs *FilesService) SaveHandler(w http.ResponseWriter, req *http.Request) {
 	    return
     }
 
-    userFile, err := fs.repository.SaveFile(userId, fh.Filename, f)
+    userFile, err := fs.repository.SaveFile(userId, fh.Filename, f, dir)
     if err != nil {
 	log.Println(err)
 

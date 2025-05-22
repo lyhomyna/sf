@@ -14,4 +14,10 @@ var FilesErrorNoFilesForUser = errors.New("There is no files for user")
 var FilesErrorDbScan = errors.New("Failed to scan database row")
 
 
-var ErrorDirNotExist = errors.New("Dir don't exist")
+var ErrorRootDirNotFound = errors.New("Root directory not found")
+var ErrorDirectoryNotFound = errors.New("Directory not found")
+var ErrorGetDirFailed = errors.New("Failed to get directory id")
+
+var ErrorPathNotFound = errors.New("Directory path not found")
+var ErrorQueryFailed = errors.New("Failed to query database")
+var ErrorScanFailed = errors.New("Failed to scan row")

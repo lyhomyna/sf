@@ -2,9 +2,11 @@ package models
 
 import "time"
 
-type DbDirItem struct {
-    Id		string
-    Type	string
+type DirEntry struct {
+    Id           string `json:"id"`
+    Type         string `json:"type"` // "dir" or "file"
+    Name         string `json:"name"`
+    FullFilepath string `json:"fullFilepath"`
 }
 
 type DbUserFile struct {
