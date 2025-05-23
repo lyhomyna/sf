@@ -364,3 +364,28 @@ func (pr *FilesRepository) CreateDir(userId, parentDirId, name string) (string, 
 
     return newDirId, nil
 }
+
+func (pr *FilesRepository) CreateRootDir(userId string) (string, error) {
+    ctx := context.Background()
+
+    // check if directory exist
+    var tmp string
+    dupCheckSql := "SELECT id FROM directories WHERE user_id=$1 AND parent_id=NULL"
+    err := pr.db.Pool.QueryRow(ctx, dupCheckSql, userId).Scan(&tmp)
+    if err == nil {
+	return "", repository.ErrorDirectoryAlreadyExist
+    } else if err != pgx.ErrNoRows {
+	return "", fmt.Errorf("Check duplicate dir error: %w", err)
+    }
+
+    newDirId := uuid.NewString()
+    insertSql := `
+	INSERT INTO directories (id, user_id, name, parent_id)
+	VALUES ($1, $2, $3, NULL)` 
+    _, err = pr.db.Pool.Exec(ctx, insertSql, newDirId, userId, "root")
+    if err != nil {
+	return "", fmt.Errorf("Create dir insert error: %w", err)
+    }
+
+    return newDirId, nil
+}

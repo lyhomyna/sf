@@ -38,6 +38,7 @@ func WriteResponseV2(w http.ResponseWriter, data any, code int) {
     if err != nil {
 	panic(err)
     }
+
     w.Write(response)
 }
 

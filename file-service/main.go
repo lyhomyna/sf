@@ -23,7 +23,7 @@ var (
     fr = filesRepository.NewFilesRepository(pgDb)
     uir = userImagesRepository.NewUserImagesRepository(pgDb)
 
-    fs service.FileService = filesService.NewFilesService(fr)
+    fs service.FileService = filesService.NewFilesService(fr, cfg)
     uis service.UserImagesService = userImagesService.NewUserImagesService(uir)
 )
 
@@ -32,6 +32,7 @@ func main() {
 
     mux.HandleFunc("/", fs.ListDirHandler)     // GET
     mux.HandleFunc("/create-directory", fs.CreateDirectoryHandler)
+    mux.HandleFunc("/create-root", fs.CreateRootDirectoryHandler)
 
     mux.HandleFunc("/save", fs.SaveHandler)               // POST
     mux.HandleFunc("/delete/", fs.DeleteHandler)          // DELETE

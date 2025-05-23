@@ -1,16 +1,19 @@
 import { useContext } from "react";
-import { FilesContext } from "storage/SfContext.jsx";
+import { DirItemsContext } from "storage/SfContext.jsx";
 import { fileServiceBaseUrl } from "config/constants.js";
 import { useDispatch } from "react-redux";
 import { addUpload, removeUpload } from "storage/uploadSlice.js";
+import { useLocation } from "react-router-dom" 
 
 export function useUploadFile() {
-    const { addFiles } = useContext(FilesContext);
+    const { addDirItems } = useContext(DirItemsContext);
     const dispatch = useDispatch();
+    const location = useLocation();
 
     const uploadFile = async (file) => {
 	const formData = new FormData();
 	formData.append("file", file);
+	formData.append("dir", location.pathname);
 
 	// to show progress at the top right corner
 	const tempFileId = file.name+randomInt();
@@ -24,18 +27,22 @@ export function useUploadFile() {
 	    });
 	    
 	    const resJson = await response.json();
-	    if (response.ok) {
+	    if (response.status === 200) {
 		// show file in list
-		addFiles({files: [{
-		    id: resJson.data.id,
-		    filename: resJson.data.filename,
-		    createdAt: -1, // no creation time
-		}]})
+		addDirItems({
+		    dirItems: [
+			{
+			    id: resJson.id,
+			    name: resJson.filename,
+			}
+		    ]
+		})
 	    } else if(response.status === 400) {
 		alert(resJson.data)
+		console.error(resJson.data)
 	    } else {
 		alert(`Failed to upload file '${file.name}'. Try again.`);
-		console.log(resJson.data)
+		console.error(resJson.data)
 	    }
 	} catch (err) {
 	    console.error("Error uploading file:", err)

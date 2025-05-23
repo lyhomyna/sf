@@ -1,5 +1,9 @@
 package config
 
+// ::::::::::::::::::::::::::::::::::::::::::::
+// :::  Create .env file for file-serivce   :::
+// ::::::::::::::::::::::::::::::::::::::::::::
+
 import (
 	"log"
 	"os"
@@ -13,18 +17,26 @@ const (
     POSTGRES_PASSWORD	= "postgres"
     POSTGRES_NAME	= "postgres"
 
+    AUTH_TO_FILE_TOKEN	= "none"
+
     SERVER_PORT		= ":8082"
 )
 
 type Config struct {
     ServerPort string
+    AuthToFileToken string
     
     PostgresConfig *postgresConfig
 }
 
 func NewConfig() *Config {
+    if os.Getenv("AUTH_TO_FILE_TOKEN") == "" {
+	os.Setenv("AUTH_TO_FILE_TOKEN", AUTH_TO_FILE_TOKEN)
+    }
+
     config := &Config {
 	ServerPort: SERVER_PORT,
+	AuthToFileToken: AUTH_TO_FILE_TOKEN,
     }
 
     return config

@@ -1,11 +1,11 @@
 import { useContext } from "react"; 
-import { FilesContext } from "storage/SfContext.jsx";
+import { DirItemsContext } from "storage/SfContext.jsx";
 import { fileServiceBaseUrl } from "config/constants.js";
 
 import Button from "./Button.jsx";
 
 export default function FileItem({ file }) {
-    const { deleteFile } = useContext(FilesContext);
+    const { deleteDirItem } = useContext(DirItemsContext);
 
     const deleteItem = async () => {
 	const res = await fetch(`${fileServiceBaseUrl}/delete/${file.id}`, {
@@ -20,7 +20,7 @@ export default function FileItem({ file }) {
 	}
 	
 	// allert("File deleted successfuly");
-	deleteFile(file);
+	deleteDirItem(file);
     }
 
     const downloadFile = async () => {
@@ -39,7 +39,7 @@ export default function FileItem({ file }) {
 
 	    const a = document.createElement("a");
 	    a.href = url;
-	    a.download = file.filename;
+	    a.download = file.name;
 
 	    document.body.appendChild(a);
 	    a.click();
@@ -58,10 +58,10 @@ export default function FileItem({ file }) {
 		<button onClick={deleteItem} className="w-[15px] h-[2.1rem] bg-red-200 hover:bg-red-700 duration-300" title="Delete" />
 		<div className="flex flex-row gap-x-2">
 		    <div className="border border-stone-300 text-slate-300 p-1">
-			.{ file.filename.split(".")[1] }
+			.{ file.name.split(".")[1] }
 		    </div>
-		    <p className="text-xl text-slate-300" title={file.filename}>
-			{ file.filename }
+		    <p className="text-xl text-slate-300" title={file.name}>
+			{ file.name }
 		    </p>
 		</div>
 	    </div>

@@ -2,7 +2,6 @@ package files
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -10,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/lyhomyna/sf/file-service/config"
 	"github.com/lyhomyna/sf/file-service/models"
 	"github.com/lyhomyna/sf/file-service/utils"
 
@@ -18,14 +18,16 @@ import (
 
 type FilesService struct {
     repository repository.FilesRepository
+    cfg *config.Config
 }
 
 // Directory, where uploaded files will be saved
 var filesDirectory = filepath.Join("files")
 
-func NewFilesService(filesRepository repository.FilesRepository) *FilesService {
+func NewFilesService(filesRepository repository.FilesRepository, cfg *config.Config) *FilesService {
     return &FilesService{
 	repository: filesRepository,
+	cfg: cfg,
     }
 }
 
@@ -50,7 +52,7 @@ func (fs *FilesService) SaveHandler(w http.ResponseWriter, req *http.Request) {
     // Read file's dir
     dir := req.FormValue("dir");
     if dir == "" {
-	utils.WriteResponse(w, "File's dire couldn't be empty.", http.StatusBadRequest)
+	utils.WriteResponse(w, "The file directory cannot be empty", http.StatusBadRequest)
 	return
     }
 
@@ -95,7 +97,7 @@ func (fs *FilesService) SaveHandler(w http.ResponseWriter, req *http.Request) {
 	return
     }
 
-    utils.WriteResponse(w, userFile, http.StatusOK)
+    utils.WriteResponseV2(w, userFile, http.StatusOK)
 }
 
 func (fs *FilesService) DeleteHandler(w http.ResponseWriter, req *http.Request) {
@@ -232,31 +234,10 @@ func (fs *FilesService) CreateDirectoryHandler(w http.ResponseWriter, req *http.
     dirName := req.FormValue("name")
     parentDir := req.FormValue("curr_dir")
 
-    // What errors can GetDirIdByPath return?
-    parentDirId, err := fs.repository.GetDirIdByPath(userId, parentDir)
-    if err != nil {
-	log.Println(err)
-
-	// TODO: combine these two errors 
-	if errors.Is(repository.ErrorRootDirNotFound, err) || errors.Is(repository.ErrorDirectoryNotFound, err) {
-	    utils.WriteResponse(w, "Parent directory not found", http.StatusNoContent)
-	    return
-	}
-
-	utils.WriteResponse(w, "Something went wrong. Try again", http.StatusInternalServerError)
-	return
-    }
-
-    dirId, err := fs.repository.CreateDir(userId, parentDirId, dirName)
-    if err != nil {
-	log.Println(err)
-    
-	if errors.Is(repository.ErrorDirectoryAlreadyExist, err) {
-	    utils.WriteResponse(w, "Directory already exist", http.StatusConflict)
-	    return
-	}
-
-	utils.WriteResponse(w, "Couldn't create folder. Try again", http.StatusInternalServerError)
+    var dirId string
+    dirId, httpErr = fs.createDir(userId, parentDir, dirName)
+    if httpErr != nil {
+	utils.WriteResponse(w, httpErr.Message, httpErr.Code)
 	return
     }
 
@@ -265,10 +246,97 @@ func (fs *FilesService) CreateDirectoryHandler(w http.ResponseWriter, req *http.
 	Name string `json:"name"`
 	FullPath string `json:"fullPath"`
     }{
-	    Id: dirId,
-	    Name: dirName,
-	    FullPath: path.Clean("/" + strings.Trim(parentDir, "/") + "/" + dirName),
+	Id: dirId,
+	Name: dirName,
+	FullPath: path.Clean("/" + strings.Trim(parentDir, "/") + "/" + dirName),
     }
 
     utils.WriteResponseV2(w, response, http.StatusOK)
+}
+
+func (fs *FilesService) createDir(userId, parentDir, dirName string) (string, *models.HttpError) {
+	parentDirId, err := fs.repository.GetDirIdByPath(userId, parentDir)
+	if err != nil {
+	    log.Println(err)
+
+	    // TODO: combine these two errors 
+	    if errors.Is(repository.ErrorRootDirNotFound, err) || errors.Is(repository.ErrorDirectoryNotFound, err) {
+		return "", &models.HttpError {
+		    Message: "Parent directory not found",
+		    Code: http.StatusNoContent,
+		}
+	    }
+
+	    return "", &models.HttpError {
+		Message: "Something went wrong. Try again",
+		Code: http.StatusInternalServerError,
+	    }
+	}
+
+	dirId, err := fs.repository.CreateDir(userId, parentDirId, dirName)
+	if err != nil {
+	    log.Println(err)
+	
+	    if errors.Is(repository.ErrorDirectoryAlreadyExist, err) {
+		return "", &models.HttpError {
+		    Message: "Directory already exist",
+		    Code: http.StatusConflict,
+		}
+	    }
+
+	    return "", &models.HttpError {
+		Message: "Couldn't create folder. Try again",
+		Code: http.StatusInternalServerError,
+	    }
+	}
+
+	return dirId, nil
+}
+
+func (fs *FilesService) CreateRootDirectoryHandler(w http.ResponseWriter, req *http.Request) {
+    if !fs.isAuthorized(req) {
+	http.Error(w, "Unauthorized", http.StatusUnauthorized)
+	return
+    }
+    userId := req.FormValue("userId")
+
+    dirId, httpErr := fs.createRootDir(userId)
+    if httpErr != nil {
+	utils.WriteResponse(w, httpErr.Message, httpErr.Code)
+	return
+    }
+
+    response := struct {
+	Id   string `json:"id"`
+    }{
+	Id: dirId,
+    }
+
+    utils.WriteResponseV2(w, response, http.StatusOK)
+}
+
+func (fs *FilesService) isAuthorized(req *http.Request) bool {
+    authHeader := req.Header.Get("Authorization")
+    return authHeader == "Bearer "+fs.cfg.AuthToFileToken
+}
+
+func (fs *FilesService) createRootDir(userId string) (string, *models.HttpError) {
+	dirId, err := fs.repository.CreateRootDir(userId)
+	if err != nil {
+	    log.Println(err)
+	
+	    if errors.Is(repository.ErrorDirectoryAlreadyExist, err) {
+		return "", &models.HttpError {
+		    Message: "Directory already exist",
+		    Code: http.StatusConflict,
+		}
+	    }
+
+	    return "", &models.HttpError {
+		Message: "Couldn't create folder. Try again",
+		Code: http.StatusInternalServerError,
+	    }
+	}
+
+	return dirId, nil
 }
