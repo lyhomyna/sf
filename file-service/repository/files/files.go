@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -203,7 +204,7 @@ func (pr *FilesRepository) ListDir(path, userId string) ([]models.DirEntry, erro
     return entries, nil
 }
 
-// path should look like this: /inner/directory
+// path should be like this: /inner/directory
 func (pr *FilesRepository) GetDirIdByPath(userId, path string) (string, error) {
     if path == "/" {
 	return pr.getRootDirId(userId)
@@ -248,8 +249,8 @@ func (pr *FilesRepository) getNestedDirId(userId, path string) (string, error) {
     `
 
     segments := strings.Split(strings.Trim(path, "/"), "/")
-    depth := len(segments)
-    dirName := segments[depth-1]
+    depth := len(segments) + 1 // because of the above trim
+    dirName := segments[len(segments)-1]
 
     var dirId string
     err := pr.db.Pool.QueryRow(context.Background(), recursiveSql, userId, dirName, depth).Scan(&dirId)

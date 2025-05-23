@@ -102,8 +102,6 @@ func register(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
     }
     defer resp.Body.Close()
 
-    log.Println("RESPONSE STATUS CODE:", resp.StatusCode)
-
     if resp.StatusCode != http.StatusOK {
 	userService.DeleteUser(userId, siglog)
 

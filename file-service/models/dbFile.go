@@ -6,7 +6,7 @@ type DirEntry struct {
     Id           string `json:"id"`
     Type         string `json:"type"` // "dir" or "file"
     Name         string `json:"name"`
-    FullFilepath string `json:"fullFilepath"`
+    FullFilepath string `json:"path"`
 }
 
 type DbUserFile struct {
