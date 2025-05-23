@@ -148,10 +148,10 @@ export default function ControlButtons({...props}) {
 			    id: resJson.id,
 			    name: resJson.name,
 			    path: resJson.fullPath,
+			    type: "dir"
 			}
 		    ]
 		});
-		console.log("NEW DIR ITEM WAS ADDED (DIRECTORY)")
 	    }
 
 	} catch(e) {

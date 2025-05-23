@@ -232,10 +232,10 @@ func (fs *FilesService) CreateDirectoryHandler(w http.ResponseWriter, req *http.
     }
 
     dirName := req.FormValue("name")
-    parentDir := req.FormValue("curr_dir")
+    parentDirPath := req.FormValue("curr_dir")
 
     var dirId string
-    dirId, httpErr = fs.createDir(userId, parentDir, dirName)
+    dirId, httpErr = fs.createDir(userId, parentDirPath, dirName)
     if httpErr != nil {
 	utils.WriteResponse(w, httpErr.Message, httpErr.Code)
 	return
@@ -248,14 +248,14 @@ func (fs *FilesService) CreateDirectoryHandler(w http.ResponseWriter, req *http.
     }{
 	Id: dirId,
 	Name: dirName,
-	FullPath: path.Clean("/" + strings.Trim(parentDir, "/") + "/" + dirName),
+	FullPath: path.Clean("/" + strings.Trim(parentDirPath, "/") + "/" + dirName),
     }
 
     utils.WriteResponseV2(w, response, http.StatusOK)
 }
 
-func (fs *FilesService) createDir(userId, parentDir, dirName string) (string, *models.HttpError) {
-	parentDirId, err := fs.repository.GetDirIdByPath(userId, parentDir)
+func (fs *FilesService) createDir(userId, parentDirPath, dirName string) (string, *models.HttpError) {
+	parentDirId, err := fs.repository.GetDirIdByPath(userId, parentDirPath)
 	if err != nil {
 	    log.Println(err)
 
@@ -273,7 +273,7 @@ func (fs *FilesService) createDir(userId, parentDir, dirName string) (string, *m
 	    }
 	}
 
-	dirId, err := fs.repository.CreateDir(userId, parentDirId, dirName)
+	dirId, err := fs.repository.CreateDir(userId, parentDirId, parentDirPath, dirName)
 	if err != nil {
 	    log.Println(err)
 	

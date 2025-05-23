@@ -197,8 +197,10 @@ func (pr *FilesRepository) ListDir(path, userId string) ([]models.DirEntry, erro
     if err != nil {
 	return nil, err
     }
+    
+    entries := append(dirs, files...)
 
-    return append(dirs, files...), nil
+    return entries, nil
 }
 
 // path should look like this: /inner/directory
@@ -210,7 +212,7 @@ func (pr *FilesRepository) GetDirIdByPath(userId, path string) (string, error) {
 }
 
 func (pr *FilesRepository) getRootDirId(userId string) (string, error) {
-    sql := "SELECT id FROM DIRECTORIES WHERE user_id=$1 AND parent_id=NULL"
+    sql := "SELECT id FROM DIRECTORIES WHERE user_id=$1 AND parent_id IS NULL"
 
     var rootId string
     err := pr.db.Pool.QueryRow(context.Background(), sql, userId).Scan(&rootId)
@@ -293,7 +295,7 @@ func (pr *FilesRepository) fetchSubdirectories(userId, dirId, path string) ([]mo
 
 func (pr *FilesRepository) fetchFiles(userId, dirId, path string) ([]models.DirEntry, error) {
     const filesSql = `
-	SELECT id, name
+	SELECT id, filename
 	FROM files
 	WHERE directory_id=$1 AND user_id=$2;
     `
@@ -331,7 +333,7 @@ func joinPath(base, name string, isDir bool) string {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func (pr *FilesRepository) CreateDir(userId, parentDirId, name string) (string, error) {
+func (pr *FilesRepository) CreateDir(userId, parentDirId, parentDirPath, name string) (string, error) {
     ctx := context.Background()
 
     // check if parent directory exist and belongs to user
@@ -353,10 +355,18 @@ func (pr *FilesRepository) CreateDir(userId, parentDirId, name string) (string, 
 	return "", fmt.Errorf("Check duplicate dir error: %w", err)
     }
 
+    // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    newFilePath := filepath.Join(filesDirectory, userId, parentDirPath, name)
+    // create directory if not exitst (this only for new users)
+    if err := os.MkdirAll(newFilePath, os.ModePerm); err != nil {
+	return "", fmt.Errorf("%w: %v", repository.FilesErrorInternal, err) 
+    }
+    // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
     newDirId := uuid.NewString()
     insertSql := `
 	INSERT INTO directories (id, name, parent_id, user_id)
-	VALUES ($1, $2, $3, $4, $5)` 
+	VALUES ($1, $2, $3, $4)` 
     _, err = pr.db.Pool.Exec(ctx, insertSql, newDirId, name, parentDirId, userId)
     if err != nil {
 	return "", fmt.Errorf("Create dir insert error: %w", err)
@@ -370,13 +380,21 @@ func (pr *FilesRepository) CreateRootDir(userId string) (string, error) {
 
     // check if directory exist
     var tmp string
-    dupCheckSql := "SELECT id FROM directories WHERE user_id=$1 AND parent_id=NULL"
+    dupCheckSql := "SELECT id FROM directories WHERE user_id=$1 AND parent_id IS NULL"
     err := pr.db.Pool.QueryRow(ctx, dupCheckSql, userId).Scan(&tmp)
     if err == nil {
 	return "", repository.ErrorDirectoryAlreadyExist
     } else if err != pgx.ErrNoRows {
 	return "", fmt.Errorf("Check duplicate dir error: %w", err)
     }
+
+    // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    newFilePath := filepath.Join(filesDirectory, userId)
+    // create directory if not exitst (this only for new users)
+    if err := os.MkdirAll(newFilePath, os.ModePerm); err != nil {
+	return "", fmt.Errorf("%w: %v", repository.FilesErrorInternal, err) 
+    }
+    // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     newDirId := uuid.NewString()
     insertSql := `

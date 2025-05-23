@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -98,13 +97,16 @@ func register(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
     if err != nil {
 	log.Println(err)
 
-	userService.DeleteUser(userId, siglog)
 	writeResponseMessage(w, http.StatusInternalServerError, "Couldn't create user")
 	return
     }
     defer resp.Body.Close()
 
+    log.Println("RESPONSE STATUS CODE:", resp.StatusCode)
+
     if resp.StatusCode != http.StatusOK {
+	userService.DeleteUser(userId, siglog)
+
 	body, _ := io.ReadAll(resp.Body)
 	log.Printf("Root dir creation failed: %s", body)
 	return

@@ -36,7 +36,7 @@ func NewConfig() *Config {
 
     config := &Config {
 	ServerPort: SERVER_PORT,
-	AuthToFileToken: AUTH_TO_FILE_TOKEN,
+	AuthToFileToken: os.Getenv("AUTH_TO_FILE_TOKEN"),
     }
 
     return config

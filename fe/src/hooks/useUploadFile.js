@@ -34,6 +34,7 @@ export function useUploadFile() {
 			{
 			    id: resJson.id,
 			    name: resJson.filename,
+			    type: "file",
 			}
 		    ]
 		})

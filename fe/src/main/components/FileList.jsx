@@ -25,7 +25,7 @@ export default function FileList() {
 		    return
 		}
 
-		addDirItems({ files: [...resJson.data], rewrite: true });
+		addDirItems({ dirItems: [...resJson], rewrite: true });
 	    } catch (e) {
 		console.error(e);
 	    }
