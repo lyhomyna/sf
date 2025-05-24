@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -104,7 +105,9 @@ func (pr *FilesRepository) DeleteFile(userId string, fileId string) error {
 	return err
     }
 
-    if _, err := os.Stat(uf.Filepath); err != nil {
+    fullFilePath := filepath.Join(filesDirectory, uf.Filepath)
+
+    if _, err := os.Stat(fullFilePath); err != nil {
 	return fmt.Errorf("%w: %v", repository.FilesErrorFileNotExist, err)
     }
 
@@ -112,21 +115,26 @@ func (pr *FilesRepository) DeleteFile(userId string, fileId string) error {
 	return err
     }
 
-    os.Remove(uf.Filepath)
+    err = os.Remove(fullFilePath)
 
-    return nil 
+    return err
 }
 
 // Can return FilesErrorDbQuery
 func (pr *FilesRepository) removeFileFromDb(fileId string) error {
     ctx := context.Background()
 
+    log.Println("TRYING TO DELETE FILE:", fileId)
+
     sql := "DELETE FROM files WHERE id=$1"
 
     _, err := pr.db.Pool.Exec(ctx, sql, fileId)
     if err != nil {
+	log.Println("FILE HASN'T BEEN DELETED:", err)
 	return fmt.Errorf("%w:%v", repository.FilesErrorDbQuery, err)	 
     }
+
+    log.Println("FILE HAS BEEN DELETED")
 
     return nil
 }
@@ -136,6 +144,9 @@ func (pr *FilesRepository) removeFileFromDb(fileId string) error {
 // Can return FilesErrorFailureToRetrieve
 func (pr *FilesRepository) GetFile(userId string, fileId string) (*models.DbUserFile, error) { 
     ctx := context.Background()
+
+    log.Println("USER ID:", userId)
+    log.Println("FILE ID:", fileId)
 
     sql := "SELECT id, user_id, filename, filepath, size, hash, last_accessed FROM files WHERE user_id=$1 AND id=$2"
 

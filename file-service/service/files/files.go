@@ -111,7 +111,13 @@ func (fs *FilesService) DeleteHandler(w http.ResponseWriter, req *http.Request) 
 	return
     }
 
-    fileId := strings.TrimPrefix(req.URL.Path, "/delete/")
+    urlChanks := strings.Split(req.URL.Path, "/")
+    fileId := urlChanks[len(urlChanks) - 1]   
+    if fileId == "" {
+	utils.WriteResponse(w, "File not specified", http.StatusBadRequest)
+	return
+    }
+
     err := fs.repository.DeleteFile(userId, fileId)
     if err != nil {
 	log.Println(err.Error())
