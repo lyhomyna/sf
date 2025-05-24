@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -31,7 +30,7 @@ func NewFilesRepository(db *database.Postgres) *FilesRepository {
     }
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 var FileErrorFileExist = errors.New("File with the save name already exists")
 // SaveupLoadedFile saves file into server's forlder and returns HttpError object if there is an error. 
@@ -69,7 +68,7 @@ func (pr *FilesRepository) SaveFile(userId string, filename string, file io.Read
     }
 
     hashString := fmt.Sprintf("%x", hash.Sum(nil))
-    fileId, err := pr.saveFileToDb(userId, dirId, filename, newFilePath, writtenBytes, hashString)
+    fileId, err := pr.saveFileToDb(userId, dirId, filename, filepath.Join(userId, dirPath, filename), writtenBytes, hashString)
     if err != nil {
 	os.Remove(newFilePath)
 	return nil, fmt.Errorf("%w: %v", repository.FilesErrorDbSave, err)
@@ -96,7 +95,7 @@ func (pr *FilesRepository) saveFileToDb(userId, dirId, filename, filepath string
     return fileId, nil
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // DeleteFile deletes file from server and returns error if there is an error
 func (pr *FilesRepository) DeleteFile(userId string, fileId string) error {
@@ -106,7 +105,6 @@ func (pr *FilesRepository) DeleteFile(userId string, fileId string) error {
     }
 
     if _, err := os.Stat(uf.Filepath); err != nil {
-	pr.removeFileFromDb(fileId)
 	return fmt.Errorf("%w: %v", repository.FilesErrorFileNotExist, err)
     }
 
@@ -133,13 +131,13 @@ func (pr *FilesRepository) removeFileFromDb(fileId string) error {
     return nil
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Can return FilesErrorFailureToRetrieve
 func (pr *FilesRepository) GetFile(userId string, fileId string) (*models.DbUserFile, error) { 
     ctx := context.Background()
 
-    sql := "SELECT * FROM files WHERE user_id=$1 AND id=$2"
+    sql := "SELECT id, user_id, filename, filepath, size, hash, last_accessed FROM files WHERE user_id=$1 AND id=$2"
 
     var uf models.DbUserFile
     if err := pr.db.Pool.QueryRow(ctx, sql, userId, fileId).Scan(&uf.Id, &uf.UserId, &uf.Filename, &uf.Filepath, &uf.Size, &uf.Hash, &uf.LastAccessed); err != nil {
@@ -149,7 +147,7 @@ func (pr *FilesRepository) GetFile(userId string, fileId string) (*models.DbUser
     return &uf, nil
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ::::::::::::::::::
 // ::: DEPRECATED :::
 // ::::::::::::::::::

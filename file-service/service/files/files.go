@@ -110,12 +110,6 @@ func (fs *FilesService) DeleteHandler(w http.ResponseWriter, req *http.Request) 
 	utils.WriteResponse(w, httpErr.Message, httpErr.Code)
 	return
     }
-    
-    // to do not go beyond permitted access limits
-    if !isUrlPathCorrect(req.URL.Path) {
-	utils.WriteResponse(w,  "Access denied. You don't have permission to perform this action.", http.StatusForbidden)
-	return
-    }
 
     fileId := strings.TrimPrefix(req.URL.Path, "/delete/")
     err := fs.repository.DeleteFile(userId, fileId)
@@ -136,15 +130,6 @@ func (fs *FilesService) DeleteHandler(w http.ResponseWriter, req *http.Request) 
     utils.WriteResponse(w, "File deleted", http.StatusOK)
 }
 
-// path must start with '/'
-func isUrlPathCorrect(path string) bool {
-    splitted := strings.Split(path[1:], "/") 
-    if (len(splitted) < 2 || len(splitted) > 2) {
-	return false
-    }
-    return true
-}
-
 // DownloadHandler downloads file into client downloads folder
 func (fs *FilesService) DownloadHandler(w http.ResponseWriter, req *http.Request) {
     if req.Method != http.MethodGet {
@@ -157,13 +142,8 @@ func (fs *FilesService) DownloadHandler(w http.ResponseWriter, req *http.Request
 	return
     }
 
-    // to do not go beyond permitted access limits
-    if !isUrlPathCorrect(req.URL.Path) {
-	utils.WriteResponse(w,  "Access denied. You don't have permission to perform this action.", http.StatusForbidden)
-	return
-    }
-
-    fileId := strings.TrimPrefix(req.URL.Path, "/download/")   
+    urlChanks := strings.Split(req.URL.Path, "/")
+    fileId := urlChanks[len(urlChanks) - 1]   
     if fileId == "" {
 	utils.WriteResponse(w, "File not specified", http.StatusBadRequest)
 	return
@@ -178,7 +158,8 @@ func (fs *FilesService) DownloadHandler(w http.ResponseWriter, req *http.Request
 	}
     }
 
-    _, err = os.Stat(file.Filepath)
+    fileFullPath := filepath.Join(filesDirectory, file.Filepath)
+    _, err = os.Stat(fileFullPath)
     if err != nil {
 	utils.WriteResponse(w, "File not found", http.StatusNotFound)
 	return
@@ -187,7 +168,7 @@ func (fs *FilesService) DownloadHandler(w http.ResponseWriter, req *http.Request
     w.Header().Set("Content-Disposition", "attachment; filename="+file.Filename)
     w.Header().Set("Content-Type", "application/octet-stream")
 
-    http.ServeFile(w, req, file.Filepath)
+    http.ServeFile(w, req, fileFullPath)
 }
 
 // Dir comes from request URL path

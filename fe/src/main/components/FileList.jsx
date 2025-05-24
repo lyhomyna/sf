@@ -14,7 +14,7 @@ export default function FileList() {
     useEffect(() => {
         (async () => {
 	    try {
-		// that's ok, cause pathname always starts with /
+		// that's ok, because pathname always starts with '/'
 		const res = await fetch(`${fileServiceBaseUrl}${location.pathname}`, {
 		    credentials: "include",
 		})
