@@ -31,7 +31,7 @@ func NewFilesRepository(db *database.Postgres) *FilesRepository {
     }
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
+// :::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 var FileErrorFileExist = errors.New("File with the save name already exists")
 // SaveupLoadedFile saves file into server's forlder and returns HttpError object if there is an error. 
@@ -96,7 +96,7 @@ func (pr *FilesRepository) saveFileToDb(userId, dirId, filename, filepath string
     return fileId, nil
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
+// :::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 // DeleteFile deletes file from server and returns error if there is an error
 func (pr *FilesRepository) DeleteFile(userId string, fileId string) error {
@@ -139,7 +139,7 @@ func (pr *FilesRepository) removeFileFromDb(fileId string) error {
     return nil
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
+// :::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 // Can return FilesErrorFailureToRetrieve
 func (pr *FilesRepository) GetFile(userId string, fileId string) (*models.DbUserFile, error) { 
@@ -158,7 +158,7 @@ func (pr *FilesRepository) GetFile(userId string, fileId string) (*models.DbUser
     return &uf, nil
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
+// :::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 // ::::::::::::::::::
 // ::: DEPRECATED :::
 // ::::::::::::::::::
@@ -188,7 +188,7 @@ func (pr *FilesRepository) GetFiles(userId string) ([]*models.DbUserFile, error)
     return userFiles, nil
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// :::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 func (pr *FilesRepository) ListDir(path, userId string) ([]models.DirEntry, error) {
     dirId, err := pr.GetDirIdByPath(userId, path)
@@ -341,7 +341,7 @@ func joinPath(base, name string, isDir bool) string {
     return base + "/" + name
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// :::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 func (pr *FilesRepository) CreateDir(userId, parentDirId, parentDirPath, name string) (string, error) {
     ctx := context.Background()
@@ -365,13 +365,10 @@ func (pr *FilesRepository) CreateDir(userId, parentDirId, parentDirPath, name st
 	return "", fmt.Errorf("Check duplicate dir error: %w", err)
     }
 
-    // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     newFilePath := filepath.Join(filesDirectory, userId, parentDirPath, name)
-    // create directory if not exitst (this only for new users)
     if err := os.MkdirAll(newFilePath, os.ModePerm); err != nil {
 	return "", fmt.Errorf("%w: %v", repository.FilesErrorInternal, err) 
     }
-    // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     newDirId := uuid.NewString()
     insertSql := `
@@ -384,6 +381,102 @@ func (pr *FilesRepository) CreateDir(userId, parentDirId, parentDirPath, name st
 
     return newDirId, nil
 }
+
+// :::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+func (pr *FilesRepository) DeleteDir(userId, dirId string) (error) {
+    ctx := context.Background()
+
+    dirPath, err := pr.getDirPathById(userId, dirId)
+    if err != nil {
+	return err
+    }
+
+    tx, err := pr.db.Pool.Begin(ctx)
+    if err != nil {
+	return fmt.Errorf("%w: %v", repository.ErrorBeginTransaction, err)
+    }
+    defer tx.Rollback(ctx)
+
+    recursiveSql := `
+	WITH RECURSIVE dirs_to_delete AS (
+	    SELECT id FROM directories WHERE id=$1 AND user_id=$2
+	    UNION
+	    SELECT d.id
+	    FROM directories d
+	    INNER JOIN dirs_to_delete dt ON d.parent_id=dt.id
+	),
+	deleted_files AS (
+	    DELETE FROM files
+	    WHERE directory_id IN (
+		SELECT id FROM dirs_to_delete
+	    )
+	)
+	DELETE FROM directories
+	WHERE id IN (SELECT id FROM dirs_to_delete); `
+
+    _, err = pr.db.Pool.Exec(ctx, recursiveSql, dirId, userId)
+    if err != nil {
+	return fmt.Errorf("%w: %v", repository.ErrorDelete, err)
+    }
+
+    err = os.RemoveAll(dirPath)
+    if err != nil {
+	return fmt.Errorf("%w: %v", repository.ErrorDeleteFolder, err)
+    }
+
+    if err := tx.Commit(ctx); err != nil {
+	return fmt.Errorf("%w: %v", repository.ErrorCommitTransaction, err)
+    }
+
+    return nil
+}
+
+func (pr *FilesRepository) getDirPathById(userId, dirId string) (string, error) {
+    ctx := context.Background()
+
+    recursiveSql := `
+	WITH RECURSIVE dir_path AS (
+	    SELECT id, name, parent_id 
+	    FROM directories
+	    WHERE id=$1
+	    
+	    UNION ALL
+
+	    SELECT d.id, d.name, d.parent_id
+	    FROM directories d
+	    INNER JOIN dir_path dp ON d.id=dp.parent_id
+	)
+	SELECT name 
+	FROM dir_path; `
+
+	rows, err := pr.db.Pool.Query(ctx, recursiveSql, dirId)
+	if err != nil {
+	    if errors.Is(err, pgx.ErrNoRows) {
+		return "", fmt.Errorf("%w: %v", repository.ErrorNoRows, err)
+	    }
+
+	    return "", fmt.Errorf("%w: %v", repository.FilesErrorDbQuery, err)
+	}
+
+	var dirNames []string
+	for rows.Next() {
+	    var dirName string
+	    err := rows.Scan(&dirName)
+	    if err != nil {
+		return "", fmt.Errorf("%w: %v", repository.ErrorScanFailed, err)
+	    }
+	    dirNames = append(dirNames, dirName)
+	}
+
+	pathParts := []string{"files", userId}
+	for i := len(dirNames)-1; i >= 0; i-- {
+	    pathParts = append(pathParts, dirNames[i])
+	}
+	return filepath.Join(pathParts...), nil
+}
+
+// :::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 func (pr *FilesRepository) CreateRootDir(userId string) (string, error) {
     ctx := context.Background()
@@ -398,13 +491,10 @@ func (pr *FilesRepository) CreateRootDir(userId string) (string, error) {
 	return "", fmt.Errorf("Check duplicate dir error: %w", err)
     }
 
-    // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     newFilePath := filepath.Join(filesDirectory, userId)
-    // create directory if not exitst (this only for new users)
     if err := os.MkdirAll(newFilePath, os.ModePerm); err != nil {
 	return "", fmt.Errorf("%w: %v", repository.FilesErrorInternal, err) 
     }
-    // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     newDirId := uuid.NewString()
     insertSql := `

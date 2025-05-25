@@ -32,6 +32,7 @@ func main() {
 
     mux.HandleFunc("/", fs.ListDirHandler)     // GET
     mux.HandleFunc("/create-directory", fs.CreateDirectoryHandler)
+    mux.HandleFunc("/delete-directory", fs.DeleteDirectoryHandler)
     mux.HandleFunc("/create-root", fs.CreateRootDirectoryHandler)
 
     mux.HandleFunc("/save", fs.SaveHandler)               // POST

@@ -1,16 +1,14 @@
 import { useContext } from "react"; 
 import { DirItemsContext } from "storage/SfContext.jsx";
 import { fileServiceBaseUrl } from "config/constants.js";
-import { useLocation } from "react-router-dom";
 
 import Button from "./Button.jsx";
 
 export default function FileItem({ file }) {
     const { deleteDirItem } = useContext(DirItemsContext);
-    const location = useLocation();
 
     const deleteItem = async () => {
-	const res = await fetch(`${fileServiceBaseUrl}/delete${location.pathname}/${file.id}`, {
+	const res = await fetch(`${fileServiceBaseUrl}/delete/${file.id}`, {
 	    method: "DELETE",
 	});
 
@@ -27,7 +25,7 @@ export default function FileItem({ file }) {
 
     const downloadFile = async () => {
 	try {
-	    const res = await fetch(`${fileServiceBaseUrl}/download${location.pathname}/${file.id}`);
+	    const res = await fetch(`${fileServiceBaseUrl}/download/${file.id}`);
 	    if (res.status === 404) {
 		alert("File not found. Refresh the page.");
 		return;

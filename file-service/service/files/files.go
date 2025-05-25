@@ -111,8 +111,7 @@ func (fs *FilesService) DeleteHandler(w http.ResponseWriter, req *http.Request) 
 	return
     }
 
-    urlChanks := strings.Split(req.URL.Path, "/")
-    fileId := urlChanks[len(urlChanks) - 1]   
+    fileId := extractIdFromPath(req.URL.Path)
     if fileId == "" {
 	utils.WriteResponse(w, "File not specified", http.StatusBadRequest)
 	return
@@ -136,6 +135,11 @@ func (fs *FilesService) DeleteHandler(w http.ResponseWriter, req *http.Request) 
     utils.WriteResponse(w, "File deleted", http.StatusOK)
 }
 
+func extractIdFromPath(path string) string {
+    urlChanks := strings.Split(path, "/")
+    return urlChanks[len(urlChanks) - 1]   
+}
+
 // DownloadHandler downloads file into client downloads folder
 func (fs *FilesService) DownloadHandler(w http.ResponseWriter, req *http.Request) {
     if req.Method != http.MethodGet {
@@ -148,8 +152,7 @@ func (fs *FilesService) DownloadHandler(w http.ResponseWriter, req *http.Request
 	return
     }
 
-    urlChanks := strings.Split(req.URL.Path, "/")
-    fileId := urlChanks[len(urlChanks) - 1]   
+    fileId := extractIdFromPath(req.URL.Path)
     if fileId == "" {
 	utils.WriteResponse(w, "File not specified", http.StatusBadRequest)
 	return
@@ -278,6 +281,36 @@ func (fs *FilesService) createDir(userId, parentDirPath, dirName string) (string
 	}
 
 	return dirId, nil
+}
+
+func (fs *FilesService) DeleteDirectoryHandler(w http.ResponseWriter, req *http.Request) {
+    if req.Method != http.MethodDelete {
+	http.Error(w, "Use DELETE method instead", http.StatusMethodNotAllowed)
+	return
+    }
+    userId, httpErr := utils.CheckAuth(req)
+    if httpErr != nil {
+	utils.WriteResponse(w, httpErr.Message, httpErr.Code)
+	return
+    }
+
+    dirId := extractIdFromPath(req.URL.Path)
+    err := fs.repository.DeleteDir(userId, dirId)
+    if err != nil {
+	log.Println(err)
+
+	switch {
+	    case errors.Is(repository.ErrorDelete, err):
+		utils.WriteResponse(w, "Could not delete directory. Try again later", http.StatusInternalServerError)
+		return
+
+	    default:
+		utils.WriteResponse(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+    }
+
+    utils.WriteResponse(w, "Directory deleted successfully", http.StatusOK)
 }
 
 func (fs *FilesService) CreateRootDirectoryHandler(w http.ResponseWriter, req *http.Request) {

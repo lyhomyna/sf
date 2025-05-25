@@ -18,6 +18,7 @@ type FilesRepository interface {
     GetFiles(userId string) ([]*models.DbUserFile, error)
     ListDir(path, userId string) ([]models.DirEntry, error)
     CreateDir(userId, parentDirId, parentDirPath, name string) (string, error)
+    DeleteDir(userId, dirId string) (error)
     CreateRootDir(userId string) (string, error)
     GetDirIdByPath(userId, path string) (string, error)
 }

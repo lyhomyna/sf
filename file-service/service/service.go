@@ -8,6 +8,7 @@ type FileService interface {
     DownloadHandler(w http.ResponseWriter, req *http.Request)
     ListDirHandler(w http.ResponseWriter, req *http.Request)
     CreateDirectoryHandler(w http.ResponseWriter, req *http.Request)
+    DeleteDirectoryHandler(w http.ResponseWriter, req *http.Request)
     CreateRootDirectoryHandler(w http.ResponseWriter, req *http.Request)
 }
 
