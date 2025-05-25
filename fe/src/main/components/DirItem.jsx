@@ -23,12 +23,12 @@ export default function DirItem({ dir }) {
     };
 
     return <>
-	<div className="flex gap-[0.3rem]">
+	<a className="flex gap-[0.3rem] mt-3 hover:bg-gray-500 rounded">
 	    <button onClick={ deleteDir } className="w-[15px] h-[2.1rem] bg-red-200 hover:bg-red-700 duration-300" title="Delete" />
-	    <a href={dir.path} className="flex flex-row gap-3 mt-3 hover:bg-gray-500 rounded">
+	    <a href={ dir.path } className="flex flex-row gap-3 w-full">
 		<img src="/images/dir.png" className="h-[2.1rem]"/>
 		<p className="text-xl text-slate-300">{ dir.name }</p>
-	    </a>;
-	</div>
+	    </a>
+	</a>
     </>;
 }
