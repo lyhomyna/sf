@@ -314,6 +314,11 @@ func (fs *FilesService) DeleteDirectoryHandler(w http.ResponseWriter, req *http.
 }
 
 func (fs *FilesService) CreateRootDirectoryHandler(w http.ResponseWriter, req *http.Request) {
+    if req.Method != http.MethodPost {
+	http.Error(w, "Use POST method instead", http.StatusMethodNotAllowed)
+	return
+    }
+
     if !fs.isAuthorized(req) {
 	http.Error(w, "Unauthorized", http.StatusUnauthorized)
 	return

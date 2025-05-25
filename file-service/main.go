@@ -30,16 +30,16 @@ var (
 func main() {
     mux := http.NewServeMux()
 
-    mux.HandleFunc("/", fs.ListDirHandler)     // GET
-    mux.HandleFunc("/create-directory", fs.CreateDirectoryHandler)
-    mux.HandleFunc("/delete-directory", fs.DeleteDirectoryHandler)
-    mux.HandleFunc("/create-root", fs.CreateRootDirectoryHandler)
+    mux.HandleFunc("/", fs.ListDirHandler) // GET
+    mux.HandleFunc("/create-directory", fs.CreateDirectoryHandler)  // POST
+    mux.HandleFunc("/delete-directory/", fs.DeleteDirectoryHandler) // POST
+    mux.HandleFunc("/create-root", fs.CreateRootDirectoryHandler)   // POST
 
     mux.HandleFunc("/save", fs.SaveHandler)               // POST
     mux.HandleFunc("/delete/", fs.DeleteHandler)          // DELETE
     mux.HandleFunc("/download/", fs.DownloadHandler)      // GET
 
-    mux.HandleFunc("/image/", uis.GetUserImageHandler)        // GET
+    mux.HandleFunc("/image/", uis.GetUserImageHandler)       // GET
     mux.HandleFunc("/save-image", uis.SaveUserImageHandler)  // POST
 
     mux.HandleFunc("/health", func(w http.ResponseWriter, req *http.Request) {
