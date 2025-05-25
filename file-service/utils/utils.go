@@ -15,7 +15,6 @@ var authServiceBaseUrl = "http://auth-service:8081"
 
 func WriteResponse(w http.ResponseWriter, data any, code int) {
     w.Header().Set("Content-Type", "application/json")
-    w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 
     w.WriteHeader(code)
     d := struct {
@@ -33,11 +32,13 @@ func WriteResponse(w http.ResponseWriter, data any, code int) {
 
 func WriteResponseV2(w http.ResponseWriter, data any, code int) {
     w.Header().Set("Content-Type", "application/json")
-    w.WriteHeader(200)
+    w.WriteHeader(code)
+
     response, err := json.Marshal(data)
     if err != nil {
 	panic(err)
     }
+
     w.Write(response)
 }
 

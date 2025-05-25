@@ -1,13 +1,17 @@
 import { useContext } from "react";
 
 import Button from "./Button.jsx";
-import { AuthContext } from "storage/SfContext.jsx";
-import { authServiceBaseUrl } from "config/constants.js";
+import { AuthContext, DirItemsContext } from "storage/SfContext.jsx";
+import { authServiceBaseUrl, fileServiceBaseUrl } from "config/constants.js";
 import { useUploadFile } from "hooks/useUploadFile.js";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export default function ControlButtons({...props}) {
     const { changeAuthStatus } = useContext(AuthContext);
+    const { addDirItems } = useContext(DirItemsContext);
     const { uploadFile } = useUploadFile();
+    const location = useLocation();
+    const navigate = useNavigate();
 
     const uploadFileOrFiles = async (multiple = false) => {
 	const supportsFileSystemAccess = "showOpenFilePicker" in window &&
@@ -102,7 +106,61 @@ export default function ControlButtons({...props}) {
 	changeAuthStatus();
     }
 
+    const uploadFolder = async () => {
+	let folderName = prompt("Enter new folder's name")
+	if (!folderName || folderName.trim() === "") {
+	    return;
+	}
+
+	try {
+	    const formData = new FormData();
+	    formData.append("name", folderName)
+	    formData.append("curr_dir", location.pathname)
+
+	    const res = await fetch(`${fileServiceBaseUrl}/create-directory`, {
+		method: "POST",
+		body: formData,
+		credentials: "include",
+	    })
+
+	    if (res.status === 204) {
+		alert("Wrong parent directory. The page will return to the root folder")
+		navigate("/");
+		return;
+	    }
+
+	    if (res.status === 409) {
+		alert(`Directory '${folderName}' already exist`);
+		return;
+	    }
+	    
+	    const resJson = await res.json();
+	    if (res.status === 500) {
+		console.error(resJson.data);
+		alert("Refresh the page and try again");
+		return;
+	    }
+
+	    if (res.status === 200) {
+		addDirItems({
+		    dirItems: [ 
+			{
+			    id: resJson.id,
+			    name: resJson.name,
+			    path: resJson.fullPath,
+			    type: "dir"
+			}
+		    ]
+		});
+	    }
+
+	} catch(e) {
+	    console.log(e);
+	}
+    }
+
     return (<div {...props}>
 	<Button className="bg-neutral-700" text="Log out" onClick={logout}/>
-	<Button className="bg-neutral-700"text="Upload file" onClick={ uploadFileOrFiles } />
+	<Button className="bg-neutral-700" text="Upload file" onClick={ uploadFileOrFiles } />
+	<Button className="bg-neutral-700" text="Create Dir" onClick={ uploadFolder }/>
     </div>);}

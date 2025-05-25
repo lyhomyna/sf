@@ -26,10 +26,10 @@ export default function TopBar() {
 		    });
 		} else if (response.status === 404) {
 		    const err = await response.json();
-		    console.error(err.message)
+		    console.log(err.message)
 		}
 	    } catch (err) {
-		console.error("Failed to fetch user", err)
+		console.log("Failed to fetch user", err)
 	    }
 	}
 
@@ -82,10 +82,10 @@ export default function TopBar() {
 		    alert(resJson.data)
 		} else {
 		    alert(`Failed to change an image '${image.name}'. Try again.`)
-		    console.error(resJson.data)
+		    console.log(resJson.data)
 		}
 	    } catch (e) {
-		console.error(e)
+		console.log(e)
 	    }
 	}
     };

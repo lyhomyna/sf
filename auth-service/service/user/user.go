@@ -18,7 +18,7 @@ func CreateUser(siglog *models.Siglog, req *http.Request) (string, *models.HTTPE
 
     var user models.User
     if err := decodeFromTo(req.Body, &user); err != nil {
-	fmt.Println("Could't decode user.", err)
+	fmt.Println("Could't decode user.")
 	return "", &models.HTTPError {
 	    Code: http.StatusBadRequest,
 	    Message: "Use correct user schema",
@@ -33,7 +33,7 @@ func CreateUser(siglog *models.Siglog, req *http.Request) (string, *models.HTTPE
 
     userId, err := siglog.Users.CreateUser(dbUser)
     if err != nil {
-	log.Println("Couldn't create user:", err.Error())
+	log.Println(err.Error())
 	return "", &models.HTTPError {
 	    Code: http.StatusInternalServerError,
 	    Message: err.Error(),
@@ -82,7 +82,7 @@ func encryptPassword(password string) (string, error) {
 // danger function
 func DeleteUser(userId string, siglog *models.Siglog) *models.HTTPError {
     if err := siglog.Users.DeleteUser(userId); err != nil {
-	log.Println(fmt.Sprintf("Couldn't delete user '%s': $v", userId, err))
+	log.Println(fmt.Sprintf("Couldn't delete user '%s'", userId))
 	return &models.HTTPError {
 	    Code: http.StatusInternalServerError,
 	    Message: "Couldn't delete user.",
@@ -96,7 +96,7 @@ func DeleteUser(userId string, siglog *models.Siglog) *models.HTTPError {
 func GetUserByEmail(email string, siglog *models.Siglog) (*models.DbUser, *models.HTTPError) {
     dbUser, err := siglog.Users.GetUserByEmail(email)
     if err != nil {
-	log.Println("Couldn't get user by email:", err.Error())
+	log.Println(err.Error())
 	return nil, &models.HTTPError{
 	    Code: http.StatusInternalServerError,
 	    Message: "Internal server error",
@@ -127,3 +127,6 @@ func GetById(userId string, siglog *models.Siglog) (*models.User, *models.HTTPEr
     }
     return user, nil
 }
+
+
+

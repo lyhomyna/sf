@@ -23,19 +23,23 @@ var (
     fr = filesRepository.NewFilesRepository(pgDb)
     uir = userImagesRepository.NewUserImagesRepository(pgDb)
 
-    fs service.FileService = filesService.NewFilesService(fr)
+    fs service.FileService = filesService.NewFilesService(fr, cfg)
     uis service.UserImagesService = userImagesService.NewUserImagesService(uir)
 )
 
 func main() {
     mux := http.NewServeMux()
 
+    mux.HandleFunc("/", fs.ListDirHandler) // GET
+    mux.HandleFunc("/create-directory", fs.CreateDirectoryHandler)  // POST
+    mux.HandleFunc("/delete-directory/", fs.DeleteDirectoryHandler) // POST
+    mux.HandleFunc("/create-root", fs.CreateRootDirectoryHandler)   // POST
+
     mux.HandleFunc("/save", fs.SaveHandler)               // POST
     mux.HandleFunc("/delete/", fs.DeleteHandler)          // DELETE
     mux.HandleFunc("/download/", fs.DownloadHandler)      // GET
-    mux.HandleFunc("/files", fs.FilesHanlder)     // GET
 
-    mux.HandleFunc("/image/", uis.GetUserImageHandler)        // GET
+    mux.HandleFunc("/image/", uis.GetUserImageHandler)       // GET
     mux.HandleFunc("/save-image", uis.SaveUserImageHandler)  // POST
 
     mux.HandleFunc("/health", func(w http.ResponseWriter, req *http.Request) {

@@ -1,18 +1,22 @@
-package handlers 
+package handlers
 
 import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"net/url"
+	"os"
 	"strings"
 	"time"
 
-	"github.com/lyhomyna/sf/auth-service/service/session"
-	userService "github.com/lyhomyna/sf/auth-service/service/user"
 	"github.com/lyhomyna/sf/auth-service/models"
 	"github.com/lyhomyna/sf/auth-service/repository"
+	"github.com/lyhomyna/sf/auth-service/service/session"
+	userService "github.com/lyhomyna/sf/auth-service/service/user"
 )
 
 var sessionCookieName = "session-id"
@@ -88,9 +92,63 @@ func register(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
 	writeResponseMessage(w, errHttp.Code, errHttp.Message)
 	return
     }
+    
+    resp, err := makeCreateRootDirRequest(userId)
+    if err != nil {
+	log.Println(err)
+
+	writeResponseMessage(w, http.StatusInternalServerError, "Couldn't create user")
+	return
+    }
+    defer resp.Body.Close()
+
+    if resp.StatusCode != http.StatusOK {
+	userService.DeleteUser(userId, siglog)
+
+	body, _ := io.ReadAll(resp.Body)
+	log.Printf("Root dir creation failed: %s", body)
+	return
+    }
 
     log.Printf("New user '%s' has been registered.", userId)
+
+    w.Header().Set("Content-Type", "application/json")
     w.WriteHeader(http.StatusOK)
+
+    response, err := json.Marshal(struct {
+	Id   string `json:"id"`
+    }{
+	Id: userId,
+    })
+    if err != nil {
+	panic(err)
+    }
+    
+    w.Write(response)
+}
+
+func makeCreateRootDirRequest(userId string) (*http.Response, error) {
+    serviceToken := os.Getenv("AUTH_TO_FILE_TOKEN")
+
+    data := url.Values{}
+    data.Set("userId", userId)
+
+    requestToFilesService, err := http.NewRequest(http.MethodPost, "http://file-service:8082/create-root", strings.NewReader(data.Encode()))
+    if err != nil {
+	return nil, err
+    }
+    requestToFilesService.Header.Add("Authorization", fmt.Sprintf("Bearer %s", serviceToken))
+    requestToFilesService.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+    client := &http.Client{
+	Timeout: 5 * time.Second,
+    }
+    resp, err := client.Do(requestToFilesService)
+    if err != nil {
+	return nil, err
+    }
+
+    return resp, nil
 }
 
 func login(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {

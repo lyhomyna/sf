@@ -50,7 +50,7 @@ export default function DragAndDrop() {
 
 	// show dropzone only when files are being dragged 
 	if (!e.dataTransfer.types.includes('Files')) {
-	    alert("Isn't a file")
+	    console.log("Isn't file")
 	    return; 
 	}
 
@@ -65,11 +65,11 @@ export default function DragAndDrop() {
 
 	// show dropzone only when files are being dragged 
 	if (!e.dataTransfer.types.includes('Files')) {
-	    alert("Isn't a file")
+	    console.log("Isn't file")
 	    return; 
 	}
 
-	dragCounter.current = 0;
+	dragCounter.cuurent = 0;
 	setIsDragging(false);
     };
 
