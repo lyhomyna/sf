@@ -1,4 +1,4 @@
-package repository
+package sessions 
 
 import (
 	"context"
@@ -27,7 +27,7 @@ func GetSessionsDao(ctx context.Context) *PostgreSessions {
 }
 
 func (p *PostgreSessions) CreateSession(userId string) (string, error) {
-    sql := fmt.Sprintf("INSERT INTO %s (%s, %s) VALUES ($1, $2)", DB_sessions_name, DB_sessions_id, DB_sessions_userId)
+    sql := fmt.Sprintf("INSERT INTO %s (%s, %s) VALUES ($1, $2)", database.DB_sessions_name, database.DB_sessions_id, database.DB_sessions_userId)
     sessionId := uuid.NewString()
     _, err := p.pool.Exec(p.ctx, sql, sessionId, userId)
 
@@ -39,7 +39,7 @@ func (p *PostgreSessions) CreateSession(userId string) (string, error) {
 }
 
 func (p *PostgreSessions) DeleteSession(sessionId string) error {
-    sql := fmt.Sprintf("DELETE FROM %s WHERE id=$1", DB_sessions_name)
+    sql := fmt.Sprintf("DELETE FROM %s WHERE id=$1", database.DB_sessions_name)
 
     execRes, err := p.pool.Exec(p.ctx, sql, sessionId)
 
@@ -53,7 +53,7 @@ func (p *PostgreSessions) DeleteSession(sessionId string) error {
 }
 
 func (p *PostgreSessions) UserIdFromSessionId(sessionId string) (string, error) {
-    sql := fmt.Sprintf("SELECT %s FROM %s WHERE id=$1", DB_sessions_userId, DB_sessions_name)
+    sql := fmt.Sprintf("SELECT %s FROM %s WHERE id=$1", database.DB_sessions_userId, database.DB_sessions_name)
     row := p.pool.QueryRow(p.ctx, sql, sessionId)
 
     var	userId string

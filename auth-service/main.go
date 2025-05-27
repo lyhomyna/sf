@@ -4,11 +4,11 @@ import (
 	"context"
 	"log"
 
-	"github.com/lyhomyna/sf/auth-service/service"
+	"github.com/lyhomyna/sf/auth-service/siglog"
 )
 
 func main() {
-    siglogServer := service.SiglogServer{}
+    siglogServer := siglog.SiglogServer{}
     ctx := context.Background()
 
     errCh := make(chan error, 1)
@@ -22,3 +22,4 @@ func main() {
 	log.Println("Server terminated by error:", err)
     }
 }
+

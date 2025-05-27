@@ -1,10 +1,12 @@
-package service
+package siglog
 
 import (
 	"context"
 	"fmt"
 
 	"github.com/lyhomyna/sf/auth-service/handlers"
+	"github.com/lyhomyna/sf/auth-service/repository"
+	"github.com/lyhomyna/sf/auth-service/service"
 )
 
 type SiglogServer struct {
@@ -12,16 +14,24 @@ type SiglogServer struct {
 }
 
 func (s *SiglogServer) Run(ctx context.Context) error {
-    s.httpServer = &handlers.HttpServer{} 
     ctx, cancel := context.WithCancel(ctx)
 
     errCh := make(chan error, 1)
     go func() {
+	repos := repository.GetRepos(ctx)
+	if repos == nil {
+	    errCh <- fmt.Errorf("Coudn't ger repos")
+	    return
+	}
+
+	s.httpServer = &handlers.HttpServer{
+	    Services: service.GetServices(ctx, repos),
+	} 
+
 	err := s.httpServer.Run(ctx)
 	if err != nil {
-	    err = fmt.Errorf("HTTP server error. %w", err)
+	    errCh <- fmt.Errorf("HTTP server error. %w", err)
 	}
-	errCh <- err
     } ()
 
     err := <-errCh

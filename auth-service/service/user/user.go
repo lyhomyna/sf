@@ -10,10 +10,21 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/lyhomyna/sf/auth-service/models"
+	"github.com/lyhomyna/sf/auth-service/repository"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func CreateUser(siglog *models.Siglog, req *http.Request) (string, *models.HTTPError) {
+type UserService struct {
+    dao repository.UserDao
+}
+
+func NewUserService(userDao repository.UserDao) *UserService {
+    return &UserService{
+	dao: userDao,
+    }
+}
+
+func (s *UserService) CreateUser(req *http.Request) (string, *models.HTTPError) {
     defer req.Body.Close()
 
     var user models.User
@@ -31,7 +42,7 @@ func CreateUser(siglog *models.Siglog, req *http.Request) (string, *models.HTTPE
 	return "", *&errHttp
     }
 
-    userId, err := siglog.Users.CreateUser(dbUser)
+    userId, err := s.dao.CreateUser(dbUser)
     if err != nil {
 	log.Println(err.Error())
 	return "", &models.HTTPError {
@@ -80,8 +91,8 @@ func encryptPassword(password string) (string, error) {
 
 
 // danger function
-func DeleteUser(userId string, siglog *models.Siglog) *models.HTTPError {
-    if err := siglog.Users.DeleteUser(userId); err != nil {
+func (s *UserService) DeleteUser(userId string) *models.HTTPError {
+    if err := s.dao.DeleteUser(userId); err != nil {
 	log.Println(fmt.Sprintf("Couldn't delete user '%s'", userId))
 	return &models.HTTPError {
 	    Code: http.StatusInternalServerError,
@@ -93,8 +104,8 @@ func DeleteUser(userId string, siglog *models.Siglog) *models.HTTPError {
     return nil
 }
 
-func GetUserByEmail(email string, siglog *models.Siglog) (*models.DbUser, *models.HTTPError) {
-    dbUser, err := siglog.Users.GetUserByEmail(email)
+func (s *UserService) GetUserByEmail(email string) (*models.DbUser, *models.HTTPError) {
+    dbUser, err := s.dao.GetUserByEmail(email)
     if err != nil {
 	log.Println(err.Error())
 	return nil, &models.HTTPError{
@@ -117,8 +128,8 @@ func ComparePasswords(passwordHash string, possiblePassword string) error {
     return err
 }
 
-func GetById(userId string, siglog *models.Siglog) (*models.User, *models.HTTPError) {
-    user, err := siglog.Users.ReadUserById(userId)
+func (s *UserService) GetUserById(userId string) (*models.User, *models.HTTPError) {
+    user, err := s.dao.ReadUserById(userId)
     if err != nil {
 	return nil, &models.HTTPError {
 	    Code: http.StatusNotFound, 
@@ -127,6 +138,4 @@ func GetById(userId string, siglog *models.Siglog) (*models.User, *models.HTTPEr
     }
     return user, nil
 }
-
-
 

@@ -3,7 +3,6 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -14,8 +13,7 @@ import (
 	"time"
 
 	"github.com/lyhomyna/sf/auth-service/models"
-	"github.com/lyhomyna/sf/auth-service/repository"
-	"github.com/lyhomyna/sf/auth-service/service/session"
+	"github.com/lyhomyna/sf/auth-service/service"
 	userService "github.com/lyhomyna/sf/auth-service/service/user"
 )
 
@@ -23,14 +21,10 @@ var sessionCookieName = "session-id"
 
 type HttpServer struct {
     http *http.Server
+    Services *service.Services
 }
 
-func (s *HttpServer) Run(ctx context.Context) error {
-    siglog := repository.GetSiglog()
-    if siglog == nil {
-	return errors.New("Couldn't get SigLog.")
-    }
-
+func (s *HttpServer) Run(ctx context.Context ) error {
     mux := http.NewServeMux()
 
     mux.HandleFunc("/register", func(w http.ResponseWriter, req *http.Request) {
@@ -38,35 +32,35 @@ func (s *HttpServer) Run(ctx context.Context) error {
 	    writeResponseMessage(w, http.StatusMethodNotAllowed, "Use method POST instead")
 	    return
 	}
-	register(siglog, w, req)
+	s.register(w, req)
     })
     mux.HandleFunc("/login", func(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost {
 	    writeResponseMessage(w, http.StatusMethodNotAllowed, "Use method POST instead")
 	    return
 	}
-	login(siglog, w, req)
+	s.login(w, req)
     })
     mux.HandleFunc("/logout", func(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodGet {
 	    writeResponseMessage(w, http.StatusMethodNotAllowed, "Use method GET instead")
 	    return
 	}
-	logout(siglog, w, req)
+	s.logout(w, req)
     })
     mux.HandleFunc("/check-auth", func(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodGet {
 	    writeResponseMessage(w, http.StatusMethodNotAllowed, "Use method GET instead")
 	    return
 	}
-	checkAuth(siglog, w, req)
+	s.checkAuth(w, req)
     })
     mux.HandleFunc("/get-user", func(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodGet {
 	    writeResponseMessage(w, http.StatusMethodNotAllowed, "Use method GET instead")
 	    return
 	}
-	handleGetUser(siglog, w, req)
+	s.handleGetUser(w, req)
     })
     mux.HandleFunc("/health", func(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(http.StatusOK)
@@ -86,8 +80,8 @@ func (s *HttpServer) Run(ctx context.Context) error {
     return nil 
 }
 
-func register(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
-    userId, errHttp := userService.CreateUser(siglog, req)
+func (s *HttpServer) register(w http.ResponseWriter, req *http.Request) {
+    userId, errHttp := s.Services.Users.CreateUser(req)
     if errHttp != nil {
 	writeResponseMessage(w, errHttp.Code, errHttp.Message)
 	return
@@ -103,7 +97,7 @@ func register(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
     defer resp.Body.Close()
 
     if resp.StatusCode != http.StatusOK {
-	userService.DeleteUser(userId, siglog)
+	s.Services.Users.DeleteUser(userId)
 
 	body, _ := io.ReadAll(resp.Body)
 	log.Printf("Root dir creation failed: %s", body)
@@ -151,7 +145,7 @@ func makeCreateRootDirRequest(userId string) (*http.Response, error) {
     return resp, nil
 }
 
-func login(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
+func (s *HttpServer) login(w http.ResponseWriter, req *http.Request) {
     // Decode user
     var userData models.User
     err := json.NewDecoder(req.Body).Decode(&userData)
@@ -160,14 +154,14 @@ func login(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
 	return
     }
 
-    dbUser, httpErr := validateUser(&userData, siglog)
+    dbUser, httpErr := s.validateUser(&userData)
     if httpErr != nil {
 	writeResponseMessage(w, httpErr.Code, httpErr.Message)
 	return
     }
 
     // create session
-    sessionId, errHttp := session.Create(dbUser.Id, siglog)
+    sessionId, errHttp := s.Services.Sessions.CreateSession(dbUser.Id)
     if errHttp != nil {
 	writeResponseMessage(w, errHttp.Code, errHttp.Message)
 	return
@@ -179,7 +173,7 @@ func login(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
     w.WriteHeader(http.StatusOK)
 }
 
-func validateUser(user *models.User, siglog *models.Siglog) (*models.DbUser, *models.HTTPError) {
+func (s *HttpServer) validateUser(user *models.User) (*models.DbUser, *models.HTTPError) {
     if strings.Trim(user.Email, " ") == "" || strings.Trim(user.Password,  " ") == "" {
 	return nil, &models.HTTPError{
 	    Code: http.StatusBadRequest,
@@ -202,7 +196,7 @@ func validateUser(user *models.User, siglog *models.Siglog) (*models.DbUser, *mo
     }
 
     // find user by email
-    dbUser, httpError := userService.GetUserByEmail(user.Email, siglog);
+    dbUser, httpError := s.Services.Users.GetUserByEmail(user.Email);
     if httpError != nil {
 	return nil,  httpError   
     }
@@ -227,7 +221,7 @@ func setSessionCookie(w http.ResponseWriter, sessionId string) {
     })
 }
 
-func logout(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
+func (s *HttpServer) logout(w http.ResponseWriter, req *http.Request) {
     cookie, err := req.Cookie(sessionCookieName)
     if err != nil {
 	writeResponseMessage(w, http.StatusUnauthorized, err.Error())
@@ -236,7 +230,7 @@ func logout(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
     
     sessionId := cookie.Value
 
-    errHttp := session.Delete(sessionId, siglog)
+    errHttp := s.Services.Sessions.DeleteSession(sessionId)
     if errHttp != nil {
 	writeResponseMessage(w, errHttp.Code, errHttp.Message)
 	return
@@ -253,7 +247,7 @@ func logout(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
     w.WriteHeader(http.StatusOK)
 }
 
-func checkAuth(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
+func (s *HttpServer) checkAuth(w http.ResponseWriter, req *http.Request) {
     logConnection(req)
 
     sessionCookie, err := req.Cookie(sessionCookieName)
@@ -263,7 +257,7 @@ func checkAuth(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) 
 	return
     }
 
-    if uid, ok := session.IsSessionExists(sessionCookie.Value, siglog); ok {
+    if uid, ok := s.Services.Sessions.IsSessionExists(sessionCookie.Value); ok {
 	w.WriteHeader(http.StatusOK)
 	jsonResponse, _ := json.Marshal(map[string]string{"userId": uid})
 	w.Write(jsonResponse)
@@ -280,21 +274,21 @@ func checkAuth(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) 
     w.WriteHeader(http.StatusUnauthorized)
 }
 
-func handleGetUser(siglog *models.Siglog, w http.ResponseWriter, req *http.Request) {
+func (s *HttpServer) handleGetUser(w http.ResponseWriter, req *http.Request) {
     sessionCookie, err := req.Cookie(sessionCookieName)
     if err != nil {
 	writeResponseMessage(w, http.StatusUnauthorized, err.Error())
 	return
     }
 
-    userId, sessionExists := session.IsSessionExists(sessionCookie.Value, siglog)
+    userId, sessionExists := s.Services.Sessions.IsSessionExists(sessionCookie.Value)
     if !sessionExists {
 	writeResponseMessage(w, http.StatusNotFound, "There is no user associated with session")
 	return
     }
 
-    user, httpErr := userService.GetById(userId, siglog)
-    if err != nil {
+    user, httpErr := s.Services.Users.GetUserById(userId)
+    if httpErr != nil {
 	writeResponseMessage(w, httpErr.Code, httpErr.Message)
 	return
     }
