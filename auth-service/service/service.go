@@ -15,8 +15,6 @@ type Services struct {
 }
 
 func GetServices(ctx context.Context, repos *repository.Repositories) *Services {
-    
-
     return &Services {
 	Users: usersService.NewUserService(repos.Users),
 	Sessions: sessionService.NewSessionService(repos.Sessions),
