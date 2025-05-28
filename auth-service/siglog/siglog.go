@@ -23,9 +23,10 @@ func (s *SiglogServer) Run(ctx context.Context) error {
 	    errCh <- fmt.Errorf("Coudn't ger repos")
 	    return
 	}
+	services := service.GetServices(ctx, repos)
 
 	s.httpServer = &handlers.HttpServer{
-	    Services: service.GetServices(ctx, repos),
+	    Services: services,
 	} 
 
 	err := s.httpServer.Run(ctx)
