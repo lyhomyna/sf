@@ -1,4 +1,4 @@
-package repository
+package database
 
 const (
     DB_sessions_name = "sessions"

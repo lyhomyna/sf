@@ -3,6 +3,7 @@ package files
 import (
 	"context"
 	"crypto/sha256"
+	"database/sql"
 	"errors"
 	"fmt"
 	"io"
@@ -286,7 +287,7 @@ func (pr *FilesRepository) fetchSubdirectories(userId, dirId, path string) ([]mo
     }
     defer rows.Close()
 
-    var result []models.DirEntry
+    result := []models.DirEntry{}
     for rows.Next() {
 	var id, name string
 	if err := rows.Scan(&id, &name); err != nil {
@@ -315,7 +316,7 @@ func (pr *FilesRepository) fetchFiles(userId, dirId, path string) ([]models.DirE
     }
     defer rows.Close()
 
-    var result []models.DirEntry
+    result := []models.DirEntry{}
     for rows.Next() {
 	var id, name string
 	if err := rows.Scan(&id, &name); err != nil {
@@ -439,7 +440,8 @@ func (pr *FilesRepository) getDirPathById(userId, dirId string) (string, error) 
 	WITH RECURSIVE dir_path AS (
 	    SELECT id, name, parent_id 
 	    FROM directories
-	    WHERE id=$1
+	    WHERE user_id=$1
+	    AND id=$2
 	    
 	    UNION ALL
 
@@ -447,10 +449,10 @@ func (pr *FilesRepository) getDirPathById(userId, dirId string) (string, error) 
 	    FROM directories d
 	    INNER JOIN dir_path dp ON d.id=dp.parent_id
 	)
-	SELECT name 
+	SELECT name, parent_id 
 	FROM dir_path; `
 
-	rows, err := pr.db.Pool.Query(ctx, recursiveSql, dirId)
+	rows, err := pr.db.Pool.Query(ctx, recursiveSql, userId, dirId)
 	if err != nil {
 	    if errors.Is(err, pgx.ErrNoRows) {
 		return "", fmt.Errorf("%w: %v", repository.ErrorNoRows, err)
@@ -462,10 +464,18 @@ func (pr *FilesRepository) getDirPathById(userId, dirId string) (string, error) 
 	var dirNames []string
 	for rows.Next() {
 	    var dirName string
-	    err := rows.Scan(&dirName)
+	    var parentId sql.NullString 
+
+	    err := rows.Scan(&dirName, &parentId)
 	    if err != nil {
 		return "", fmt.Errorf("%w: %v", repository.ErrorScanFailed, err)
 	    }
+
+	    // root folder has "root" name, but in filepath that name is't relevant
+	    if !parentId.Valid {
+		continue
+	    }
+
 	    dirNames = append(dirNames, dirName)
 	}
 

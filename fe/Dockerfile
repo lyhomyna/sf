@@ -12,5 +12,6 @@ RUN npm run build
 # Production stage
 FROM nginx:stable-alpine
 COPY --from=builder /usr/src/sf-fe/build /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 CMD ["nginx", "-g", "daemon off;"]

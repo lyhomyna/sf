@@ -5,10 +5,21 @@ import (
 	"net/http"
 
 	"github.com/lyhomyna/sf/auth-service/models"
+	"github.com/lyhomyna/sf/auth-service/repository"
 )
 
-func Create(userId string, siglog *models.Siglog) (string, *models.HTTPError) {
-    sessionId, err := siglog.Sessions.CreateSession(userId)
+type SessionService struct {
+    dao repository.SessionDao 
+}
+
+func NewSessionService(sessionDao repository.SessionDao) *SessionService {
+    return &SessionService{
+	dao: sessionDao,
+    }
+}
+
+func (s *SessionService) CreateSession(userId string) (string, *models.HTTPError) {
+    sessionId, err := s.dao.CreateSession(userId)
     if err != nil {
 	log.Println("Couldn't create session.", err.Error())
 	return "", &models.HTTPError{
@@ -20,8 +31,8 @@ func Create(userId string, siglog *models.Siglog) (string, *models.HTTPError) {
     return sessionId, nil
 }
 
-func Delete(sessionId string, siglog *models.Siglog) *models.HTTPError {
-    err := siglog.Sessions.DeleteSession(sessionId)
+func (s *SessionService) DeleteSession(sessionId string) *models.HTTPError {
+    err := s.dao.DeleteSession(sessionId)
     if err != nil {
 	log.Println("Couldn't delete session.", err.Error())
 	return &models.HTTPError{
@@ -32,8 +43,8 @@ func Delete(sessionId string, siglog *models.Siglog) *models.HTTPError {
     return nil
 }
 
-func IsSessionExists(sessionId string, siglog *models.Siglog) (string, bool) {
-    userId, _ := siglog.Sessions.UserIdFromSessionId(sessionId)
+func (s *SessionService) IsSessionExists(sessionId string) (string, bool) {
+    userId, _ := s.dao.UserIdFromSessionId(sessionId)
     if userId != "" {
 	return userId, true 
     }
