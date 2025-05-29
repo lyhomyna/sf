@@ -1,4 +1,4 @@
-package userImages
+package userImage
 
 import (
 	"crypto/sha1"
@@ -15,20 +15,20 @@ import (
 	"github.com/lyhomyna/sf/file-service/repository"
 )
 
-type UserImagesService struct {
+type UserImageService struct {
     repository repository.UserImageRepository
 }
 
 // directory where uploaded files will be saved
 var userImagesDirectoryPath = filepath.Join("userImages")
 
-func NewUserImagesService(userImagesRepository repository.UserImageRepository) *UserImagesService {
-    return &UserImagesService{
-	repository: userImagesRepository,
+func NewUserImageService(userImageRepository repository.UserImageRepository) *UserImageService {
+    return &UserImageService{
+	repository: userImageRepository,
     }
 }
 
-func (uis *UserImagesService) SaveUserImageHandler(userId string, req *http.Request) (string, *models.HttpError) {
+func (uis *UserImageService) SaveUserImage(userId string, req *http.Request) (string, *models.HttpError) {
     // get the avatar from form field by "avatar" name
     avaFile, avaFileHeader, err := req.FormFile("image")
     if err != nil {
@@ -141,15 +141,17 @@ func removeFile(path string) {
 }
 
 
-func (uid *UserImagesService) GetUserImageHandler(path string) (*models.ImageData, *models.HttpError) {
-    pathChunks := strings.Split(path, "/")
+func (uid *UserImageService) GetUserImage(path string) (*models.ImageData, *models.HttpError) {
+    pathChunks := strings.Split(strings.Trim(path, "/"), "/")
 
     if len(pathChunks) != 2 {
+	log.Println("Incorrect image request path format")
 	return nil, &models.HttpError{
 	    Message: "Incorrect image path", 
 	    Code: http.StatusBadRequest,
 	}
     } else if (pathChunks[0] != "image") {
+	log.Println("Incorrect image request path format")
 	return nil, &models.HttpError{
 	    Message: "Incorrect image path", 
 	    Code: http.StatusBadRequest,

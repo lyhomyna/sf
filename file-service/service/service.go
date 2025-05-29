@@ -19,8 +19,8 @@ type FileService interface {
 }
 
 type UserImageService interface {
-    SaveUserImageHandler(userId string, req *http.Request) (string, *models.HttpError)
-    GetUserImageHandler(path string) (*models.ImageData, *models.HttpError)
+    SaveUserImage(userId string, req *http.Request) (string, *models.HttpError)
+    GetUserImage(path string) (*models.ImageData, *models.HttpError)
 }
 
 type DirService interface {

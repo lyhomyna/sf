@@ -15,7 +15,7 @@ import (
 
 	dirService "github.com/lyhomyna/sf/file-service/service/dir"
 	fileService "github.com/lyhomyna/sf/file-service/service/file"
-	userImageService "github.com/lyhomyna/sf/file-service/service/userImages"
+	userImageService "github.com/lyhomyna/sf/file-service/service/userImage"
 )
 
 var (
@@ -27,7 +27,7 @@ var (
     dr repository.DirRepository = dirRepository.NewDirRepository(pgDb)
 
     fs service.FileService = fileService.NewFileService(fr)
-    uis service.UserImageService = userImageService.NewUserImagesService(uir)
+    uis service.UserImageService = userImageService.NewUserImageService(uir)
     ds service.DirService = dirService.NewDirService(dr)
 )
 
@@ -38,7 +38,7 @@ func main() {
 	DirService: ds,
     }, cfg)
 
-    if err := handler.Run(cfg); err != nil {
+    if err := handler.Run(); err != nil {
 	log.Println(err)
     }
 

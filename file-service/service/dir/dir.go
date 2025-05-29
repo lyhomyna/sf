@@ -78,7 +78,6 @@ func (ds *DirService) createDir(userId, parentDirPath, dirName string) (string, 
 	    }
 	}
 
-	log.Printf(">>> TRYING TO CREATE DIR WITH PARENT DIR '%s' WITH ID '%s'", parentDirPath, parentDirId)
 	dirId, err := ds.repository.CreateDir(userId, parentDirId, parentDirPath, dirName)
 	if err != nil {
 	    log.Println(err)
@@ -129,37 +128,24 @@ func extractIdFromPath(path string) string {
 }
 
 func (ds *DirService) CreateRootDirectory(userId string) (string, *models.HttpError) {
-    dirId, httpErr := ds.createRootDir(userId)
-    if httpErr != nil {
-	return "", &models.HttpError{
-	    Message: httpErr.Message,
-	    Code: httpErr.Code,
+    dirId, err := ds.repository.CreateRootDir(userId)
+    if err != nil {
+	log.Println(err)
+    
+	if errors.Is(repository.ErrorDirectoryAlreadyExist, err) {
+	    return "", &models.HttpError {
+		Message: "Directory already exist",
+		Code: http.StatusConflict,
+	    }
+	}
+
+	return "", &models.HttpError {
+	    Message: "Couldn't create folder. Try again",
+	    Code: http.StatusInternalServerError,
 	}
     }
 
     return dirId, nil
-}
-
-
-func (ds *DirService) createRootDir(userId string) (string, *models.HttpError) {
-	dirId, err := ds.repository.CreateRootDir(userId)
-	if err != nil {
-	    log.Println(err)
-	
-	    if errors.Is(repository.ErrorDirectoryAlreadyExist, err) {
-		return "", &models.HttpError {
-		    Message: "Directory already exist",
-		    Code: http.StatusConflict,
-		}
-	    }
-
-	    return "", &models.HttpError {
-		Message: "Couldn't create folder. Try again",
-		Code: http.StatusInternalServerError,
-	    }
-	}
-
-	return dirId, nil
 }
 
 func (ds *DirService) GetDirIdByPath(path, userId string) (string, *models.HttpError) {
