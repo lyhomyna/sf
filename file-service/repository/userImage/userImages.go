@@ -1,4 +1,4 @@
-package userImages
+package userImage
 
 import (
 	"context"
@@ -13,7 +13,7 @@ type UserImagesRepository struct {
     db *database.Postgres
 }
 
-func NewUserImagesRepository(db *database.Postgres) *UserImagesRepository {
+func NewUserImageRepository(db *database.Postgres) *UserImagesRepository {
     return &UserImagesRepository{
 	db: db,
     }

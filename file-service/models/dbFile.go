@@ -19,6 +19,11 @@ type DbUserFile struct {
     LastAccessed	time.Time
 }
 
+type FileEntry struct {
+    Name string
+    Path string
+}
+
 type UserFile struct {
     Id	string		`json:"id"`
     Filename string	`json:"filename"`

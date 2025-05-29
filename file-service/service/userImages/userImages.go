@@ -13,52 +13,48 @@ import (
 
 	"github.com/lyhomyna/sf/file-service/models"
 	"github.com/lyhomyna/sf/file-service/repository"
-	"github.com/lyhomyna/sf/file-service/utils"
 )
+
 type UserImagesService struct {
-    repository repository.UserImagesRepository
+    repository repository.UserImageRepository
 }
 
 // directory where uploaded files will be saved
 var userImagesDirectoryPath = filepath.Join("userImages")
 
-func NewUserImagesService(userImagesRepository repository.UserImagesRepository) *UserImagesService {
+func NewUserImagesService(userImagesRepository repository.UserImageRepository) *UserImagesService {
     return &UserImagesService{
 	repository: userImagesRepository,
     }
 }
 
-func (uis *UserImagesService) SaveUserImageHandler(w http.ResponseWriter, req *http.Request) {
-    if req.Method != http.MethodPost {
-	http.Error(w, "Use POST method instead", http.StatusBadRequest)
-	return
-    }
-    userId, httpErr := utils.CheckAuth(req)
-    if httpErr != nil {
-	utils.WriteResponse(w, httpErr.Message, httpErr.Code)
-	return
-    }
-
+func (uis *UserImagesService) SaveUserImageHandler(userId string, req *http.Request) (string, *models.HttpError) {
     // get the avatar from form field by "avatar" name
-    avaFile,avaFileHeader, err := req.FormFile("image")
+    avaFile, avaFileHeader, err := req.FormFile("image")
     if err != nil {
-	utils.WriteResponse(w, "Couldn't get image from request", http.StatusBadRequest)
-	return
+	return "", &models.HttpError{
+	    Message: "Couldn't get image from request",
+	    Code: http.StatusBadRequest,
+	}
     }
     defer avaFile.Close()
 
     // validate MIME type
     userImageActualExt, isImage := validateImageFile(avaFile)
     if !isImage {
-	utils.WriteResponse(w, "Unsupported image type. Possible types is either PNG or JPEG", http.StatusUnsupportedMediaType)
-	return
+	return "", &models.HttpError{
+	    Message: "Unsupported image type. Possible types is either PNG or JPEG",
+	    Code: http.StatusUnsupportedMediaType,
+	}
     }
     avaFile.Seek(0, io.SeekStart)
 
     if err := initUserImageDir(); err != nil {
 	log.Println("For some reason, couldn't initialize user images folder:", err.Error())
-	utils.WriteResponse(w, "Internal server error X_X", http.StatusInternalServerError)
-	return
+	return "", &models.HttpError{
+	    Message: "Internal server error",
+	    Code: http.StatusInternalServerError,
+	}
     }
 
     // construct new avatar name (uuid + .ext) 
@@ -67,15 +63,22 @@ func (uis *UserImagesService) SaveUserImageHandler(w http.ResponseWriter, req *h
     outFile, err := os.Create(internalImageFilepath)
     if err != nil {
 	log.Println("WTF! Couldn't create a file to store userImage:", err.Error())
-	utils.WriteResponse(w, "Internal server error X_X", http.StatusInternalServerError)
-	return
+
+	return "", &models.HttpError{
+	    Message: "Internal server error",
+	    Code: http.StatusInternalServerError,
+	}
     }
     defer outFile.Close()
 
     writtenBytes, err := io.Copy(outFile, avaFile)
     if err != nil {
-	utils.WriteResponse(w, "Internal server error X_X", http.StatusInternalServerError)
-	return
+	log.Println(err)
+
+	return "", &models.HttpError{
+	    Message: "Internal server error",
+	    Code: http.StatusInternalServerError,
+	}
     }
     log.Printf("User image '%s' has been stored. Written %d bytes\n", userImageFilename, writtenBytes)
 
@@ -83,11 +86,15 @@ func (uis *UserImagesService) SaveUserImageHandler(w http.ResponseWriter, req *h
     err = uis.repository.SaveUserImage(userId, externalImageFilepath)
     if err != nil {
 	removeFile(internalImageFilepath)
-	utils.WriteResponse(w, err.Error(), http.StatusInternalServerError)
+
+	return "", &models.HttpError{
+	    Message: err.Error(),
+	    Code: http.StatusInternalServerError,
+	}
     }
     log.Printf("User image '%s' metadata has been stored.\n", userImageFilename)
 
-    utils.WriteResponseV2(w, &models.ImageJson { ImageUrl: externalImageFilepath }, http.StatusOK)
+    return externalImageFilepath, nil
 }
 
 // validateImageFile returns extension and isImage indicator
@@ -129,46 +136,40 @@ func constructFilename(filename string, actualExtension string) string {
 func removeFile(path string) {
     err := os.Remove(path)
     if err == nil {
-	log.Printf("File '%s' properly removed", path)
+	log.Printf("Urgent remove of the file with id '%s'", path)
     }
 }
 
 
-func (uid *UserImagesService) GetUserImageHandler(w http.ResponseWriter, req *http.Request) {
-    _, httpErr := utils.CheckAuth(req)
-    if httpErr != nil {
-	utils.WriteResponse(w, httpErr.Message, httpErr.Code)
+func (uid *UserImagesService) GetUserImageHandler(path string) (*models.ImageData, *models.HttpError) {
+    pathChunks := strings.Split(path, "/")
+
+    if len(pathChunks) != 2 {
+	return nil, &models.HttpError{
+	    Message: "Incorrect image path", 
+	    Code: http.StatusBadRequest,
+	}
+    } else if (pathChunks[0] != "image") {
+	return nil, &models.HttpError{
+	    Message: "Incorrect image path", 
+	    Code: http.StatusBadRequest,
+	}
     }
 
-    imagePath := strings.TrimPrefix(req.URL.Path, "/")
-    imagePathChunks := strings.Split(imagePath, "/")
-
-    if len(imagePathChunks) != 2 {
-	utils.WriteResponse(w, "Incorrect image path", http.StatusBadRequest)
-	return
-    } else if (imagePathChunks[0] != "image") {
-	utils.WriteResponse(w, "Incorrect image path", http.StatusBadRequest)
-	return
-    }
-
-    image, contentType, err := readImage(filepath.Join(userImagesDirectoryPath, imagePathChunks[1]))
+    imageFile, contentTypeChunk, err := readImage(filepath.Join(userImagesDirectoryPath, pathChunks[1]))
     if err != nil {
 	log.Println(err)
-	utils.WriteResponse(w, errors.Unwrap(err).Error(), http.StatusInternalServerError)
-	return
-    }
-    defer image.Close()
 
-    log.Printf("Sending image '%s' back to the user...\n", imagePathChunks[1])
-
-    w.Header().Set("Content-Type", http.DetectContentType(contentType))
-    w.WriteHeader(http.StatusOK)
-    if _, err = io.Copy(w, image); err != nil {
-	log.Printf("Image '%s' wasn't sent to the user. Reason:%v", imagePathChunks[1], err)
-	return
+	return nil, &models.HttpError{
+	    Message: errors.Unwrap(err).Error(), 
+	    Code: http.StatusInternalServerError,
+	}
     }
 
-    log.Printf("Image '%s' sent", imagePathChunks[1])
+    return &models.ImageData {
+	ImageFile: imageFile,
+	ContentTypeChunk: contentTypeChunk,
+    }, nil 
 }
 
 func readImage(imagePath string) (*os.File, []byte, error) {

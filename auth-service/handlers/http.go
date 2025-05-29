@@ -198,13 +198,16 @@ func (s *HttpServer) validateUser(user *models.User) (*models.DbUser, *models.HT
     // find user by email
     dbUser, httpError := s.Services.Users.GetUserByEmail(user.Email);
     if httpError != nil {
-	return nil,  httpError   
+	return nil, &models.HTTPError{
+	    Code: http.StatusForbidden,
+	    Message: "Incorrect credentials",
+	}   
     }
 
     if err := userService.ComparePasswords(dbUser.Password, user.Password); err != nil {
 	return nil, &models.HTTPError{
 	    Code: http.StatusForbidden,
-	    Message: "Passwords don't match",
+	    Message: "Incorrect credentials",
 	}
     }
 
