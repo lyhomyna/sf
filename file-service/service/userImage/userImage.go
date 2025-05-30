@@ -19,8 +19,6 @@ type UserImageService struct {
     repository repository.UserImageRepository
 }
 
-// directory where uploaded files will be saved
-var userImagesDirectoryPath = filepath.Join("userImages")
 
 func NewUserImageService(userImageRepository repository.UserImageRepository) *UserImageService {
     return &UserImageService{
@@ -49,7 +47,7 @@ func (uis *UserImageService) SaveUserImage(userId string, req *http.Request) (st
     }
     avaFile.Seek(0, io.SeekStart)
 
-    if err := initUserImageDir(); err != nil {
+    if err := uis.repository.InitUserImageDir(); err != nil {
 	log.Println("For some reason, couldn't initialize user images folder:", err.Error())
 	return "", &models.HttpError{
 	    Message: "Internal server error",
@@ -59,7 +57,7 @@ func (uis *UserImageService) SaveUserImage(userId string, req *http.Request) (st
 
     // construct new avatar name (uuid + .ext) 
     userImageFilename := constructFilename(avaFileHeader.Filename, userImageActualExt)
-    internalImageFilepath := filepath.Join(userImagesDirectoryPath, userImageFilename) 
+    internalImageFilepath := filepath.Join(uis.repository.GetUserImageDirectoryPath(), userImageFilename) 
     outFile, err := os.Create(internalImageFilepath)
     if err != nil {
 	log.Println("WTF! Couldn't create a file to store userImage:", err.Error())
@@ -85,7 +83,9 @@ func (uis *UserImageService) SaveUserImage(userId string, req *http.Request) (st
     externalImageFilepath := fmt.Sprintf("image/%s", userImageFilename)
     err = uis.repository.SaveUserImage(userId, externalImageFilepath)
     if err != nil {
-	removeFile(internalImageFilepath)
+	if err := uis.repository.RemoveImage(internalImageFilepath); err != nil {
+	    log.Println(err)
+	}
 
 	return "", &models.HttpError{
 	    Message: err.Error(),
@@ -120,11 +120,6 @@ func validateImageFile(possibleImage io.Reader) (string, bool) {
     return ext, true
 }
 
-func initUserImageDir() error {
-    err := os.MkdirAll(userImagesDirectoryPath, os.ModePerm)
-    return err
-}
-
 func constructFilename(filename string, actualExtension string) string {
     hash := sha1.New()
     hash.Write([]byte(filename))
@@ -133,15 +128,7 @@ func constructFilename(filename string, actualExtension string) string {
     return newFilename 
 }
 
-func removeFile(path string) {
-    err := os.Remove(path)
-    if err == nil {
-	log.Printf("Urgent remove of the file with id '%s'", path)
-    }
-}
-
-
-func (uid *UserImageService) GetUserImage(path string) (*models.ImageData, *models.HttpError) {
+func (uis *UserImageService) GetUserImage(path string) (*models.ImageData, *models.HttpError) {
     pathChunks := strings.Split(strings.Trim(path, "/"), "/")
 
     if len(pathChunks) != 2 {
@@ -158,7 +145,7 @@ func (uid *UserImageService) GetUserImage(path string) (*models.ImageData, *mode
 	}
     }
 
-    imageFile, contentTypeChunk, err := readImage(filepath.Join(userImagesDirectoryPath, pathChunks[1]))
+    imageFile, contentTypeChunk, err := uis.repository.ReadImage(filepath.Join(uis.repository.GetUserImageDirectoryPath(), pathChunks[1]))
     if err != nil {
 	log.Println(err)
 
@@ -172,20 +159,4 @@ func (uid *UserImageService) GetUserImage(path string) (*models.ImageData, *mode
 	ImageFile: imageFile,
 	ContentTypeChunk: contentTypeChunk,
     }, nil 
-}
-
-func readImage(imagePath string) (*os.File, []byte, error) {
-    image, err := os.Open(imagePath)
-    if err != nil {
-	return nil, []byte{}, fmt.Errorf("%w: %v", errors.New("User picture missing"), err)
-    }
-
-    buf := make([]byte, 512)
-    _, err = image.Read(buf)
-    if err != nil {
-	return nil, []byte{}, fmt.Errorf("%w: %v", errors.New("Couldn't read user image"), err)
-    }
-    image.Seek(0, io.SeekStart)
-
-    return image, buf, nil
 }

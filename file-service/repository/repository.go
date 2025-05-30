@@ -2,6 +2,7 @@ package repository
 
 import (
 	"io"
+	"os"
 
 	"github.com/lyhomyna/sf/file-service/models"
 )
@@ -9,6 +10,10 @@ import (
 type UserImageRepository interface {
     SaveUserImage(userId string, imageUrl string) error
     GetUserImageUrl(userId string) (string, error)
+    GetUserImageDirectoryPath() string
+    InitUserImageDir() error
+    RemoveImage(path string) error
+    ReadImage(imagePath string) (*os.File, []byte, error)
 }
 
 type FileRepository interface {
