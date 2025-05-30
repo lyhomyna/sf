@@ -2,7 +2,7 @@ FROM nginx:stable
 
 RUN mkdir -p /etc/nginx/certs
 
-COPY ./certs/* /etc/nginx/certs
+COPY certs/* /etc/nginx/certs
 
 RUN chown root:root /etc/nginx/certs/* && \
     chmod 600 /etc/nginx/certs/*-key.pem && \
