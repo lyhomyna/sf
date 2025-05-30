@@ -32,6 +32,7 @@ services:
       dockerfile: Dockerfile 
     env_file:
       - .env
+      - ./auth-service/.env
     depends_on:
       migration:
         condition: service_completed_successfully
@@ -48,6 +49,7 @@ services:
       dockerfile: Dockerfile
     env_file:
       - .env
+      - ./file-service/.env
     volumes:
       - files:/usr/src/file-service/files 
       - images:/usr/src/file-service/userImages
