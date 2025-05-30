@@ -33,7 +33,12 @@ func (p *PostgreSessions) CreateSession(userId string) (string, error) {
     sessionId := uuid.NewString()
     expiresAt := time.Now().Add(24 * time.Hour)
 
-    sql := fmt.Sprintf("INSERT INTO %s (%s, %s, %s) VALUES ($1, $2, $3)", database.DB_sessions_name, database.DB_sessions_id, database.DB_sessions_user_id, database.DB_sessions_expires_at)
+    sql := fmt.Sprintf("INSERT INTO %s (%s, %s, %s) VALUES ($1, $2, $3)", 
+	database.DB_sessions_name, 
+	database.DB_sessions_id, 
+	database.DB_sessions_user_id, 
+	database.DB_sessions_expires_at)
+
     _, err := p.pool.Exec(p.ctx, sql, sessionId, userId, expiresAt)
 
     if err != nil {
