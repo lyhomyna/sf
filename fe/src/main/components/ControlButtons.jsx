@@ -96,7 +96,10 @@ export default function ControlButtons({...props}) {
     }
 
     const logout = async () => {
-	const res = await fetch(`${authServiceBaseUrl}/logout`)
+	const res = await fetch(`${authServiceBaseUrl}/logout`, {
+	    method: "GET",
+	    credentials: "include", 
+	})
 	
 	if (res.status !== 200) {
 	    console.log(await res.json());

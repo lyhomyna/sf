@@ -7,8 +7,10 @@ export default function DirItem({ dir }) {
 
     const deleteDir = async () => {
 	try {
+
 	    const res = await fetch(`${fileServiceBaseUrl}/delete-directory/${dir.id}`, {
 		method: "DELETE",
+		credentials: "include",
 	    });
 
 	    if (!res.ok) {
