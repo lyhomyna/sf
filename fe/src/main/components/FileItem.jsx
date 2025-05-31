@@ -10,6 +10,7 @@ export default function FileItem({ file }) {
     const deleteItem = async () => {
 	const res = await fetch(`${fileServiceBaseUrl}/delete/${file.id}`, {
 	    method: "DELETE",
+	    credentials: "include",
 	});
 
 	if (res.status === 204) {
@@ -25,7 +26,11 @@ export default function FileItem({ file }) {
 
     const downloadFile = async () => {
 	try {
-	    const res = await fetch(`${fileServiceBaseUrl}/download/${file.id}`);
+	    const res = await fetch(`${fileServiceBaseUrl}/download/${file.id}`, {
+		method: "GET",
+		credentials: "include",
+	    });
+
 	    if (res.status === 404) {
 		alert("File not found. Refresh the page.");
 		return;

@@ -1,18 +1,32 @@
 package service
 
-import "net/http"
+import (
+	"net/http"
 
-type FileService interface {
-    SaveHandler(w http.ResponseWriter, req *http.Request)
-    DeleteHandler(w http.ResponseWriter, req *http.Request)
-    DownloadHandler(w http.ResponseWriter, req *http.Request)
-    ListDirHandler(w http.ResponseWriter, req *http.Request)
-    CreateDirectoryHandler(w http.ResponseWriter, req *http.Request)
-    DeleteDirectoryHandler(w http.ResponseWriter, req *http.Request)
-    CreateRootDirectoryHandler(w http.ResponseWriter, req *http.Request)
+	"github.com/lyhomyna/sf/file-service/models"
+)
+
+type Services struct {
+    FileService FileService
+    UserImageService UserImageService
+    DirService DirService
 }
 
-type UserImagesService interface {
-    GetUserImageHandler(w http.ResponseWriter, req *http.Request)
-    SaveUserImageHandler(w http.ResponseWriter, req *http.Request)
+type FileService interface {
+    SaveFile(userId, dirId, dirPath string, req *http.Request) (*models.UserFile, *models.HttpError)
+    DeleteFile(userId, fileId string) *models.HttpError
+    GetFileEntry(userId, fileId string) (*models.FileEntry, *models.HttpError)
+}
+
+type UserImageService interface {
+    SaveUserImage(userId string, req *http.Request) (string, *models.HttpError)
+    GetUserImage(path string) (*models.ImageData, *models.HttpError)
+}
+
+type DirService interface {
+    ListDir(path, userId string) ([]models.DirEntry, *models.HttpError)
+    CreateDirectory(userId, parentDirPath, dirName string) (*models.Dir, *models.HttpError)
+    DeleteDirectory(path, userId string) *models.HttpError
+    CreateRootDirectory(userId string) (string, *models.HttpError)
+    GetDirIdByPath(path, userId string) (string, *models.HttpError)
 }

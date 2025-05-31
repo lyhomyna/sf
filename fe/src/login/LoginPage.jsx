@@ -52,21 +52,21 @@ export default function LoginPage() {
     <form className="bg-stone-900 shadow-md rounded px-8 pt-6 pb-8 mb-4">
 	<div className="mb-4">
 	    <label className="block text-gray-300 text-sm font-bold mb-2" htmlFor="email">
-		Eemail 
+		Email 
 	    </label>
-	    <input ref={emailRef} className="shadow appearance-none rounded w-full py-2 px-3 text-gray-100 leading-tight focus:outline-none focus:shadow-outline bg-[#2B2A33]" id="email" type="text" placeholder="supermail@gmail.com"/>
+	    <input tabIndex="1" ref={emailRef} className="shadow appearance-none rounded w-full py-2 px-3 text-gray-100 leading-tight focus:outline-none focus:shadow-outline bg-[#2B2A33]" id="email" type="text" placeholder="supermail@gmail.com"/>
 	</div>
 	<div className="mb-6">
 	  <label className="block text-gray-300 text-sm font-bold mb-2" htmlFor="password">
 	    Password
 	  </label>
-
 	  <div className="relative">
 	    <HidePasswordButton 
+	        tabIndex="3"
 		className="absolute h-full right-2 text-gray-600 flex items-center" 
 		toggleVisibility={togglePasswordVisibility} 
 		isVisible={isPasswordVisible}/>
-	    <input
+	    <input tabIndex="2"
 		ref={passwordRef}
 		className="shadow appearance-none rounded w-full py-2 pl-3 px-9 text-gray-100 leading-tight focus:outline-none focus:shadow-outline bg-[#2B2A33]"
 		id="password"
@@ -78,10 +78,10 @@ export default function LoginPage() {
 	</div>
 
     <div className="flex items-center justify-between">
-		<button className="bg-blue-500 hover:bg-blue-300 transition-all text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline active:scale-150" type="button" onClick={doLogIn}>
+		<button tabIndex="4" className="bg-blue-500 hover:bg-blue-300 transition-all text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline active:scale-150" type="button" onClick={doLogIn}>
 		    Sign In
 		</button>
-		<a href="mailto:mail@example.com" className="inline-block align-baseline font-bold text-sm text-blue-500 hover:scale-50 hover:text-blue-900 transition-all">
+		<a tabIndex="5" href="mailto:mail@example.com" className="inline-block align-baseline font-bold text-sm text-blue-500 hover:scale-50 hover:text-blue-900 transition-all">
 		    Forgot Password?
 		</a>
 	</div>
