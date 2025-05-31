@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/lyhomyna/sf/auth-service/middleware"
 	"github.com/lyhomyna/sf/auth-service/models"
 	"github.com/lyhomyna/sf/auth-service/service"
 	userService "github.com/lyhomyna/sf/auth-service/service/user"
@@ -66,9 +67,11 @@ func (s *HttpServer) Run(ctx context.Context ) error {
 	w.WriteHeader(http.StatusOK)
     })
 
+    router := middleware.OptionsMiddleware(mux)
+
     s.http = &http.Server {
 	Addr: ":8081",
-	Handler: mux,
+	Handler: router,
 	ReadHeaderTimeout: 5 * time.Second, // mitigate risk of Slowloris Attack
     }
     
@@ -83,7 +86,7 @@ func (s *HttpServer) Run(ctx context.Context ) error {
 func (s *HttpServer) register(w http.ResponseWriter, req *http.Request) {
     userId, errHttp := s.Services.Users.CreateUser(req)
     if errHttp != nil {
-	writeResponseMessage(w, errHttp.Code, errHttp.Message)
+	writeResponseMessage(w, errHttp.Code, "Check logs")
 	return
     }
     
