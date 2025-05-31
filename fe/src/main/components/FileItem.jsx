@@ -8,7 +8,6 @@ export default function FileItem({ file }) {
     const { deleteDirItem } = useContext(DirItemsContext);
 
     const deleteItem = async () => {
-
 	const res = await fetch(`${fileServiceBaseUrl}/delete/${file.id}`, {
 	    method: "DELETE",
 	    credentials: "include",
@@ -31,6 +30,7 @@ export default function FileItem({ file }) {
 		method: "GET",
 		credentials: "include",
 	    });
+
 	    if (res.status === 404) {
 		alert("File not found. Refresh the page.");
 		return;

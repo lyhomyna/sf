@@ -1,5 +1,5 @@
-export default function HidePasswordButton({ tabindex, className, toggleVisibility, isVisible }) {
-    return <button tabindex={tabindex}
+export default function HidePasswordButton({ tabIndex, className, toggleVisibility, isVisible }) {
+    return <button tabIndex={tabIndex}
       className={className}
       onClick={toggleVisibility}>
 	  {isVisible ? (

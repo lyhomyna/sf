@@ -29,7 +29,8 @@ func (s *UserService) CreateUser(req *http.Request) (string, *models.HTTPError) 
 
     var user models.User
     if err := decodeFromTo(req.Body, &user); err != nil {
-	fmt.Println("Could't decode user.")
+	log.Println("Could't decode user.", err)
+
 	return "", &models.HTTPError {
 	    Code: http.StatusBadRequest,
 	    Message: "Use correct user schema",
@@ -38,13 +39,15 @@ func (s *UserService) CreateUser(req *http.Request) (string, *models.HTTPError) 
 
     dbUser, errHttp := constructDbUser(&user);   
     if errHttp != nil {
-	fmt.Println(errHttp.Message)
+	log.Println(errHttp.Message)
+	
 	return "", *&errHttp
     }
 
     userId, err := s.dao.CreateUser(dbUser)
     if err != nil {
 	log.Println(err.Error())
+
 	return "", &models.HTTPError {
 	    Code: http.StatusInternalServerError,
 	    Message: err.Error(),
