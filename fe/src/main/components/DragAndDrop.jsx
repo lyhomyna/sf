@@ -2,8 +2,8 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { useUploadFile } from "hooks/useUploadFile.js"; 
 
-function DragAndDropSection() {
-    const { getRootProps, getInputProps } = useDropzone();
+function DragAndDropSection({ onDrop }) {
+    const { getRootProps, getInputProps } = useDropzone({ onDrop });
 
     return (
     <div
@@ -55,7 +55,8 @@ export default function DragAndDrop() {
 	}
 
 	dragCounter.current--;
-	if (dragCounter === 0) {
+
+	if (dragCounter.current === 0) {
 	setIsDragging(false);
 	}
     };
@@ -69,7 +70,7 @@ export default function DragAndDrop() {
 	    return; 
 	}
 
-	dragCounter.cuurent = 0;
+	dragCounter.current = 0;
 	setIsDragging(false);
     };
 
