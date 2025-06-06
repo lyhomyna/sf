@@ -1,5 +1,5 @@
 fe/node_modules/
-.env
+*.env
 .bk
 certs/
 *.tar.gz
