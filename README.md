@@ -25,7 +25,7 @@ $ docker compose up -d
 ```
 7. Register new user:
 ```
-curl -H "Content-Type: application/json" -d '{"email":"mail@example.com", "password":"strong"}' https://tmpl:strong@localhost/api/auth/register -v -k
+$ curl -H "Content-Type: application/json" -d '{"email":"mail@example.com", "password":"strong"}' https://tmpl:strong@localhost/api/auth/register -v -k
 ```
 >[!NOTE] `tmpl:strong` are credentials that located in `.auth.env file`
 
