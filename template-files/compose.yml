@@ -1,0 +1,93 @@
+services:
+  nginx:
+    container_name: sf-nginx-proxy
+    image: qqweq/sf-reverse-proxy
+    ports: 
+      - "443:443"
+    volumes:
+      - ./certs:/etc/nginx/certs
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      fe: 
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+      file-service:
+        condition: service_healthy
+
+  fe:
+    container_name: sf-frontend
+    image: qqweq/sf-fe
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://fe:80"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  auth-service:
+    container_name: sf-auth-service
+    image: sf-auth-service
+    env_file:
+      - .auth.env
+      - .env
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://auth-service:8081/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  file-service:
+    container_name: sf-file-service
+    image: qqweq/sf-file-service
+    env_file:
+      - .file.env
+      - .env
+    volumes:
+      - files:/usr/src/file-service/files 
+      - images:/usr/src/file-service/userImages
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://file-service:8082/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  db:
+    container_name: sf-postgres
+    image: postgres:latest
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  migrations:
+    container_name: sf-migrations
+    image: qqweq/sf-migrations
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    entrypoint: [
+      "migrate",
+      "-path", "/app/migrations",
+      "-database", "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_NAME}?sslmode=disable",
+      "up"
+    ]
+    restart: no
+
+
+volumes:
+  postgres_data:
+  files:
+  images:
