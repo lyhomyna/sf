@@ -11,17 +11,23 @@ Authentication and file handling are split into separate services.
 - mkcert (or any other tool for generating local SSL certificates)
 
 ## How to Run
-1. Copy nginx.conf, docker-compose.yml, .env (I'll create these files sometime later)
-2. Create dir named `certs` in repo's root directory
-2. Generate SSL certificates into certs/:
+1. Download `template-files` folder and cd into it
+2. Create dir named `certs`
+3. Generate SSL certificates into `certs/`:
 ```
 $ mkcert <IP> localhost 127.0.0.1
 ```
-3. Rename certificate to `sf-cert.pem` and key to `sf-key.pem`
-4. Start the stack:
+4. Rename certificate to `sf-cert.pem` and key to `sf-key.pem`
+5. Change variables in all `.env` files (recommended)
+6. Start the stack:
 ```
 $ docker compose up -d
 ```
+7. Register new user:
+```
+curl -H "Content-Type: application/json" -d '{"email":"mail@example.com", "password":"strong"}' https://tmpl:strong@localhost/api/auth/register -v -k
+```
+>[!NOTE] `tmpl:strong` are credentials that located in `.auth.env file`
 
 ## Usage
-Open in your browser: `https://<IP>`
+Open in your browser: `https://<IP>` and log in using the credentials created in steo 7.
