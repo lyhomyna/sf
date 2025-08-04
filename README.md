@@ -31,3 +31,5 @@ curl -H "Content-Type: application/json" -d '{"email":"mail@example.com", "passw
 
 ## Usage
 Open in your browser: `https://<IP>` and log in using the credentials created in step 7.
+
+https://github.com/user-attachments/assets/c8704fdc-2fa3-431a-bdfc-a0fb5f559527
