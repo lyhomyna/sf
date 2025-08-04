@@ -30,4 +30,4 @@ curl -H "Content-Type: application/json" -d '{"email":"mail@example.com", "passw
 >[!NOTE] `tmpl:strong` are credentials that located in `.auth.env file`
 
 ## Usage
-Open in your browser: `https://<IP>` and log in using the credentials created in steo 7.
+Open in your browser: `https://<IP>` and log in using the credentials created in step 7.
